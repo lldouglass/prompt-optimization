@@ -1,0 +1,56 @@
+from uuid import UUID
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from ..database import get_db
+from ..models import Organization, Prompt, Request
+from ..schemas import LogCreate, LogResponse
+from ..auth import get_current_org
+
+router = APIRouter(prefix="/api/v1/logs", tags=["logs"])
+
+
+@router.post("", response_model=LogResponse, status_code=status.HTTP_201_CREATED)
+async def create_log(
+    log_data: LogCreate,
+    org: Organization = Depends(get_current_org),
+    db: AsyncSession = Depends(get_db),
+) -> Request:
+    """Log a new LLM request."""
+
+    # Look up prompt by slug if provided
+    prompt_id: UUID | None = None
+    if log_data.prompt_slug:
+        result = await db.execute(
+            select(Prompt).where(
+                Prompt.org_id == org.id,
+                Prompt.slug == log_data.prompt_slug,
+            )
+        )
+        prompt = result.scalar_one_or_none()
+        if prompt:
+            prompt_id = prompt.id
+
+    # Create the request record
+    request = Request(
+        org_id=org.id,
+        model=log_data.model,
+        provider=log_data.provider,
+        messages=log_data.messages,
+        parameters=log_data.parameters,
+        response_content=log_data.response_content,
+        response_raw=log_data.response_raw,
+        latency_ms=log_data.latency_ms,
+        input_tokens=log_data.input_tokens,
+        output_tokens=log_data.output_tokens,
+        cost_usd=log_data.cost_usd,
+        prompt_id=prompt_id,
+        tags=log_data.tags,
+        trace_id=log_data.trace_id,
+    )
+
+    db.add(request)
+    await db.commit()
+    await db.refresh(request)
+
+    return request
