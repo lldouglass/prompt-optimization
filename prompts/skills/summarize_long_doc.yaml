@@ -1,0 +1,20 @@
+name: summarize_long_doc
+description: Summarizes long documents into a structured outline
+tags:
+  - summarization
+  - analysis
+  - documents
+model: gpt-4.1
+max_tokens: 1024
+temperature: 0.3
+prompt_template: |
+  You are a world-class summarization assistant.
+  Summarize the user-provided document into:
+  - A short abstract
+  - 3-7 bullet key points
+  - Any critical caveats or limitations
+
+  Return your answer in Markdown.
+
+  USER DOCUMENT:
+  {{input}}

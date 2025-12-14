@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import String, DateTime, ForeignKey, Integer, Text, Numeric, Index
+from sqlalchemy import String, DateTime, ForeignKey, Integer, Text, Numeric, Index, Float
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..database import Base
@@ -33,6 +33,13 @@ class Request(Base):
     prompt_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("prompts.id"))
     tags: Mapped[dict | None] = mapped_column(JSONB)
     trace_id: Mapped[str | None] = mapped_column(String(100))
+
+    # Auto-evaluation fields
+    evaluation_score: Mapped[float | None] = mapped_column(Float)
+    evaluation_subscores: Mapped[dict | None] = mapped_column(JSONB)
+    evaluation_tags: Mapped[list | None] = mapped_column(JSONB)
+    evaluation_rationale: Mapped[str | None] = mapped_column(Text)
+    evaluated_at: Mapped[datetime | None] = mapped_column(DateTime)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
