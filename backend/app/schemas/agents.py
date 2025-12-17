@@ -127,3 +127,38 @@ class OptimizeResponse(BaseModel):
     improvements: list[str]
     reasoning: str
     analysis: AnalysisResponse | None = None
+
+
+class SaveOptimizationRequest(BaseModel):
+    """Request to save an optimization result."""
+    original_prompt: str
+    optimized_prompt: str
+    task_description: str
+    original_score: float
+    optimized_score: float
+    improvements: list[str] = []
+    reasoning: str = ""
+    analysis: AnalysisResponse | None = None
+    skill_name: str | None = None
+
+
+class SavedOptimizationResponse(BaseModel):
+    """Response for a saved optimization."""
+    id: str
+    original_prompt: str
+    optimized_prompt: str
+    task_description: str
+    original_score: float
+    optimized_score: float
+    improvements: list[str]
+    reasoning: str
+    analysis: AnalysisResponse | None = None
+    skill_name: str | None = None
+    model_used: str
+    created_at: str
+
+
+class OptimizationListResponse(BaseModel):
+    """Response containing list of saved optimizations."""
+    optimizations: list[SavedOptimizationResponse]
+    total: int
