@@ -1,0 +1,12 @@
+{
+  "name": "promptlab",
+  "version": "1.0.0",
+  "description": "PromptLab development tools and prompt optimization assistant",
+  "author": {
+    "name": "PromptLab"
+  },
+  "keywords": ["prompt-engineering", "llm", "optimization", "development"],
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "skills": "./skills/"
+}

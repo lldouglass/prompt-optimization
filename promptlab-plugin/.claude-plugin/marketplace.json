@@ -1,0 +1,14 @@
+{
+  "name": "promptlab-tools",
+  "owner": {
+    "name": "PromptLab"
+  },
+  "plugins": [
+    {
+      "name": "promptlab",
+      "source": "../",
+      "description": "PromptLab development tools and prompt optimization assistant",
+      "version": "1.0.0"
+    }
+  ]
+}
