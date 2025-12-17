@@ -5,6 +5,7 @@ import { LoginPage } from "@/pages/Login"
 import { DashboardPage } from "@/pages/Dashboard"
 import { SettingsPage } from "@/pages/Settings"
 import { AgentsPage } from "@/pages/Agents"
+import { OptimizationsPage } from "@/pages/Optimizations"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth()
@@ -43,6 +44,7 @@ function AppRoutes() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/agents" element={<AgentsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/optimizations" element={<OptimizationsPage />} />
       </Route>
     </Routes>
   )

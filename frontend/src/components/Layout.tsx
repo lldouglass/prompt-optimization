@@ -1,12 +1,13 @@
 import { Link, Outlet, useLocation } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Settings, LogOut, Zap, Bot } from "lucide-react"
+import { LayoutDashboard, Settings, LogOut, Zap, Bot, History } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Requests" },
   { to: "/agents", icon: Bot, label: "Agents" },
+  { to: "/optimizations", icon: History, label: "Optimizations" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ]
 
