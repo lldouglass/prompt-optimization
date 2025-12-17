@@ -187,6 +187,21 @@ export interface OptimizationResult {
   analysis: PromptAnalysis | null
 }
 
+export interface SavedOptimization {
+  id: string
+  original_prompt: string
+  optimized_prompt: string
+  task_description: string
+  original_score: number
+  optimized_score: number
+  improvements: string[]
+  reasoning: string
+  analysis: PromptAnalysis | null
+  skill_name: string | null
+  model_used: string
+  created_at: string
+}
+
 // Agent API (no auth required for now)
 export const agentApi = {
   async listSkills(): Promise<{ skills: Skill[]; total: number }> {
@@ -268,6 +283,36 @@ export const agentApi = {
       }),
     })
     if (!res.ok) throw new Error("Failed to optimize prompt")
+    return res.json()
+  },
+
+  async saveOptimization(
+    result: OptimizationResult,
+    taskDescription: string,
+    skillName?: string
+  ): Promise<SavedOptimization> {
+    const res = await fetch(`${API_BASE}/agents/optimizations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        original_prompt: result.original_prompt,
+        optimized_prompt: result.optimized_prompt,
+        task_description: taskDescription,
+        original_score: result.original_score,
+        optimized_score: result.optimized_score,
+        improvements: result.improvements,
+        reasoning: result.reasoning,
+        analysis: result.analysis,
+        skill_name: skillName,
+      }),
+    })
+    if (!res.ok) throw new Error("Failed to save optimization")
+    return res.json()
+  },
+
+  async listOptimizations(limit = 20, offset = 0): Promise<{ optimizations: SavedOptimization[]; total: number }> {
+    const res = await fetch(`${API_BASE}/agents/optimizations?limit=${limit}&offset=${offset}`)
+    if (!res.ok) throw new Error("Failed to list optimizations")
     return res.json()
   },
 }

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { agentApi } from "@/lib/api"
 import type { Judgment, CompareResult, OptimizationResult } from "@/lib/api"
-import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight } from "lucide-react"
+import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save } from "lucide-react"
 
 type TabMode = "evaluate" | "compare" | "optimize"
 
@@ -43,6 +43,8 @@ export function AgentsPage() {
   const [optimizeSamples, setOptimizeSamples] = useState("")
   const [optimizeResult, setOptimizeResult] = useState<OptimizationResult | null>(null)
   const [optimizeLoading, setOptimizeLoading] = useState(false)
+  const [saveLoading, setSaveLoading] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   const runEvaluate = async (request?: string, response?: string) => {
     const reqText = request ?? evalRequest
@@ -103,6 +105,7 @@ export function AgentsPage() {
 
     setOptimizeLoading(true)
     setOptimizeResult(null)
+    setSaved(false)
 
     try {
       // Parse sample inputs (one per line)
@@ -121,6 +124,20 @@ export function AgentsPage() {
       console.error("Optimize error:", error)
     } finally {
       setOptimizeLoading(false)
+    }
+  }
+
+  const saveOptimization = async () => {
+    if (!optimizeResult) return
+
+    setSaveLoading(true)
+    try {
+      await agentApi.saveOptimization(optimizeResult, optimizeTask)
+      setSaved(true)
+    } catch (error) {
+      console.error("Save error:", error)
+    } finally {
+      setSaveLoading(false)
     }
   }
 
@@ -582,16 +599,39 @@ export function AgentsPage() {
                     <div className="bg-muted p-4 rounded-lg whitespace-pre-wrap font-mono text-sm max-h-96 overflow-auto">
                       {optimizeResult.optimized_prompt}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-2"
-                      onClick={() => {
-                        navigator.clipboard.writeText(optimizeResult.optimized_prompt)
-                      }}
-                    >
-                      Copy to Clipboard
-                    </Button>
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(optimizeResult.optimized_prompt)
+                        }}
+                      >
+                        Copy to Clipboard
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={saveOptimization}
+                        disabled={saveLoading || saved}
+                      >
+                        {saveLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : saved ? (
+                          <>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Saved
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Save to Database
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
