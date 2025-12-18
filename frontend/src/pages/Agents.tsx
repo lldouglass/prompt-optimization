@@ -33,9 +33,29 @@ export function AgentsPage() {
   const [compareRequest, setCompareRequest] = useState("")
   const [compareResponseA, setCompareResponseA] = useState("")
   const [compareResponseB, setCompareResponseB] = useState("")
+  const [compareModelA, setCompareModelA] = useState("")
+  const [compareModelB, setCompareModelB] = useState("")
   const [compareRubric, setCompareRubric] = useState("")
   const [compareResult, setCompareResult] = useState<CompareResult | null>(null)
   const [compareLoading, setCompareLoading] = useState(false)
+
+  const modelOptions = [
+    { value: "", label: "Select model..." },
+    { value: "gpt-4o", label: "GPT-4o" },
+    { value: "gpt-4o-mini", label: "GPT-4o Mini" },
+    { value: "gpt-4-turbo", label: "GPT-4 Turbo" },
+    { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
+    { value: "claude-3-5-sonnet", label: "Claude 3.5 Sonnet" },
+    { value: "claude-3-5-haiku", label: "Claude 3.5 Haiku" },
+    { value: "claude-3-opus", label: "Claude 3 Opus" },
+    { value: "gemini-pro", label: "Gemini Pro" },
+    { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
+    { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" },
+    { value: "llama-3.1-70b", label: "Llama 3.1 70B" },
+    { value: "llama-3.1-8b", label: "Llama 3.1 8B" },
+    { value: "mistral-large", label: "Mistral Large" },
+    { value: "other", label: "Other" },
+  ]
 
   // Optimize state
   const [optimizePrompt, setOptimizePrompt] = useState("")
@@ -354,20 +374,46 @@ export function AgentsPage() {
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Response A</label>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Response A</label>
+                    <select
+                      className="text-sm border rounded-md px-2 py-1 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={compareModelA}
+                      onChange={(e) => setCompareModelA(e.target.value)}
+                    >
+                      {modelOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <textarea
-                    className="w-full min-h-[150px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary mt-1"
-                    placeholder="First response..."
+                    className="w-full min-h-[150px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Paste the first response..."
                     value={compareResponseA}
                     onChange={(e) => setCompareResponseA(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="text-sm font-medium">Response B</label>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Response B</label>
+                    <select
+                      className="text-sm border rounded-md px-2 py-1 bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                      value={compareModelB}
+                      onChange={(e) => setCompareModelB(e.target.value)}
+                    >
+                      {modelOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <textarea
-                    className="w-full min-h-[150px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary mt-1"
-                    placeholder="Second response..."
+                    className="w-full min-h-[150px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Paste the second response..."
                     value={compareResponseB}
                     onChange={(e) => setCompareResponseB(e.target.value)}
                   />
@@ -414,8 +460,15 @@ export function AgentsPage() {
                   Comparison Result
                 </CardTitle>
                 <CardDescription>
-                  Winner: <span className="font-bold">{compareResult.winner}</span> |{" "}
-                  Confidence: {compareResult.confidence}
+                  Winner:{" "}
+                  <span className="font-bold">
+                    {compareResult.winner === "A"
+                      ? compareModelA || "Response A"
+                      : compareResult.winner === "B"
+                      ? compareModelB || "Response B"
+                      : "Tie"}
+                  </span>{" "}
+                  | Confidence: {compareResult.confidence}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -432,7 +485,11 @@ export function AgentsPage() {
                             <Badge
                               variant={details.winner === "A" ? "default" : "secondary"}
                             >
-                              {details.winner === "A" ? "Response A" : details.winner === "B" ? "Response B" : "Tie"}
+                              {details.winner === "A"
+                                ? compareModelA || "Response A"
+                                : details.winner === "B"
+                                ? compareModelB || "Response B"
+                                : "Tie"}
                             </Badge>
                           </div>
                           <div className="text-sm text-muted-foreground mt-1">
