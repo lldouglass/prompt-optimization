@@ -202,6 +202,21 @@ export interface ExecuteResult {
   skill: string
 }
 
+export interface ClaimVerification {
+  claim: string
+  status: "verified" | "contradicted" | "unverified"
+  evidence: string
+  source: string | null
+}
+
+export interface HallucinationReport {
+  has_hallucinations: boolean
+  verified_claims: ClaimVerification[]
+  contradicted_claims: ClaimVerification[]
+  unverified_claims: ClaimVerification[]
+  summary: string
+}
+
 export interface Judgment {
   scores: Record<string, number>
   overall_score: number
@@ -209,6 +224,7 @@ export interface Judgment {
   strengths: string[]
   weaknesses: string[]
   reasoning: string
+  hallucination_check: HallucinationReport | null
 }
 
 export interface CompareResult {
@@ -216,6 +232,8 @@ export interface CompareResult {
   confidence: string
   comparison: Record<string, { winner: string; explanation: string }>
   reasoning: string
+  hallucination_check_a: HallucinationReport | null
+  hallucination_check_b: HallucinationReport | null
 }
 
 // Optimization types

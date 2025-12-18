@@ -16,6 +16,11 @@ from .optimizer import (
     OptimizationResult,
     PromptAnalysis,
 )
+from .hallucination_checker import (
+    HallucinationChecker,
+    HallucinationReport,
+    ClaimVerification,
+)
 
 __all__ = [
     "Planner",
@@ -32,4 +37,7 @@ __all__ = [
     "OptimizerError",
     "OptimizationResult",
     "PromptAnalysis",
+    "HallucinationChecker",
+    "HallucinationReport",
+    "ClaimVerification",
 ]

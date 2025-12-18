@@ -13,6 +13,7 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from agents import Planner, LegacyJudge, PromptOptimizer
+from agents.hallucination_checker import HallucinationChecker
 from llm import OpenAIClient, MockLLMClient
 from prompts import SkillRegistry
 
@@ -44,6 +45,8 @@ from ..schemas.agents import (
     SaveOptimizationRequest,
     SavedOptimizationResponse,
     OptimizationListResponse,
+    HallucinationReport,
+    ClaimVerification,
 )
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
@@ -101,7 +104,35 @@ async def evaluate_response(request: EvaluateRequest) -> JudgmentResponse:
     llm = get_llm_client()
     judge = LegacyJudge(llm, rubric=request.rubric)
     judgment = judge.evaluate(request.request, request.response)
-    return JudgmentResponse(scores=judgment.scores, overall_score=judgment.overall_score, passed=judgment.passed, strengths=judgment.strengths, weaknesses=judgment.weaknesses, reasoning=judgment.reasoning)
+
+    # Run hallucination check
+    checker = HallucinationChecker()
+    hallucination_report = await checker.check(request.request, request.response)
+
+    return JudgmentResponse(
+        scores=judgment.scores,
+        overall_score=judgment.overall_score,
+        passed=judgment.passed,
+        strengths=judgment.strengths,
+        weaknesses=judgment.weaknesses,
+        reasoning=judgment.reasoning,
+        hallucination_check=HallucinationReport(
+            has_hallucinations=hallucination_report.has_hallucinations,
+            verified_claims=[
+                ClaimVerification(claim=c.claim, status=c.status, evidence=c.evidence, source=c.source)
+                for c in hallucination_report.verified_claims
+            ],
+            contradicted_claims=[
+                ClaimVerification(claim=c.claim, status=c.status, evidence=c.evidence, source=c.source)
+                for c in hallucination_report.contradicted_claims
+            ],
+            unverified_claims=[
+                ClaimVerification(claim=c.claim, status=c.status, evidence=c.evidence, source=c.source)
+                for c in hallucination_report.unverified_claims
+            ],
+            summary=hallucination_report.summary,
+        )
+    )
 
 
 @router.post("/compare", response_model=CompareResponse)
@@ -109,7 +140,38 @@ async def compare_responses(request: CompareRequest) -> CompareResponse:
     llm = get_llm_client()
     judge = LegacyJudge(llm, rubric=request.rubric)
     result = judge.compare(request.request, request.response_a, request.response_b)
-    return CompareResponse(winner=result.winner, confidence=result.confidence, comparison=result.comparison, reasoning=result.reasoning)
+
+    # Run hallucination checks on both responses
+    checker = HallucinationChecker()
+    report_a = await checker.check(request.request, request.response_a)
+    report_b = await checker.check(request.request, request.response_b)
+
+    def convert_report(report) -> HallucinationReport:
+        return HallucinationReport(
+            has_hallucinations=report.has_hallucinations,
+            verified_claims=[
+                ClaimVerification(claim=c.claim, status=c.status, evidence=c.evidence, source=c.source)
+                for c in report.verified_claims
+            ],
+            contradicted_claims=[
+                ClaimVerification(claim=c.claim, status=c.status, evidence=c.evidence, source=c.source)
+                for c in report.contradicted_claims
+            ],
+            unverified_claims=[
+                ClaimVerification(claim=c.claim, status=c.status, evidence=c.evidence, source=c.source)
+                for c in report.unverified_claims
+            ],
+            summary=report.summary,
+        )
+
+    return CompareResponse(
+        winner=result.winner,
+        confidence=result.confidence,
+        comparison=result.comparison,
+        reasoning=result.reasoning,
+        hallucination_check_a=convert_report(report_a),
+        hallucination_check_b=convert_report(report_b),
+    )
 
 
 @router.get("/skills", response_model=SkillListResponse)

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { agentApi, sessionApi } from "@/lib/api"
 import type { Judgment, CompareResult, OptimizationResult } from "@/lib/api"
-import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp } from "lucide-react"
+import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp, Search, AlertTriangle, ShieldCheck, HelpCircle } from "lucide-react"
 
 type TabMode = "evaluate" | "compare" | "optimize"
 
@@ -343,6 +343,88 @@ export function AgentsPage() {
                   <div className="text-sm font-medium text-muted-foreground">Reasoning</div>
                   <div className="mt-1 text-sm">{evalJudgment.reasoning}</div>
                 </div>
+
+                {/* Hallucination Check Results */}
+                {evalJudgment.hallucination_check && (
+                  <div className="border-t pt-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Search className="h-4 w-4" />
+                      <span className="text-sm font-medium">Fact Check Results</span>
+                      {evalJudgment.hallucination_check.has_hallucinations ? (
+                        <Badge variant="destructive" className="ml-auto">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Potential Hallucinations
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="ml-auto text-green-600 border-green-600">
+                          <ShieldCheck className="h-3 w-3 mr-1" />
+                          Claims Verified
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {evalJudgment.hallucination_check.summary}
+                    </p>
+
+                    {evalJudgment.hallucination_check.contradicted_claims.length > 0 && (
+                      <div className="mb-3">
+                        <div className="text-sm font-medium text-red-600 mb-2 flex items-center gap-1">
+                          <XCircle className="h-4 w-4" /> Contradicted Claims
+                        </div>
+                        <div className="space-y-2">
+                          {evalJudgment.hallucination_check.contradicted_claims.map((claim, i) => (
+                            <div key={i} className="p-2 bg-red-50 dark:bg-red-950/20 rounded border border-red-200 dark:border-red-800 text-sm">
+                              <div className="font-medium">{claim.claim}</div>
+                              <div className="text-muted-foreground mt-1">{claim.evidence}</div>
+                              {claim.source && (
+                                <a href={claim.source} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-xs hover:underline mt-1 block">
+                                  Source
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {evalJudgment.hallucination_check.verified_claims.length > 0 && (
+                      <div className="mb-3">
+                        <div className="text-sm font-medium text-green-600 mb-2 flex items-center gap-1">
+                          <CheckCircle className="h-4 w-4" /> Verified Claims
+                        </div>
+                        <div className="space-y-2">
+                          {evalJudgment.hallucination_check.verified_claims.map((claim, i) => (
+                            <div key={i} className="p-2 bg-green-50 dark:bg-green-950/20 rounded border border-green-200 dark:border-green-800 text-sm">
+                              <div className="font-medium">{claim.claim}</div>
+                              <div className="text-muted-foreground mt-1">{claim.evidence}</div>
+                              {claim.source && (
+                                <a href={claim.source} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-xs hover:underline mt-1 block">
+                                  Source
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {evalJudgment.hallucination_check.unverified_claims.length > 0 && (
+                      <div>
+                        <div className="text-sm font-medium text-yellow-600 mb-2 flex items-center gap-1">
+                          <HelpCircle className="h-4 w-4" /> Unverified Claims
+                        </div>
+                        <div className="space-y-2">
+                          {evalJudgment.hallucination_check.unverified_claims.map((claim, i) => (
+                            <div key={i} className="p-2 bg-yellow-50 dark:bg-yellow-950/20 rounded border border-yellow-200 dark:border-yellow-800 text-sm">
+                              <div className="font-medium">{claim.claim}</div>
+                              <div className="text-muted-foreground mt-1">{claim.evidence}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -503,6 +585,82 @@ export function AgentsPage() {
                   <div className="text-sm font-medium text-muted-foreground">Reasoning</div>
                   <div className="mt-1 text-sm">{compareResult.reasoning}</div>
                 </div>
+
+                {/* Hallucination Check Results for Both Responses */}
+                {(compareResult.hallucination_check_a || compareResult.hallucination_check_b) && (
+                  <div className="border-t pt-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Search className="h-4 w-4" />
+                      <span className="text-sm font-medium">Fact Check Results</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Response A Hallucination Check */}
+                      {compareResult.hallucination_check_a && (
+                        <div className="p-3 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-medium text-sm">{compareModelA || "Response A"}</span>
+                            {compareResult.hallucination_check_a.has_hallucinations ? (
+                              <Badge variant="destructive" className="text-xs">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Issues Found
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                                <ShieldCheck className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {compareResult.hallucination_check_a.summary}
+                          </p>
+                          {compareResult.hallucination_check_a.contradicted_claims.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              {compareResult.hallucination_check_a.contradicted_claims.map((claim, i) => (
+                                <div key={i} className="text-xs p-1.5 bg-red-50 dark:bg-red-950/20 rounded text-red-700 dark:text-red-300">
+                                  {claim.claim}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Response B Hallucination Check */}
+                      {compareResult.hallucination_check_b && (
+                        <div className="p-3 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-medium text-sm">{compareModelB || "Response B"}</span>
+                            {compareResult.hallucination_check_b.has_hallucinations ? (
+                              <Badge variant="destructive" className="text-xs">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Issues Found
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                                <ShieldCheck className="h-3 w-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {compareResult.hallucination_check_b.summary}
+                          </p>
+                          {compareResult.hallucination_check_b.contradicted_claims.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              {compareResult.hallucination_check_b.contradicted_claims.map((claim, i) => (
+                                <div key={i} className="text-xs p-1.5 bg-red-50 dark:bg-red-950/20 rounded text-red-700 dark:text-red-300">
+                                  {claim.claim}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

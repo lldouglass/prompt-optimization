@@ -45,6 +45,23 @@ class EvaluateRequest(BaseModel):
     rubric: str | None = None
 
 
+class ClaimVerification(BaseModel):
+    """A single verified or unverified claim."""
+    claim: str
+    status: str  # "verified", "contradicted", "unverified"
+    evidence: str
+    source: str | None = None
+
+
+class HallucinationReport(BaseModel):
+    """Report on hallucination detection."""
+    has_hallucinations: bool
+    verified_claims: list[ClaimVerification] = []
+    contradicted_claims: list[ClaimVerification] = []
+    unverified_claims: list[ClaimVerification] = []
+    summary: str
+
+
 class JudgmentResponse(BaseModel):
     """Response containing evaluation judgment."""
     scores: dict[str, int]
@@ -53,6 +70,7 @@ class JudgmentResponse(BaseModel):
     strengths: list[str]
     weaknesses: list[str]
     reasoning: str
+    hallucination_check: HallucinationReport | None = None
 
 
 class CompareRequest(BaseModel):
@@ -69,6 +87,8 @@ class CompareResponse(BaseModel):
     confidence: str  # "high", "medium", "low"
     comparison: dict[str, dict]
     reasoning: str
+    hallucination_check_a: HallucinationReport | None = None
+    hallucination_check_b: HallucinationReport | None = None
 
 
 class SkillResponse(BaseModel):
