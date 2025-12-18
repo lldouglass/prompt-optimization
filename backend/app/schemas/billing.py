@@ -43,17 +43,17 @@ PLAN_LIMITS = {
         "data_retention_days": 7,
         "team_members": 1,
     },
-    "pro": {
-        "requests_per_month": 50000,
-        "optimizations_per_month": 100,
-        "data_retention_days": 90,
-        "team_members": 5,
+    "team": {  # Premium plan ($15/mo) - uses "team" internally for Stripe mapping
+        "requests_per_month": 10000,
+        "optimizations_per_month": 50,
+        "data_retention_days": 30,
+        "team_members": 3,
     },
-    "team": {
-        "requests_per_month": 500000,
+    "pro": {  # Pro plan ($90/mo)
+        "requests_per_month": 100000,
         "optimizations_per_month": -1,  # unlimited
-        "data_retention_days": 365,
-        "team_members": -1,  # unlimited
+        "data_retention_days": 90,
+        "team_members": 10,
     },
     "enterprise": {
         "requests_per_month": -1,  # unlimited

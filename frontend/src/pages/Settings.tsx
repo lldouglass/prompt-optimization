@@ -228,12 +228,35 @@ export function SettingsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 border rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold">Pro</span>
-                        <span className="text-lg font-bold">$99/mo</span>
+                        <span className="font-semibold">Premium</span>
+                        <span className="text-lg font-bold">$15/mo</span>
                       </div>
                       <ul className="text-sm text-muted-foreground space-y-1 mb-4">
-                        <li>50,000 requests/month</li>
-                        <li>100 optimizations/month</li>
+                        <li>10,000 requests/month</li>
+                        <li>50 optimizations/month</li>
+                        <li>30-day data retention</li>
+                      </ul>
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => handleUpgrade("team")}
+                        disabled={upgrading === "team"}
+                      >
+                        <Zap className="h-4 w-4 mr-2" />
+                        {upgrading === "team" ? "Loading..." : "Upgrade to Premium"}
+                      </Button>
+                    </div>
+                    <div className="p-4 border-2 border-primary rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">Pro</span>
+                          <Badge>Popular</Badge>
+                        </div>
+                        <span className="text-lg font-bold">$90/mo</span>
+                      </div>
+                      <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                        <li>100,000 requests/month</li>
+                        <li>Unlimited optimizations</li>
                         <li>90-day data retention</li>
                       </ul>
                       <Button
@@ -243,28 +266,6 @@ export function SettingsPage() {
                       >
                         <Zap className="h-4 w-4 mr-2" />
                         {upgrading === "pro" ? "Loading..." : "Upgrade to Pro"}
-                      </Button>
-                    </div>
-                    <div className="p-4 border-2 border-primary rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">Team</span>
-                          <Badge>Popular</Badge>
-                        </div>
-                        <span className="text-lg font-bold">$299/mo</span>
-                      </div>
-                      <ul className="text-sm text-muted-foreground space-y-1 mb-4">
-                        <li>500,000 requests/month</li>
-                        <li>Unlimited optimizations</li>
-                        <li>1-year data retention</li>
-                      </ul>
-                      <Button
-                        className="w-full"
-                        onClick={() => handleUpgrade("team")}
-                        disabled={upgrading === "team"}
-                      >
-                        <Zap className="h-4 w-4 mr-2" />
-                        {upgrading === "team" ? "Loading..." : "Upgrade to Team"}
                       </Button>
                     </div>
                   </div>

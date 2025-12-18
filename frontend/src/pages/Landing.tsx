@@ -17,7 +17,6 @@ import {
   Target,
   FileText,
   Layers,
-  MessageSquare,
   TrendingUp
 } from "lucide-react"
 
@@ -101,37 +100,40 @@ const pricingTiers = [
       "Community support"
     ],
     cta: "Get Started",
-    highlighted: false
+    highlighted: false,
+    plan: "free"
   },
   {
-    name: "Pro",
-    price: "$99",
+    name: "Premium",
+    price: "$15",
     period: "/month",
-    description: "For growing teams",
+    description: "For individual developers",
     features: [
-      "50,000 logged requests/month",
-      "100 prompt optimizations/month",
-      "90-day data retention",
-      "Advanced analytics & exports",
+      "10,000 logged requests/month",
+      "50 prompt optimizations/month",
+      "30-day data retention",
+      "Advanced analytics",
       "Email support"
     ],
     cta: "Start Free Trial",
-    highlighted: true
+    highlighted: false,
+    plan: "team"
   },
   {
-    name: "Team",
-    price: "$299",
+    name: "Pro",
+    price: "$90",
     period: "/month",
-    description: "For serious AI development",
+    description: "For teams & power users",
     features: [
-      "500,000 logged requests/month",
+      "100,000 logged requests/month",
       "Unlimited optimizations",
-      "1-year data retention",
+      "90-day data retention",
       "A/B testing suite",
       "Priority support"
     ],
     cta: "Start Free Trial",
-    highlighted: false
+    highlighted: true,
+    plan: "pro"
   },
   {
     name: "Enterprise",
@@ -146,27 +148,11 @@ const pricingTiers = [
       "Dedicated support"
     ],
     cta: "Contact Sales",
-    highlighted: false
+    highlighted: false,
+    plan: "enterprise"
   }
 ]
 
-const testimonials = [
-  {
-    quote: "The prompt optimizer transformed our customer support bot. Response quality improved by 40% overnight.",
-    author: "Sarah Chen",
-    role: "ML Engineer, TechCorp"
-  },
-  {
-    quote: "What used to take hours of manual iteration now happens in seconds. The few-shot example generation is brilliant.",
-    author: "Michael Rodriguez",
-    role: "Founder, AI Startup"
-  },
-  {
-    quote: "Finally, a scientific approach to prompt engineering. The scoring breakdown helps us understand exactly what to fix.",
-    author: "Emily Watson",
-    role: "CTO, DataFlow Inc"
-  }
-]
 
 export function LandingPage() {
   return (
@@ -520,30 +506,6 @@ export function LandingPage() {
                 &lt;task&gt;...&lt;/task&gt;
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Loved by AI Teams</h2>
-            <p className="text-xl text-muted-foreground">See what developers are saying about PromptLab</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <Card key={testimonial.author}>
-                <CardContent className="pt-6">
-                  <MessageSquare className="h-8 w-8 text-primary/20 mb-4" />
-                  <p className="text-lg mb-4">"{testimonial.quote}"</p>
-                  <div>
-                    <div className="font-semibold">{testimonial.author}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
         </div>
       </section>
