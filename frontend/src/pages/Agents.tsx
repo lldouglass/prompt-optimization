@@ -123,7 +123,12 @@ export function AgentsPage() {
   }
 
   const runOptimize = async () => {
-    if (!optimizePrompt.trim() || !optimizeTask.trim() || !authAgentApi) return
+    if (!optimizePrompt.trim() || !optimizeTask.trim()) return
+
+    if (!authAgentApi) {
+      setOptimizeError("Not authenticated. Please log out and log back in with your API key.")
+      return
+    }
 
     setOptimizeLoading(true)
     setOptimizeResult(null)
@@ -665,7 +670,7 @@ export function AgentsPage() {
                         ) : (
                           <>
                             <Save className="h-4 w-4 mr-2" />
-                            Save to Database
+                            Save to Library
                           </>
                         )}
                       </Button>

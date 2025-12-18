@@ -6,7 +6,7 @@ import { LoginPage } from "@/pages/Login"
 import { DashboardPage } from "@/pages/Dashboard"
 import { SettingsPage } from "@/pages/Settings"
 import { AgentsPage } from "@/pages/Agents"
-import { OptimizationsPage } from "@/pages/Optimizations"
+import { PromptLibraryPage } from "@/pages/PromptLibrary"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth()
@@ -27,15 +27,10 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public landing page */}
-      <Route
-        path="/"
-        element={
-          <PublicRoute>
-            <LandingPage />
-          </PublicRoute>
-        }
-      />
+      {/* Public landing page - always accessible */}
+      <Route path="/" element={<LandingPage />} />
+      {/* Landing page also at /home for logged-in users */}
+      <Route path="/home" element={<LandingPage />} />
       <Route
         path="/login"
         element={
@@ -55,7 +50,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/agents" element={<AgentsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/optimizations" element={<OptimizationsPage />} />
+        <Route path="/library" element={<PromptLibraryPage />} />
       </Route>
     </Routes>
   )

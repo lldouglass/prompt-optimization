@@ -340,7 +340,7 @@ class PairwiseJudgment:
 
 
 class LegacyJudge:
-    def __init__(self, llm_client: LLMClient, model: str = "gpt-5-mini", rubric: str | None = None):
+    def __init__(self, llm_client: LLMClient, model: str = "gpt-4o-mini", rubric: str | None = None):
         self.llm = llm_client
         self.model = model
         self.rubric = rubric or DEFAULT_RUBRIC

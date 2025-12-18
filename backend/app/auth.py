@@ -16,6 +16,32 @@ def hash_api_key(key: str) -> str:
     return hashlib.sha256(key.encode()).hexdigest()
 
 
+async def get_api_key(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db),
+) -> ApiKey:
+    """Validate API key and return the API key record."""
+    api_key = credentials.credentials
+    key_hash = hash_api_key(api_key)
+
+    result = await db.execute(
+        select(ApiKey).where(ApiKey.key_hash == key_hash)
+    )
+    api_key_record = result.scalar_one_or_none()
+
+    if not api_key_record:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key",
+        )
+
+    # Update last_used_at
+    api_key_record.last_used_at = datetime.utcnow()
+    await db.commit()
+
+    return api_key_record
+
+
 async def get_current_org(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db),

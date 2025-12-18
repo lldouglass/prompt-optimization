@@ -1,5 +1,6 @@
 """Router for agent endpoints."""
 
+import json
 import sys
 from pathlib import Path
 
@@ -150,7 +151,7 @@ async def optimize_prompt(
     db: AsyncSession = Depends(get_db),
 ) -> OptimizeResponse:
     # Check and increment optimization usage
-    await check_and_increment_usage(str(api_key.organization_id), db, "optimizations")
+    await check_and_increment_usage(str(api_key.org_id), db, "optimizations")
 
     registry = get_registry()
     optimizer = PromptOptimizer()
@@ -169,8 +170,16 @@ async def optimize_prompt(
 
     few_shot_response = None
     if result.few_shot_research:
+        examples_list = []
+        for ex in result.few_shot_research.examples:
+            output_str = ex.output if isinstance(ex.output, str) else json.dumps(ex.output, indent=2)
+            examples_list.append(FewShotExampleResponse(
+                input=ex.input,
+                output=output_str,
+                rationale=ex.rationale
+            ))
         few_shot_response = FewShotResearchResponse(
-            examples=[FewShotExampleResponse(input=ex.input, output=ex.output, rationale=ex.rationale) for ex in result.few_shot_research.examples],
+            examples=examples_list,
             format_recommendation=result.few_shot_research.format_recommendation,
             research_notes=result.few_shot_research.research_notes
         )
@@ -179,9 +188,14 @@ async def optimize_prompt(
 
 
 @router.post("/optimizations", response_model=SavedOptimizationResponse)
-async def save_optimization(request: SaveOptimizationRequest, db: AsyncSession = Depends(get_db)) -> SavedOptimizationResponse:
+async def save_optimization(
+    request: SaveOptimizationRequest,
+    api_key: ApiKey = Depends(get_api_key),
+    db: AsyncSession = Depends(get_db)
+) -> SavedOptimizationResponse:
     """Save an optimization result to the database."""
     optimization = PromptOptimization(
+        org_id=api_key.org_id,
         original_prompt=request.original_prompt,
         optimized_prompt=request.optimized_prompt,
         task_description=request.task_description,
@@ -212,11 +226,27 @@ async def save_optimization(request: SaveOptimizationRequest, db: AsyncSession =
 
 
 @router.get("/optimizations", response_model=OptimizationListResponse)
-async def list_optimizations(limit: int = 20, offset: int = 0, db: AsyncSession = Depends(get_db)) -> OptimizationListResponse:
-    """List saved optimizations with pagination."""
-    count_result = await db.execute(select(PromptOptimization))
+async def list_optimizations(
+    limit: int = 20,
+    offset: int = 0,
+    api_key: ApiKey = Depends(get_api_key),
+    db: AsyncSession = Depends(get_db)
+) -> OptimizationListResponse:
+    """List saved optimizations with pagination, filtered by organization."""
+    # Count total for this organization
+    count_result = await db.execute(
+        select(PromptOptimization).where(PromptOptimization.org_id == api_key.org_id)
+    )
     total = len(count_result.scalars().all())
-    result = await db.execute(select(PromptOptimization).order_by(PromptOptimization.created_at.desc()).offset(offset).limit(limit))
+
+    # Get paginated results for this organization
+    result = await db.execute(
+        select(PromptOptimization)
+        .where(PromptOptimization.org_id == api_key.org_id)
+        .order_by(PromptOptimization.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
     optimizations = result.scalars().all()
     return OptimizationListResponse(
         optimizations=[

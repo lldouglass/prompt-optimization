@@ -97,7 +97,7 @@ def main():
     print("TESTING ENHANCED PROMPT OPTIMIZER WITH FEW-SHOT RESEARCH")
     print("=" * 80)
 
-    optimizer = PromptOptimizer(model="gpt-5-mini")
+    optimizer = PromptOptimizer(model="gpt-4o-mini")
 
     print("\n[Step 1] Analyzing prompt...")
     analysis = optimizer.analyze(MARKET_ANALYSIS_PROMPT, TASK_DESCRIPTION)

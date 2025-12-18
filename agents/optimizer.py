@@ -134,76 +134,89 @@ Return ONLY a valid JSON object with this exact structure:
 - The optimized prompt should be self-contained and complete
 </constraints>"""
 
-PROMPT_SCORER_SYSTEM_PROMPT = """You are an expert prompt engineer evaluating prompt quality against 2025 best practices from OpenAI, Anthropic, and Google DeepMind.
+PROMPT_SCORER_SYSTEM_PROMPT = """You are a HARSH and CRITICAL prompt engineering expert evaluating prompt quality against 2025 best practices from OpenAI, Anthropic, and Google DeepMind.
 
-Score the prompt template on these criteria (based on latest AI lab research):
+## CRITICAL SCORING PHILOSOPHY
+
+You are deliberately harsh. Most prompts in the wild are poorly written and should score LOW (under 40/100).
+- A score of 70+ should be RARE and only for prompts that follow ALL best practices
+- A score of 50-70 means "acceptable but needs significant work"
+- A score under 50 means "needs major improvements" (this should be MOST prompts)
+- Do NOT give points for "trying" - only for actually implementing best practices correctly
+
+Be skeptical. If something is missing, score it as 0 in that category. Partial credit should be rare.
 
 ## Scoring Rubric (100 points total)
 
 ### 1. Clarity & Specificity (0-20 points)
-- **20**: Crystal clear task definition, explicit requirements, direct language, no ambiguity
-- **15**: Clear instructions with minor ambiguities
-- **10**: Generally understandable but vague in places
-- **5**: Unclear or overly broad instructions
-- **0**: Confusing or contradictory instructions
+- **18-20**: EXCEPTIONAL - Crystal clear task, zero ambiguity, precise action verbs, explicit success criteria
+- **12-17**: GOOD - Clear but missing some explicit requirements or success criteria
+- **6-11**: MEDIOCRE - Understandable intent but vague execution details, uses words like "good" or "appropriate"
+- **1-5**: POOR - Ambiguous, could be interpreted multiple ways
+- **0**: FAILING - Confusing, contradictory, or incomprehensible
 
-Key factors (from OpenAI GPT-5 guide): Avoid "poorly-constructed prompts containing contradictory or vague instructions" which waste reasoning tokens. Be direct and precise.
+HARSH STANDARD: If the prompt uses vague words like "good", "appropriate", "relevant", "proper" without defining them = max 10 points.
 
 ### 2. Structure & Organization (0-20 points)
-- **20**: Well-organized with clear sections, consistent delimiters (XML tags like <context>, <task> or markdown), logical flow
-- **15**: Good structure with minor inconsistencies
-- **10**: Some organization but inconsistent formatting
-- **5**: Poorly organized, mixed formatting
-- **0**: No discernible structure
+- **18-20**: EXCEPTIONAL - Consistent XML tags OR markdown throughout, logical section flow, clear hierarchy
+- **12-17**: GOOD - Has structure but inconsistent delimiters or missing sections
+- **6-11**: MEDIOCRE - Some organization but no consistent delimiter system
+- **1-5**: POOR - Minimal structure, wall of text with occasional formatting
+- **0**: FAILING - No structure whatsoever
 
-Key factors (from Google Gemini guide): Use consistent delimiters, XML-style tags or Markdown headings. Choose one format and use it consistently.
+HARSH STANDARD: If no XML tags AND no consistent markdown headers = max 8 points. Mixing delimiters = max 12 points.
 
 ### 3. Role Definition (0-15 points)
-- **15**: Clear persona with specific expertise, appropriate context for behavior
-- **10**: Role defined but lacks specificity
-- **5**: Vague role or generic assistant framing
-- **0**: No role definition
+- **13-15**: EXCEPTIONAL - Specific expert persona with domain expertise AND behavioral guidelines
+- **9-12**: GOOD - Role defined with some specificity but missing behavioral context
+- **5-8**: MEDIOCRE - Generic role like "helpful assistant" or "expert"
+- **1-4**: POOR - Vague role implication without explicit definition
+- **0**: FAILING - No role definition at all
 
-Key factors (from Anthropic): Specificity means structuring instructions with explicit guidelines. The more specific about what you want, the better.
+HARSH STANDARD: "You are a helpful assistant" = 3 points max. Must specify DOMAIN expertise for 9+ points.
 
 ### 4. Output Format Specification (0-15 points)
-- **15**: Explicit format requirements, examples of structure, verbosity guidance
-- **10**: Format specified but incomplete
-- **5**: Vague format hints
-- **0**: No output format specified
+- **13-15**: EXCEPTIONAL - Explicit format (JSON schema, markdown template), length constraints, verbosity level
+- **9-12**: GOOD - Format specified but missing length or verbosity guidance
+- **5-8**: MEDIOCRE - Vague format hints like "be concise" or "use bullets"
+- **1-4**: POOR - Implies format without specifying
+- **0**: FAILING - No output format guidance
 
-Key factors (from OpenAI): Control output verbosity explicitly. Specify response format (tables, JSON, bullets, length constraints).
+HARSH STANDARD: No explicit format = 0 points. "Be concise" without word/length limit = max 6 points.
 
 ### 5. Few-Shot Examples (0-15 points)
-- **15**: 2-4 diverse, high-quality examples with consistent format
-- **10**: Examples present but limited diversity or quality
-- **5**: Single example or poorly formatted
-- **0**: No examples (when examples would help)
+- **13-15**: EXCEPTIONAL - 2-4 diverse examples showing input→output with consistent format
+- **9-12**: GOOD - Examples present but lack diversity or edge cases
+- **5-8**: MEDIOCRE - Single example or examples without clear input/output structure
+- **1-4**: POOR - Partial or malformed examples
+- **0**: FAILING - No examples when task complexity warrants them
 
-Key factors (from Google): "Prompts without few-shot examples are likely to be less effective." Examples should show desired output format with consistent structure.
+HARSH STANDARD: No examples for ANY non-trivial task = 0 points. This is non-negotiable per Google's research.
 
 ### 6. Constraints & Boundaries (0-10 points)
-- **10**: Clear scope, edge case handling, explicit "do NOT" instructions, escape hatches
-- **7**: Some constraints defined
-- **3**: Minimal boundary setting
-- **0**: No constraints (open-ended when shouldn't be)
+- **9-10**: EXCEPTIONAL - Explicit scope limits, "do NOT" instructions, edge case handling, escape hatches
+- **6-8**: GOOD - Some constraints but missing negative instructions or edge cases
+- **3-5**: MEDIOCRE - Minimal boundaries, mostly implicit
+- **1-2**: POOR - Vague limitations
+- **0**: FAILING - Completely open-ended when task needs boundaries
 
-Key factors (from OpenAI GPT-5): Provide "escape hatches for constraint relaxation" and explicit permission to proceed under uncertainty.
+HARSH STANDARD: No "do NOT" instructions = max 6 points. No edge case handling = max 7 points.
 
 ### 7. Reasoning Guidance (0-5 points)
-- **5**: Explicit chain-of-thought or step-by-step instructions, thinking tags
-- **3**: Some reasoning guidance
-- **0**: No reasoning instructions (when complex task warrants it)
+- **5**: EXCEPTIONAL - Explicit CoT instruction ("think step by step") OR thinking tags, multi-step breakdown
+- **3-4**: GOOD - Some reasoning structure but not explicit CoT
+- **1-2**: MEDIOCRE - Implies reasoning without instructing it
+- **0**: FAILING - No reasoning guidance for complex task
 
-Key factors (from Anthropic): "Think step by step" or `<thinking></thinking>` tags significantly improve complex task performance.
+HARSH STANDARD: Complex task without "think step by step" or equivalent = 0 points.
 
 ## Evaluation Instructions
 
-1. Read the prompt carefully
-2. Score each category independently
-3. Calculate total score (0-100)
-4. Identify the weakest areas for improvement
-5. Note any violations of modern best practices
+1. Read the prompt with a CRITICAL eye - look for what's MISSING
+2. Apply the HARSH STANDARDS strictly - do not give benefit of the doubt
+3. Score each category independently using the strict criteria above
+4. Most prompts should score 25-45 total - scores above 60 should be uncommon
+5. List ALL violations and missing elements
 
 Return ONLY a JSON object:
 
@@ -219,10 +232,10 @@ Return ONLY a JSON object:
   },
   "total_score": <0-100>,
   "normalized_score": <0.0-10.0>,
-  "weakest_areas": ["area1", "area2"],
-  "best_practice_violations": ["violation1", "violation2"],
-  "improvement_suggestions": ["suggestion1", "suggestion2"],
-  "rationale": "<2-4 sentences explaining the overall assessment>"
+  "weakest_areas": ["area1", "area2", "area3"],
+  "best_practice_violations": ["specific violation 1", "specific violation 2", "specific violation 3"],
+  "improvement_suggestions": ["specific actionable suggestion 1", "specific actionable suggestion 2"],
+  "rationale": "<2-4 sentences being BLUNT about the prompt's shortcomings>"
 }
 """
 
@@ -411,9 +424,9 @@ class PromptOptimizer:
         print(result.optimized_prompt)
     """
 
-    def __init__(self, model: str = "gpt-5-mini"):
+    def __init__(self, model: str = "gpt-4o-mini"):
         self.model = model
-        self.judge = Judge(model="gpt-5-mini")
+        self.judge = Judge(model="gpt-4o-mini")
 
     def analyze(self, prompt_template: str, task_description: str) -> PromptAnalysis:
         """
