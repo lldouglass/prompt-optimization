@@ -20,6 +20,7 @@ from prompts import SkillRegistry
 from ..database import get_db
 from ..models.organization import Organization
 from ..models.optimization import PromptOptimization
+from ..models.evaluation import SavedEvaluation
 from ..auth import get_api_key, get_current_org
 from ..models.api_key import ApiKey
 from ..usage import check_and_increment_usage
@@ -47,6 +48,10 @@ from ..schemas.agents import (
     OptimizationListResponse,
     HallucinationReport,
     ClaimVerification,
+    SaveEvaluationRequest,
+    SaveComparisonRequest,
+    SavedEvaluationResponse,
+    EvaluationListResponse,
 )
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
@@ -352,4 +357,120 @@ async def get_optimization(optimization_id: str, db: AsyncSession = Depends(get_
         model_used=optimization.model_used,
         created_at=optimization.created_at.isoformat(),
         analysis=AnalysisResponse(**optimization.analysis) if optimization.analysis else None,
+    )
+
+
+# Saved Evaluations endpoints
+
+@router.post("/evaluations", response_model=SavedEvaluationResponse)
+async def save_evaluation(
+    request: SaveEvaluationRequest,
+    api_key: ApiKey = Depends(get_api_key),
+    db: AsyncSession = Depends(get_db)
+) -> SavedEvaluationResponse:
+    """Save an evaluation result to the database."""
+    evaluation = SavedEvaluation(
+        org_id=api_key.org_id,
+        eval_type="evaluation",
+        request=request.request,
+        response=request.response,
+        model_name=request.model_name,
+        judgment=request.judgment.model_dump() if request.judgment else None,
+        hallucination_check=request.hallucination_check.model_dump() if request.hallucination_check else None,
+    )
+    db.add(evaluation)
+    await db.commit()
+    await db.refresh(evaluation)
+    return SavedEvaluationResponse(
+        id=str(evaluation.id),
+        eval_type=evaluation.eval_type,
+        request=evaluation.request,
+        response=evaluation.response,
+        model_name=evaluation.model_name,
+        judgment=evaluation.judgment,
+        hallucination_check=evaluation.hallucination_check,
+        created_at=evaluation.created_at.isoformat(),
+    )
+
+
+@router.post("/comparisons", response_model=SavedEvaluationResponse)
+async def save_comparison(
+    request: SaveComparisonRequest,
+    api_key: ApiKey = Depends(get_api_key),
+    db: AsyncSession = Depends(get_db)
+) -> SavedEvaluationResponse:
+    """Save a comparison result to the database."""
+    evaluation = SavedEvaluation(
+        org_id=api_key.org_id,
+        eval_type="comparison",
+        request=request.request,
+        response_a=request.response_a,
+        response_b=request.response_b,
+        model_a=request.model_a,
+        model_b=request.model_b,
+        comparison_result=request.comparison_result.model_dump() if request.comparison_result else None,
+        hallucination_check_a=request.comparison_result.hallucination_check_a.model_dump() if request.comparison_result and request.comparison_result.hallucination_check_a else None,
+        hallucination_check_b=request.comparison_result.hallucination_check_b.model_dump() if request.comparison_result and request.comparison_result.hallucination_check_b else None,
+    )
+    db.add(evaluation)
+    await db.commit()
+    await db.refresh(evaluation)
+    return SavedEvaluationResponse(
+        id=str(evaluation.id),
+        eval_type=evaluation.eval_type,
+        request=evaluation.request,
+        response_a=evaluation.response_a,
+        response_b=evaluation.response_b,
+        model_a=evaluation.model_a,
+        model_b=evaluation.model_b,
+        comparison_result=evaluation.comparison_result,
+        hallucination_check_a=evaluation.hallucination_check_a,
+        hallucination_check_b=evaluation.hallucination_check_b,
+        created_at=evaluation.created_at.isoformat(),
+    )
+
+
+@router.get("/evaluations", response_model=EvaluationListResponse)
+async def list_evaluations(
+    limit: int = 20,
+    offset: int = 0,
+    api_key: ApiKey = Depends(get_api_key),
+    db: AsyncSession = Depends(get_db)
+) -> EvaluationListResponse:
+    """List saved evaluations with pagination, filtered by organization."""
+    count_result = await db.execute(
+        select(SavedEvaluation).where(SavedEvaluation.org_id == api_key.org_id)
+    )
+    total = len(count_result.scalars().all())
+
+    result = await db.execute(
+        select(SavedEvaluation)
+        .where(SavedEvaluation.org_id == api_key.org_id)
+        .order_by(SavedEvaluation.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    evaluations = result.scalars().all()
+    return EvaluationListResponse(
+        evaluations=[
+            SavedEvaluationResponse(
+                id=str(ev.id),
+                eval_type=ev.eval_type,
+                request=ev.request,
+                response=ev.response,
+                model_name=ev.model_name,
+                response_a=ev.response_a,
+                response_b=ev.response_b,
+                model_a=ev.model_a,
+                model_b=ev.model_b,
+                judgment=ev.judgment,
+                hallucination_check=ev.hallucination_check,
+                comparison_result=ev.comparison_result,
+                hallucination_check_a=ev.hallucination_check_a,
+                hallucination_check_b=ev.hallucination_check_b,
+                created_at=ev.created_at.isoformat(),
+            )
+            for ev in evaluations
+        ],
+        total=total,
     )

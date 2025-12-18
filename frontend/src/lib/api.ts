@@ -288,6 +288,24 @@ export interface SavedOptimization {
   created_at: string
 }
 
+export interface SavedEvaluation {
+  id: string
+  eval_type: "evaluation" | "comparison"
+  request: string
+  response: string | null
+  model_name: string | null
+  response_a: string | null
+  response_b: string | null
+  model_a: string | null
+  model_b: string | null
+  judgment: Record<string, unknown> | null
+  hallucination_check: Record<string, unknown> | null
+  comparison_result: Record<string, unknown> | null
+  hallucination_check_a: Record<string, unknown> | null
+  hallucination_check_b: Record<string, unknown> | null
+  created_at: string
+}
+
 // Billing types
 export interface SubscriptionInfo {
   plan: string
@@ -501,6 +519,61 @@ export const sessionApi = {
       credentials: "include",
     })
     if (!res.ok) throw new Error("Failed to list optimizations")
+    return res.json()
+  },
+
+  async saveEvaluation(
+    request: string,
+    response: string,
+    judgment: Judgment,
+    modelName?: string
+  ): Promise<SavedEvaluation> {
+    const res = await fetch(`${API_BASE}/agents/evaluations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        request,
+        response,
+        model_name: modelName,
+        judgment,
+        hallucination_check: judgment.hallucination_check,
+      }),
+    })
+    if (!res.ok) throw new Error("Failed to save evaluation")
+    return res.json()
+  },
+
+  async saveComparison(
+    request: string,
+    responseA: string,
+    responseB: string,
+    comparisonResult: CompareResult,
+    modelA?: string,
+    modelB?: string
+  ): Promise<SavedEvaluation> {
+    const res = await fetch(`${API_BASE}/agents/comparisons`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        request,
+        response_a: responseA,
+        response_b: responseB,
+        model_a: modelA,
+        model_b: modelB,
+        comparison_result: comparisonResult,
+      }),
+    })
+    if (!res.ok) throw new Error("Failed to save comparison")
+    return res.json()
+  },
+
+  async listEvaluations(limit = 20, offset = 0): Promise<{ evaluations: SavedEvaluation[]; total: number }> {
+    const res = await fetch(`${API_BASE}/agents/evaluations?limit=${limit}&offset=${offset}`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list evaluations")
     return res.json()
   },
 

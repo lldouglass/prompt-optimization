@@ -197,3 +197,49 @@ class OptimizationListResponse(BaseModel):
     """Response containing list of saved optimizations."""
     optimizations: list[SavedOptimizationResponse]
     total: int
+
+
+# Saved Evaluation schemas
+
+class SaveEvaluationRequest(BaseModel):
+    """Request to save an evaluation."""
+    request: str
+    response: str
+    model_name: str | None = None
+    judgment: JudgmentResponse
+    hallucination_check: HallucinationReport | None = None
+
+
+class SaveComparisonRequest(BaseModel):
+    """Request to save a comparison."""
+    request: str
+    response_a: str
+    response_b: str
+    model_a: str | None = None
+    model_b: str | None = None
+    comparison_result: CompareResponse
+
+
+class SavedEvaluationResponse(BaseModel):
+    """Response for a saved evaluation."""
+    id: str
+    eval_type: str
+    request: str
+    response: str | None = None
+    model_name: str | None = None
+    response_a: str | None = None
+    response_b: str | None = None
+    model_a: str | None = None
+    model_b: str | None = None
+    judgment: dict | None = None
+    hallucination_check: dict | None = None
+    comparison_result: dict | None = None
+    hallucination_check_a: dict | None = None
+    hallucination_check_b: dict | None = None
+    created_at: str
+
+
+class EvaluationListResponse(BaseModel):
+    """Response containing list of saved evaluations."""
+    evaluations: list[SavedEvaluationResponse]
+    total: int

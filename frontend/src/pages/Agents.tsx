@@ -28,6 +28,8 @@ export function AgentsPage() {
   const [evalRubric, setEvalRubric] = useState("")
   const [evalJudgment, setEvalJudgment] = useState<Judgment | null>(null)
   const [evalLoading, setEvalLoading] = useState(false)
+  const [evalSaveLoading, setEvalSaveLoading] = useState(false)
+  const [evalSaved, setEvalSaved] = useState(false)
 
   // Compare state
   const [compareRequest, setCompareRequest] = useState("")
@@ -38,6 +40,8 @@ export function AgentsPage() {
   const [compareRubric, setCompareRubric] = useState("")
   const [compareResult, setCompareResult] = useState<CompareResult | null>(null)
   const [compareLoading, setCompareLoading] = useState(false)
+  const [compareSaveLoading, setCompareSaveLoading] = useState(false)
+  const [compareSaved, setCompareSaved] = useState(false)
 
   const modelOptions = [
     { value: "", label: "Select model..." },
@@ -86,6 +90,7 @@ export function AgentsPage() {
 
     setEvalLoading(true)
     setEvalJudgment(null)
+    setEvalSaved(false)
 
     try {
       const result = await agentApi.evaluate(
@@ -117,6 +122,7 @@ export function AgentsPage() {
 
     setCompareLoading(true)
     setCompareResult(null)
+    setCompareSaved(false)
 
     try {
       const result = await agentApi.compare(
@@ -130,6 +136,41 @@ export function AgentsPage() {
       console.error("Compare error:", error)
     } finally {
       setCompareLoading(false)
+    }
+  }
+
+  const saveEvaluation = async () => {
+    if (!evalJudgment) return
+
+    setEvalSaveLoading(true)
+    try {
+      await sessionApi.saveEvaluation(evalRequest, evalResponse, evalJudgment)
+      setEvalSaved(true)
+    } catch (error) {
+      console.error("Save evaluation error:", error)
+    } finally {
+      setEvalSaveLoading(false)
+    }
+  }
+
+  const saveComparison = async () => {
+    if (!compareResult) return
+
+    setCompareSaveLoading(true)
+    try {
+      await sessionApi.saveComparison(
+        compareRequest,
+        compareResponseA,
+        compareResponseB,
+        compareResult,
+        compareModelA || undefined,
+        compareModelB || undefined
+      )
+      setCompareSaved(true)
+    } catch (error) {
+      console.error("Save comparison error:", error)
+    } finally {
+      setCompareSaveLoading(false)
     }
   }
 
@@ -425,6 +466,31 @@ export function AgentsPage() {
                     )}
                   </div>
                 )}
+
+                {/* Save Button */}
+                <div className="border-t pt-4 flex justify-end">
+                  <Button
+                    onClick={saveEvaluation}
+                    disabled={evalSaveLoading || evalSaved}
+                  >
+                    {evalSaveLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : evalSaved ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Saved to Library
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save to Library
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -661,6 +727,31 @@ export function AgentsPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Save Button */}
+                <div className="border-t pt-4 flex justify-end">
+                  <Button
+                    onClick={saveComparison}
+                    disabled={compareSaveLoading || compareSaved}
+                  >
+                    {compareSaveLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : compareSaved ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Saved to Library
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save to Library
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
