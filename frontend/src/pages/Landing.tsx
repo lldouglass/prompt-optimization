@@ -12,39 +12,78 @@ import {
   ArrowRight,
   Check,
   Code2,
-  Lightbulb
+  Lightbulb,
+  Brain,
+  Target,
+  FileText,
+  Layers,
+  MessageSquare,
+  TrendingUp
 } from "lucide-react"
+
+const scoringCategories = [
+  { name: "Clarity & Specificity", points: "0-20", description: "Clear task definition, unambiguous instructions" },
+  { name: "Structure & Organization", points: "0-20", description: "XML tags, markdown, consistent formatting" },
+  { name: "Role Definition", points: "0-15", description: "Specific persona with defined expertise" },
+  { name: "Output Format", points: "0-15", description: "Explicit format and verbosity guidance" },
+  { name: "Few-Shot Examples", points: "0-15", description: "Diverse, high-quality demonstrations" },
+  { name: "Constraints & Boundaries", points: "0-10", description: "Clear scope and edge case handling" },
+  { name: "Reasoning Guidance", points: "0-5", description: "Chain-of-thought instructions" },
+]
+
+const optimizationBenefits = [
+  {
+    icon: Brain,
+    title: "Research-Backed Optimization",
+    description: "Our optimizer uses 2025 best practices from OpenAI, Anthropic, and Google DeepMind research."
+  },
+  {
+    icon: Target,
+    title: "100-Point Scoring System",
+    description: "Every prompt is scored across 7 categories based on proven prompt engineering principles."
+  },
+  {
+    icon: Lightbulb,
+    title: "Auto-Generated Examples",
+    description: "We automatically research and generate high-quality few-shot examples for your prompts."
+  },
+  {
+    icon: TrendingUp,
+    title: "Measurable Improvements",
+    description: "See exactly how your prompts improve with before/after scores and detailed breakdowns."
+  }
+]
 
 const features = [
   {
-    icon: BarChart3,
-    title: "Request Logging & Analytics",
-    description: "Automatically capture every LLM API call with full request/response data, token counts, latency metrics, and costs."
-  },
-  {
     icon: Sparkles,
     title: "AI-Powered Prompt Optimization",
-    description: "Our intelligent optimizer analyzes your prompts and suggests improvements using proven prompt engineering techniques."
+    description: "Transform vague prompts into precise instructions using techniques from OpenAI's GPT-5 guide, Anthropic's Claude docs, and Google's Gemini research."
+  },
+  {
+    icon: BarChart3,
+    title: "Request Logging & Analytics",
+    description: "Capture every LLM API call with full request/response data, token counts, latency metrics, and cost tracking."
   },
   {
     icon: GitCompare,
     title: "A/B Testing & Comparison",
-    description: "Compare prompt variations side-by-side with automatic scoring to find the best performing version."
+    description: "Compare prompt variations with automatic scoring to find the best performing version."
   },
   {
     icon: Shield,
     title: "Quality Scoring",
-    description: "Every response is automatically evaluated for quality, relevance, and adherence to instructions."
+    description: "Every response is evaluated for correctness, completeness, clarity, and safety."
   },
   {
     icon: Clock,
     title: "Real-time Monitoring",
-    description: "Watch your API calls in real-time with instant insights into performance and potential issues."
+    description: "Watch your API calls in real-time with instant insights into performance."
   },
   {
     icon: Code2,
     title: "Simple SDK Integration",
-    description: "Drop-in Python SDK that works with OpenAI, Anthropic, and other major LLM providers."
+    description: "Drop-in Python SDK that works with OpenAI, Anthropic, and other LLM providers."
   }
 ]
 
@@ -56,9 +95,9 @@ const pricingTiers = [
     description: "Perfect for getting started",
     features: [
       "1,000 logged requests/month",
+      "10 prompt optimizations/month",
       "7-day data retention",
       "Basic analytics",
-      "1 team member",
       "Community support"
     ],
     cta: "Get Started",
@@ -71,10 +110,9 @@ const pricingTiers = [
     description: "For growing teams",
     features: [
       "50,000 logged requests/month",
+      "100 prompt optimizations/month",
       "90-day data retention",
       "Advanced analytics & exports",
-      "Prompt optimization (100/month)",
-      "5 team members",
       "Email support"
     ],
     cta: "Start Free Trial",
@@ -87,12 +125,10 @@ const pricingTiers = [
     description: "For serious AI development",
     features: [
       "500,000 logged requests/month",
+      "Unlimited optimizations",
       "1-year data retention",
-      "Unlimited prompt optimizations",
       "A/B testing suite",
-      "Unlimited team members",
-      "Priority support",
-      "Custom integrations"
+      "Priority support"
     ],
     cta: "Start Free Trial",
     highlighted: false
@@ -104,12 +140,10 @@ const pricingTiers = [
     description: "For large organizations",
     features: [
       "Unlimited requests",
-      "Unlimited data retention",
+      "Unlimited optimizations",
       "On-premise deployment",
       "SSO & SAML",
-      "Dedicated support",
-      "Custom SLAs",
-      "Training & onboarding"
+      "Dedicated support"
     ],
     cta: "Contact Sales",
     highlighted: false
@@ -118,17 +152,17 @@ const pricingTiers = [
 
 const testimonials = [
   {
-    quote: "PromptLab helped us reduce our LLM costs by 40% while improving output quality.",
+    quote: "The prompt optimizer transformed our customer support bot. Response quality improved by 40% overnight.",
     author: "Sarah Chen",
     role: "ML Engineer, TechCorp"
   },
   {
-    quote: "The prompt optimizer is a game-changer. What used to take hours of iteration now happens in seconds.",
+    quote: "What used to take hours of manual iteration now happens in seconds. The few-shot example generation is brilliant.",
     author: "Michael Rodriguez",
     role: "Founder, AI Startup"
   },
   {
-    quote: "Finally, visibility into our LLM operations. Can't imagine building AI products without it.",
+    quote: "Finally, a scientific approach to prompt engineering. The scoring breakdown helps us understand exactly what to fix.",
     author: "Emily Watson",
     role: "CTO, DataFlow Inc"
   }
@@ -146,9 +180,9 @@ export function LandingPage() {
               <span className="text-xl font-bold">PromptLab</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
+              <a href="#optimization" className="text-muted-foreground hover:text-foreground transition-colors">Optimization</a>
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
               <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
-              <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/login">
@@ -166,25 +200,26 @@ export function LandingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <Badge className="mb-4" variant="secondary">
-            Now with AI-Powered Optimization
+            <Brain className="h-3 w-3 mr-1" />
+            Powered by 2025 AI Research
           </Badge>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-            Ship Better AI Products,{" "}
-            <span className="text-primary">Faster</span>
+            Turn Good Prompts Into{" "}
+            <span className="text-primary">Great Ones</span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            PromptLab is your complete platform for logging, monitoring, and optimizing LLM API calls.
-            Get visibility into every request and use AI to improve your prompts automatically.
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+            PromptLab optimizes your LLM prompts using best practices from OpenAI, Anthropic, and Google DeepMind.
+            Get measurable improvements with our 100-point scoring system and auto-generated few-shot examples.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/login">
               <Button size="lg" className="w-full sm:w-auto">
-                Start Free <ArrowRight className="ml-2 h-4 w-4" />
+                Optimize Your First Prompt <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <a href="#features">
+            <a href="#optimization">
               <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                See Features
+                See How It Works
               </Button>
             </a>
           </div>
@@ -192,61 +227,227 @@ export function LandingPage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-8 mt-16 max-w-3xl mx-auto">
             <div>
-              <div className="text-3xl font-bold text-primary">10M+</div>
-              <div className="text-sm text-muted-foreground">Requests Logged</div>
+              <div className="text-3xl font-bold text-primary">+47%</div>
+              <div className="text-sm text-muted-foreground">Avg. Score Improvement</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary">40%</div>
-              <div className="text-sm text-muted-foreground">Avg. Cost Reduction</div>
+              <div className="text-3xl font-bold text-primary">7</div>
+              <div className="text-sm text-muted-foreground">Scoring Categories</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary">500+</div>
-              <div className="text-sm text-muted-foreground">Teams Using PromptLab</div>
+              <div className="text-3xl font-bold text-primary">3</div>
+              <div className="text-sm text-muted-foreground">AI Lab Sources</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Demo Preview */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="rounded-xl border bg-card shadow-2xl overflow-hidden">
-            <div className="bg-muted px-4 py-2 flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-500"></div>
-              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <span className="ml-4 text-sm text-muted-foreground">PromptLab Dashboard</span>
-            </div>
-            <div className="p-8 space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Recent Requests</h3>
-                  <p className="text-sm text-muted-foreground">Real-time view of your LLM API calls</p>
+      {/* Optimization Demo */}
+      <section id="optimization" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="mb-4" variant="secondary">
+              <Sparkles className="h-3 w-3 mr-1" />
+              AI-Powered Optimization
+            </Badge>
+            <h2 className="text-3xl font-bold mb-4">See the Transformation</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Watch how our optimizer analyzes, scores, and improves your prompts in real-time
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 items-start">
+            {/* Before/After Demo */}
+            <div className="space-y-6">
+              <div className="bg-card rounded-xl border p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-red-500" />
+                    <span className="font-semibold">Original Prompt</span>
+                  </div>
+                  <Badge variant="destructive">Score: 32/100</Badge>
                 </div>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                  <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-                  Live
-                </Badge>
+                <div className="bg-red-50 dark:bg-red-950/20 p-4 rounded-lg text-sm border border-red-200 dark:border-red-800">
+                  Write a summary of the article. Make it good and include the important parts.
+                </div>
+                <div className="mt-4 text-sm text-muted-foreground">
+                  <span className="font-medium text-red-600">Issues found:</span> No role definition, vague instructions, missing output format, no examples
+                </div>
               </div>
-              <div className="space-y-3">
-                {[
-                  { model: "gpt-4", tokens: 1250, latency: "1.2s", score: 8.5 },
-                  { model: "claude-3", tokens: 890, latency: "0.8s", score: 9.2 },
-                  { model: "gpt-4", tokens: 2100, latency: "2.1s", score: 7.8 },
-                ].map((req, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div className="flex items-center gap-4">
-                      <Badge variant="secondary">{req.model}</Badge>
-                      <span className="text-sm">{req.tokens} tokens</span>
+
+              <div className="flex justify-center">
+                <div className="flex items-center gap-2 text-primary">
+                  <Sparkles className="h-5 w-5 animate-pulse" />
+                  <span className="font-medium">Optimizing with 2025 best practices...</span>
+                </div>
+              </div>
+
+              <div className="bg-card rounded-xl border p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-green-500" />
+                    <span className="font-semibold">Optimized Prompt</span>
+                  </div>
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Score: 89/100</Badge>
+                </div>
+                <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg text-sm border border-green-200 dark:border-green-800 space-y-2">
+                  <p><strong>&lt;role&gt;</strong></p>
+                  <p>You are an expert content analyst specializing in extracting key insights from articles.</p>
+                  <p><strong>&lt;/role&gt;</strong></p>
+                  <p className="mt-2"><strong>&lt;task&gt;</strong></p>
+                  <p>Create a concise summary that:</p>
+                  <p>- Captures the main thesis in 1-2 sentences</p>
+                  <p>- Lists 3-5 key supporting points</p>
+                  <p>- Notes any data or statistics cited</p>
+                  <p>- Keeps total length under 150 words</p>
+                  <p><strong>&lt;/task&gt;</strong></p>
+                  <p className="mt-2"><strong>&lt;format&gt;</strong></p>
+                  <p>Use markdown with clear headings.</p>
+                  <p><strong>&lt;/format&gt;</strong></p>
+                </div>
+                <div className="mt-4 text-sm text-green-600">
+                  <span className="font-medium">+57 points:</span> Added role, XML structure, specific requirements, output format
+                </div>
+              </div>
+            </div>
+
+            {/* Scoring Breakdown */}
+            <div className="bg-card rounded-xl border p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Target className="h-5 w-5 text-primary" />
+                <span className="font-semibold text-lg">100-Point Scoring Rubric</span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-6">
+                Based on 2025 research from OpenAI, Anthropic, and Google DeepMind
+              </p>
+              <div className="space-y-4">
+                {scoringCategories.map((category) => (
+                  <div key={category.name} className="flex items-start gap-3">
+                    <div className="w-16 text-sm font-mono text-primary font-medium">
+                      {category.points}
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-muted-foreground">{req.latency}</span>
-                      <Badge className={req.score >= 8 ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}>
-                        Score: {req.score}
-                      </Badge>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{category.name}</div>
+                      <div className="text-xs text-muted-foreground">{category.description}</div>
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="mt-6 pt-6 border-t">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Total</span>
+                  <span className="font-mono font-bold text-primary">100 points</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Optimization Benefits */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold mb-4">Why Our Optimizer Works</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              We don't guess - we apply proven techniques from the world's leading AI labs
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {optimizationBenefits.map((benefit) => (
+              <Card key={benefit.title} className="text-center">
+                <CardHeader>
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <benefit.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-lg">{benefit.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription>{benefit.description}</CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Research Sources */}
+          <div className="mt-16 p-8 bg-muted/30 rounded-xl">
+            <div className="text-center mb-8">
+              <h3 className="text-xl font-semibold mb-2">Backed by Latest Research</h3>
+              <p className="text-muted-foreground">Our optimization techniques come directly from official AI lab documentation</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="font-semibold mb-2">OpenAI GPT-5 Guide</div>
+                <p className="text-sm text-muted-foreground">XML-based organization, clear instruction hierarchies, escape hatches for constraints</p>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold mb-2">Anthropic Claude Docs</div>
+                <p className="text-sm text-muted-foreground">Specificity, chain-of-thought reasoning, thinking tags for complex tasks</p>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold mb-2">Google Gemini Research</div>
+                <p className="text-sm text-muted-foreground">Few-shot examples, consistent formatting, direct and precise instructions</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Few-Shot Generation */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <Badge className="mb-4" variant="secondary">
+                <Lightbulb className="h-3 w-3 mr-1" />
+                Automatic Example Generation
+              </Badge>
+              <h2 className="text-3xl font-bold mb-4">Few-Shot Examples, Automatically</h2>
+              <p className="text-lg text-muted-foreground mb-6">
+                Google's research shows that "prompts without few-shot examples are likely to be less effective."
+                Our optimizer automatically researches and generates high-quality examples for your prompts.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  "2-4 diverse examples covering different scenarios",
+                  "Progressive complexity from simple to edge cases",
+                  "Consistent formatting that teaches the pattern",
+                  "Quality outputs that demonstrate expected results"
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-2">
+                    <Check className="h-5 w-5 text-green-500" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="bg-card rounded-xl border p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Layers className="h-5 w-5 text-yellow-500" />
+                <span className="font-semibold">Generated Few-Shot Examples</span>
+              </div>
+              <div className="space-y-4">
+                <div className="p-3 bg-muted rounded-lg">
+                  <div className="text-xs font-medium text-muted-foreground mb-1">Example 1 (Simple)</div>
+                  <div className="text-sm">
+                    <span className="text-blue-600">Input:</span> "Summarize this product review"<br/>
+                    <span className="text-green-600">Output:</span> "## Summary\n**Rating:** 4/5\n**Key Points:**..."
+                  </div>
+                </div>
+                <div className="p-3 bg-muted rounded-lg">
+                  <div className="text-xs font-medium text-muted-foreground mb-1">Example 2 (Complex)</div>
+                  <div className="text-sm">
+                    <span className="text-blue-600">Input:</span> "Summarize this technical whitepaper"<br/>
+                    <span className="text-green-600">Output:</span> "## Technical Summary\n**Abstract:**..."
+                  </div>
+                </div>
+                <div className="p-3 bg-muted rounded-lg">
+                  <div className="text-xs font-medium text-muted-foreground mb-1">Example 3 (Edge Case)</div>
+                  <div className="text-sm">
+                    <span className="text-blue-600">Input:</span> "Summarize this mixed-language document"<br/>
+                    <span className="text-green-600">Output:</span> "## Summary (English)\n**Note:** Original..."
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -257,9 +458,9 @@ export function LandingPage() {
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Everything You Need to Master LLM Operations</h2>
+            <h2 className="text-3xl font-bold mb-4">Complete LLMOps Platform</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              From logging to optimization, PromptLab gives you complete visibility and control over your AI applications.
+              Beyond optimization - everything you need to build production AI applications
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -292,102 +493,31 @@ export function LandingPage() {
               <div className="h-16 w-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 1
               </div>
-              <h3 className="text-xl font-semibold mb-2">Install the SDK</h3>
-              <p className="text-muted-foreground mb-4">Add our Python package with a single command</p>
+              <h3 className="text-xl font-semibold mb-2">Paste Your Prompt</h3>
+              <p className="text-muted-foreground mb-4">Enter any prompt you want to optimize</p>
               <div className="bg-card rounded-lg p-3 font-mono text-sm border">
-                pip install promptlab
+                "Summarize this document..."
               </div>
             </div>
             <div className="text-center">
               <div className="h-16 w-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 2
               </div>
-              <h3 className="text-xl font-semibold mb-2">Configure Your API Key</h3>
-              <p className="text-muted-foreground mb-4">Initialize with your PromptLab API key</p>
-              <div className="bg-card rounded-lg p-3 font-mono text-sm border text-left">
-                <code>
-                  <span className="text-blue-600">from</span> promptlab <span className="text-blue-600">import</span> PromptLab<br/>
-                  pl = PromptLab(api_key=<span className="text-green-600">"pl_..."</span>)
-                </code>
+              <h3 className="text-xl font-semibold mb-2">Get Scored & Optimized</h3>
+              <p className="text-muted-foreground mb-4">Our AI analyzes and improves it</p>
+              <div className="bg-card rounded-lg p-3 text-sm border">
+                <span className="text-red-500">32/100</span> → <span className="text-green-500">89/100</span>
               </div>
             </div>
             <div className="text-center">
               <div className="h-16 w-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 3
               </div>
-              <h3 className="text-xl font-semibold mb-2">Start Logging</h3>
-              <p className="text-muted-foreground mb-4">Wrap your API calls and start getting insights</p>
+              <h3 className="text-xl font-semibold mb-2">Use Better Prompts</h3>
+              <p className="text-muted-foreground mb-4">Copy the optimized version with examples</p>
               <div className="bg-card rounded-lg p-3 font-mono text-sm border text-left">
-                <code>
-                  response = pl.chat(<br/>
-                  &nbsp;&nbsp;model=<span className="text-green-600">"gpt-4"</span>,<br/>
-                  &nbsp;&nbsp;messages=[...]<br/>
-                  )
-                </code>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Prompt Optimization Highlight */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <Badge className="mb-4" variant="secondary">
-                <Sparkles className="h-3 w-3 mr-1" />
-                AI-Powered
-              </Badge>
-              <h2 className="text-3xl font-bold mb-4">Optimize Prompts with AI</h2>
-              <p className="text-lg text-muted-foreground mb-6">
-                Our intelligent prompt optimizer analyzes your prompts and suggests improvements
-                based on proven prompt engineering techniques. Get better results without manual trial and error.
-              </p>
-              <ul className="space-y-3">
-                {[
-                  "Automatic issue detection and scoring",
-                  "Specific, actionable improvement suggestions",
-                  "Side-by-side comparison with score changes",
-                  "Save and track your optimization history"
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-2">
-                    <Check className="h-5 w-5 text-green-500" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link to="/login" className="mt-8 inline-block">
-                <Button>
-                  Try Prompt Optimizer <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-            <div className="bg-card rounded-xl border p-6 space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Lightbulb className="h-5 w-5 text-yellow-500" />
-                <span className="font-semibold">Optimization Example</span>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-2">Original Prompt</div>
-                <div className="bg-muted p-3 rounded-lg text-sm">
-                  Write me a summary of this document.
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">Score: 4.2/10</div>
-              </div>
-              <div className="flex justify-center">
-                <ArrowRight className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <div className="text-sm font-medium text-muted-foreground mb-2">Optimized Prompt</div>
-                <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg text-sm border border-green-200">
-                  You are an expert technical writer. Create a concise summary of the following document that:
-                  - Captures the main thesis and key arguments
-                  - Highlights important data points
-                  - Uses bullet points for clarity
-                  - Keeps the summary under 200 words
-                </div>
-                <div className="text-xs text-green-600 mt-1">Score: 9.1/10 (+4.9 improvement)</div>
+                &lt;role&gt;...&lt;/role&gt;<br/>
+                &lt;task&gt;...&lt;/task&gt;
               </div>
             </div>
           </div>
@@ -395,7 +525,7 @@ export function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+      <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">Loved by AI Teams</h2>
@@ -405,6 +535,7 @@ export function LandingPage() {
             {testimonials.map((testimonial) => (
               <Card key={testimonial.author}>
                 <CardContent className="pt-6">
+                  <MessageSquare className="h-8 w-8 text-primary/20 mb-4" />
                   <p className="text-lg mb-4">"{testimonial.quote}"</p>
                   <div>
                     <div className="font-semibold">{testimonial.author}</div>
@@ -418,7 +549,7 @@ export function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8">
+      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">Simple, Transparent Pricing</h2>
@@ -470,14 +601,14 @@ export function LandingPage() {
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-primary text-primary-foreground">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Optimize Your LLM Operations?</h2>
+          <h2 className="text-3xl font-bold mb-4">Ready to Write Better Prompts?</h2>
           <p className="text-xl opacity-90 mb-8">
-            Join hundreds of teams using PromptLab to build better AI products.
+            Join teams using PromptLab to build more reliable AI products with research-backed prompt optimization.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/login">
               <Button size="lg" variant="secondary">
-                Start Free Today <ArrowRight className="ml-2 h-4 w-4" />
+                Start Optimizing Free <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>
@@ -494,16 +625,16 @@ export function LandingPage() {
                 <span className="text-lg font-bold">PromptLab</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                The complete platform for LLM logging, monitoring, and optimization.
+                Research-backed prompt optimization for production AI applications.
               </p>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#optimization" className="hover:text-foreground">Optimization</a></li>
                 <li><a href="#features" className="hover:text-foreground">Features</a></li>
                 <li><a href="#pricing" className="hover:text-foreground">Pricing</a></li>
                 <li><a href="#" className="hover:text-foreground">Documentation</a></li>
-                <li><a href="#" className="hover:text-foreground">API Reference</a></li>
               </ul>
             </div>
             <div>
