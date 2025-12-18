@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider, useAuth } from "@/lib/auth"
 import { Layout } from "@/components/Layout"
 import { LandingPage } from "@/pages/Landing"
+import { LandingPageV2 } from "@/pages/LandingV2"
 import { LoginPage } from "@/pages/Login"
 import { DashboardPage } from "@/pages/Dashboard"
 import { SettingsPage } from "@/pages/Settings"
@@ -50,6 +51,8 @@ function AppRoutes() {
     <Routes>
       {/* Public landing page - always accessible */}
       <Route path="/" element={<LandingPage />} />
+      {/* Landing page V2 for A/B testing */}
+      <Route path="/v2" element={<LandingPageV2 />} />
       {/* Landing page also at /home for logged-in users */}
       <Route path="/home" element={<LandingPage />} />
       <Route
