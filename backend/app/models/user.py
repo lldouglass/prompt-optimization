@@ -13,6 +13,10 @@ class User(Base):
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
+    # Email verification
+    verification_token: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    verification_token_expires: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
     # OAuth fields (for Google, etc.)
     oauth_provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
     oauth_id: Mapped[str | None] = mapped_column(String(255), nullable=True)

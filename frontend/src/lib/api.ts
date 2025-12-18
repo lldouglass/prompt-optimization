@@ -565,6 +565,34 @@ export const authApi = {
     }
     return res.json()
   },
+
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    const res = await fetch(`${API_BASE}/auth/verify-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ token }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.detail || "Failed to verify email")
+    }
+    return res.json()
+  },
+
+  async resendVerification(email: string): Promise<{ message: string }> {
+    const res = await fetch(`${API_BASE}/auth/resend-verification`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.detail || "Failed to resend verification")
+    }
+    return res.json()
+  },
 }
 
 // Agent API (no auth required for some endpoints)

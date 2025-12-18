@@ -12,7 +12,10 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, name: string | null, organizationName: string) => Promise<void>
   logout: () => Promise<void>
+  verifyEmail: (token: string) => Promise<void>
+  resendVerification: () => Promise<void>
   isAuthenticated: boolean
+  isEmailVerified: boolean
   refreshAuth: () => Promise<void>
 }
 
@@ -79,6 +82,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  const verifyEmail = async (token: string) => {
+    await authApi.verifyEmail(token)
+    // Refresh to get updated user state with email_verified = true
+    await refreshAuth()
+  }
+
+  const resendVerification = async () => {
+    if (!state.user?.email) {
+      throw new Error("No user email available")
+    }
+    await authApi.resendVerification(state.user.email)
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -86,7 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        verifyEmail,
+        resendVerification,
         isAuthenticated: !!state.user,
+        isEmailVerified: !!state.user?.email_verified,
         refreshAuth,
       }}
     >

@@ -9,7 +9,8 @@ from sqlalchemy.orm import selectinload
 from ..database import get_db
 from ..config import get_settings
 from ..models import User, Organization, OrganizationMember, UserSession
-from ..auth_utils import hash_password, verify_password, generate_session_token, hash_session_token
+from ..auth_utils import hash_password, verify_password, generate_session_token, hash_session_token, generate_verification_token
+from ..email import send_verification_email
 from ..schemas.auth import (
     RegisterRequest,
     LoginRequest,
@@ -18,6 +19,8 @@ from ..schemas.auth import (
     OrganizationBasicResponse,
     MembershipResponse,
     MessageResponse,
+    VerifyEmailRequest,
+    ResendVerificationRequest,
 )
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -117,11 +120,18 @@ async def register(
             detail="Email already registered",
         )
 
+    # Generate verification token
+    verification_token = generate_verification_token()
+    verification_expires = datetime.utcnow() + timedelta(hours=settings.verification_token_expire_hours)
+
     # Create user
     user = User(
         email=request_data.email,
         password_hash=hash_password(request_data.password),
         name=request_data.name,
+        email_verified=False,
+        verification_token=verification_token,
+        verification_token_expires=verification_expires,
     )
     db.add(user)
     await db.flush()  # Get user.id
@@ -140,6 +150,9 @@ async def register(
     )
     db.add(membership)
     await db.commit()
+
+    # Send verification email (don't block on failure)
+    await send_verification_email(request_data.email, verification_token, request_data.name)
 
     # Update user's last login
     user.last_login_at = datetime.utcnow()
@@ -254,3 +267,69 @@ async def get_current_user(
     await db.commit()
 
     return await get_user_auth_response(session.user, db)
+
+
+@router.post("/verify-email", response_model=MessageResponse)
+async def verify_email(
+    request_data: VerifyEmailRequest,
+    db: AsyncSession = Depends(get_db),
+) -> MessageResponse:
+    """Verify a user's email address with the verification token."""
+    # Find user by verification token
+    result = await db.execute(
+        select(User).where(User.verification_token == request_data.token)
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification token",
+        )
+
+    # Check if token is expired
+    if user.verification_token_expires and user.verification_token_expires < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification token has expired. Please request a new one.",
+        )
+
+    # Mark email as verified
+    user.email_verified = True
+    user.verification_token = None
+    user.verification_token_expires = None
+    await db.commit()
+
+    return MessageResponse(message="Email verified successfully")
+
+
+@router.post("/resend-verification", response_model=MessageResponse)
+async def resend_verification(
+    request_data: ResendVerificationRequest,
+    db: AsyncSession = Depends(get_db),
+) -> MessageResponse:
+    """Resend the verification email to a user."""
+    # Find user by email
+    result = await db.execute(select(User).where(User.email == request_data.email))
+    user = result.scalar_one_or_none()
+
+    # Always return success to prevent email enumeration
+    if not user:
+        return MessageResponse(message="If an account exists with this email, a verification email has been sent.")
+
+    # Check if already verified
+    if user.email_verified:
+        return MessageResponse(message="Email is already verified.")
+
+    # Generate new verification token
+    verification_token = generate_verification_token()
+    verification_expires = datetime.utcnow() + timedelta(hours=settings.verification_token_expire_hours)
+
+    user.verification_token = verification_token
+    user.verification_token_expires = verification_expires
+    await db.commit()
+
+    # Send verification email
+    await send_verification_email(request_data.email, verification_token, user.name)
+
+    return MessageResponse(message="If an account exists with this email, a verification email has been sent.")

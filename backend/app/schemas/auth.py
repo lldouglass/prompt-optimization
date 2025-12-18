@@ -58,3 +58,13 @@ class AuthResponse(BaseModel):
 class MessageResponse(BaseModel):
     """Simple message response."""
     message: str
+
+
+class VerifyEmailRequest(BaseModel):
+    """Request to verify email with token."""
+    token: str
+
+
+class ResendVerificationRequest(BaseModel):
+    """Request to resend verification email."""
+    email: EmailStr

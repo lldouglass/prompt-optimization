@@ -26,3 +26,8 @@ def generate_session_token() -> str:
 def hash_session_token(token: str) -> str:
     """Hash a session token for storage (SHA256 is fine for random tokens)."""
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+def generate_verification_token() -> str:
+    """Generate a cryptographically secure email verification token."""
+    return secrets.token_urlsafe(32)

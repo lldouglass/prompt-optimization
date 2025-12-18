@@ -7,6 +7,8 @@ import { DashboardPage } from "@/pages/Dashboard"
 import { SettingsPage } from "@/pages/Settings"
 import { AgentsPage } from "@/pages/Agents"
 import { PromptLibraryPage } from "@/pages/PromptLibrary"
+import { VerifyEmailPage } from "@/pages/VerifyEmail"
+import { VerifyEmailPendingPage } from "@/pages/VerifyEmailPending"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
@@ -22,6 +24,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
+
   return <>{children}</>
 }
 
@@ -57,7 +60,10 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
-      {/* Protected app routes */}
+      {/* Email verification routes */}
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/verify-email-pending" element={<VerifyEmailPendingPage />} />
+      {/* Protected app routes (require authentication AND email verification) */}
       <Route
         element={
           <ProtectedRoute>

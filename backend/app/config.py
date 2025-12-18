@@ -23,6 +23,16 @@ class Settings(BaseSettings):
     secret_key: str = "CHANGE-ME-IN-PRODUCTION-USE-SECURE-RANDOM-KEY"
     session_cookie_name: str = "promptlab_session"
     session_expire_days: int = 30
+    verification_token_expire_hours: int = 24
+
+    # Email settings (SMTP)
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str = "noreply@promptlab.ai"
+    smtp_from_name: str = "PromptLab"
+    smtp_use_tls: bool = True
 
     class Config:
         env_file = ".env"

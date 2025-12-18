@@ -25,6 +25,7 @@ export function LoginPage() {
 
     try {
       await login(email, password)
+      // ProtectedRoute will redirect to verify-email-pending if not verified
       navigate("/agents")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed")

@@ -468,30 +468,30 @@ export function AgentsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Prompt Template</label>
+                <label className="text-sm font-medium">Your Current Prompt</label>
                 <textarea
                   className="w-full min-h-[150px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary mt-1 font-mono text-sm"
-                  placeholder="Enter your prompt template here... Use {{input}} for user input placeholder"
+                  placeholder="Paste the prompt you want to improve..."
                   value={optimizePrompt}
                   onChange={(e) => setOptimizePrompt(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium">Task Description</label>
+                <label className="text-sm font-medium">What should this prompt do?</label>
                 <textarea
                   className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary mt-1"
-                  placeholder="What should this prompt accomplish? e.g., 'Answer user questions about Python programming'"
+                  placeholder="e.g., Summarize articles, Write marketing copy, Answer customer questions..."
                   value={optimizeTask}
                   onChange={(e) => setOptimizeTask(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium">Sample Inputs (optional, one per line)</label>
+                <label className="text-sm font-medium">Example inputs (optional)</label>
                 <textarea
                   className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary mt-1"
-                  placeholder="How do I read a file in Python?&#10;What is a list comprehension?&#10;Explain decorators"
+                  placeholder="Add a few examples of what users might ask, one per line..."
                   value={optimizeSamples}
                   onChange={(e) => setOptimizeSamples(e.target.value)}
                 />
