@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { agentApi, sessionApi } from "@/lib/api"
 import type { Judgment, CompareResult, OptimizationResult } from "@/lib/api"
+import { track } from "@/lib/analytics"
 import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp, Search, AlertTriangle, ShieldCheck, HelpCircle } from "lucide-react"
 
 type TabMode = "evaluate" | "compare" | "optimize"
@@ -183,6 +184,12 @@ export function AgentsPage() {
     setSaved(false)
     setExpandedExamples(new Set())
 
+    // Track optimization started
+    track('optimization_started', {
+      prompt_length: optimizePrompt.length,
+      task_length: optimizeTask.length,
+    })
+
     try {
       // Parse sample inputs (one per line)
       const sampleInputs = optimizeSamples
@@ -196,8 +203,19 @@ export function AgentsPage() {
         sampleInputs.length > 0 ? sampleInputs : undefined
       )
       setOptimizeResult(result)
+
+      // Track optimization completed with scores
+      track('optimization_completed', {
+        original_score: result.original_score,
+        optimized_score: result.optimized_score,
+        score_improvement: result.optimized_score - result.original_score,
+        improvements_count: result.improvements?.length || 0,
+      })
     } catch (error) {
       console.error("Optimize error:", error)
+      track('optimization_failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
       if (error instanceof Error) {
         setOptimizeError(error.message)
       } else {
@@ -940,6 +958,9 @@ export function AgentsPage() {
                         size="sm"
                         onClick={() => {
                           navigator.clipboard.writeText(optimizeResult.optimized_prompt)
+                          track('prompt_copied', {
+                            optimized_score: optimizeResult.optimized_score,
+                          })
                         }}
                       >
                         Copy to Clipboard

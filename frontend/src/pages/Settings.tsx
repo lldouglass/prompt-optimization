@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { formatDate } from "@/lib/utils"
 import { Plus, Trash2, Copy, Check, Key, CreditCard, Zap, AlertCircle, ExternalLink } from "lucide-react"
+import { track } from "@/lib/analytics"
 
 export function SettingsPage() {
   const { organization } = useAuth()
@@ -59,6 +60,11 @@ export function SettingsPage() {
 
   const handleUpgrade = async (plan: string) => {
     setUpgrading(plan)
+    // Track upgrade click
+    track('upgrade_clicked', {
+      plan,
+      current_plan: billing?.subscription.plan || 'free',
+    })
     try {
       const { checkout_url } = await sessionApi.createCheckoutSession(plan)
       window.location.href = checkout_url

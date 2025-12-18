@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 import { authApi, type User, type OrganizationBasic, type Membership } from "./api"
+import { track, identify, resetAnalytics } from "./analytics"
 
 interface AuthState {
   user: User | null
@@ -60,6 +61,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       memberships: response.memberships,
       isLoading: false,
     })
+    // Track login and identify user
+    identify(response.user.id, {
+      email: response.user.email,
+      name: response.user.name,
+      organization: response.current_organization?.name,
+    })
+    track('login_completed')
   }
 
   const register = async (email: string, password: string, name: string | null, organizationName: string) => {
@@ -69,6 +77,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       organization: response.current_organization,
       memberships: response.memberships,
       isLoading: false,
+    })
+    // Track signup and identify user
+    identify(response.user.id, {
+      email: response.user.email,
+      name: response.user.name,
+      organization: response.current_organization?.name,
+    })
+    track('signup_completed', {
+      organization_name: organizationName,
     })
   }
 
@@ -80,6 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       memberships: [],
       isLoading: false,
     })
+    // Reset analytics on logout
+    resetAnalytics()
   }
 
   const verifyEmail = async (token: string) => {
