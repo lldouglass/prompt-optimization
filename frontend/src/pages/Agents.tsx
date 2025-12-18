@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { FeedbackForm } from "@/components/FeedbackForm"
 import { agentApi, sessionApi } from "@/lib/api"
 import type { Judgment, CompareResult, OptimizationResult } from "@/lib/api"
 import { track } from "@/lib/analytics"
@@ -512,6 +513,19 @@ export function AgentsPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Feedback Form */}
+          {evalJudgment && (
+            <FeedbackForm
+              feedbackType="evaluation"
+              contextSnapshot={{
+                request: evalRequest,
+                response: evalResponse,
+                rubric: evalRubric,
+                judgment: evalJudgment,
+              }}
+            />
+          )}
         </>
       )}
 
@@ -772,6 +786,22 @@ export function AgentsPage() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Feedback Form */}
+          {compareResult && (
+            <FeedbackForm
+              feedbackType="comparison"
+              contextSnapshot={{
+                request: compareRequest,
+                responseA: compareResponseA,
+                responseB: compareResponseB,
+                modelA: compareModelA,
+                modelB: compareModelB,
+                rubric: compareRubric,
+                result: compareResult,
+              }}
+            />
           )}
         </>
       )}

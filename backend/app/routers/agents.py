@@ -21,9 +21,15 @@ from ..database import get_db
 from ..models.organization import Organization
 from ..models.optimization import PromptOptimization
 from ..models.evaluation import SavedEvaluation
-from ..auth import get_api_key, get_current_org, get_current_org_dual
+from ..models.feedback import UserFeedback
+from ..auth import get_api_key, get_current_org, get_current_org_dual, get_user_from_session
 from ..models.api_key import ApiKey
 from ..usage import check_and_increment_usage
+from ..schemas.feedback import (
+    FeedbackCreateRequest,
+    FeedbackResponse,
+    FeedbackListResponse,
+)
 from ..schemas.agents import (
     PlanRequest,
     PlanResponse,
@@ -479,4 +485,121 @@ async def list_evaluations(
             for ev in evaluations
         ],
         total=total,
+    )
+
+
+# User Feedback endpoints
+
+@router.post("/feedback", response_model=FeedbackResponse, status_code=status.HTTP_201_CREATED)
+async def submit_feedback(
+    request: FeedbackCreateRequest,
+    fastapi_request: Request,
+    org: Organization = Depends(get_current_org_dual),
+    db: AsyncSession = Depends(get_db)
+) -> FeedbackResponse:
+    """Submit user feedback on an evaluation or comparison result."""
+    import uuid as uuid_module
+
+    # Get current user if available (from session)
+    user = await get_user_from_session(fastapi_request, db)
+
+    feedback = UserFeedback(
+        org_id=org.id,
+        user_id=user.id if user else None,
+        feedback_type=request.feedback_type,
+        agrees_with_result=request.agrees_with_result,
+        quality_rating=request.quality_rating,
+        comment=request.comment,
+        saved_evaluation_id=uuid_module.UUID(request.saved_evaluation_id) if request.saved_evaluation_id else None,
+        context_snapshot=request.context_snapshot,
+    )
+
+    db.add(feedback)
+    await db.commit()
+    await db.refresh(feedback)
+
+    return FeedbackResponse(
+        id=str(feedback.id),
+        feedback_type=feedback.feedback_type,
+        agrees_with_result=feedback.agrees_with_result,
+        quality_rating=feedback.quality_rating,
+        comment=feedback.comment,
+        saved_evaluation_id=str(feedback.saved_evaluation_id) if feedback.saved_evaluation_id else None,
+        created_at=feedback.created_at.isoformat(),
+    )
+
+
+@router.get("/feedback", response_model=FeedbackListResponse)
+async def list_feedback(
+    fastapi_request: Request,
+    limit: int = 20,
+    offset: int = 0,
+    feedback_type: str | None = None,
+    org: Organization = Depends(get_current_org_dual),
+    db: AsyncSession = Depends(get_db)
+) -> FeedbackListResponse:
+    """List user feedback for the organization."""
+    query = select(UserFeedback).where(UserFeedback.org_id == org.id)
+
+    if feedback_type:
+        query = query.where(UserFeedback.feedback_type == feedback_type)
+
+    # Count total
+    count_result = await db.execute(query)
+    total = len(count_result.scalars().all())
+
+    # Get paginated results
+    result = await db.execute(
+        query
+        .order_by(UserFeedback.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    feedback_items = result.scalars().all()
+
+    return FeedbackListResponse(
+        feedback=[
+            FeedbackResponse(
+                id=str(f.id),
+                feedback_type=f.feedback_type,
+                agrees_with_result=f.agrees_with_result,
+                quality_rating=f.quality_rating,
+                comment=f.comment,
+                saved_evaluation_id=str(f.saved_evaluation_id) if f.saved_evaluation_id else None,
+                created_at=f.created_at.isoformat(),
+            )
+            for f in feedback_items
+        ],
+        total=total,
+    )
+
+
+@router.get("/feedback/{feedback_id}", response_model=FeedbackResponse)
+async def get_feedback(
+    feedback_id: str,
+    org: Organization = Depends(get_current_org_dual),
+    db: AsyncSession = Depends(get_db)
+) -> FeedbackResponse:
+    """Get a specific feedback item."""
+    result = await db.execute(
+        select(UserFeedback)
+        .where(UserFeedback.id == feedback_id)
+        .where(UserFeedback.org_id == org.id)
+    )
+    feedback = result.scalar_one_or_none()
+
+    if not feedback:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Feedback not found: {feedback_id}"
+        )
+
+    return FeedbackResponse(
+        id=str(feedback.id),
+        feedback_type=feedback.feedback_type,
+        agrees_with_result=feedback.agrees_with_result,
+        quality_rating=feedback.quality_rating,
+        comment=feedback.comment,
+        saved_evaluation_id=str(feedback.saved_evaluation_id) if feedback.saved_evaluation_id else None,
+        created_at=feedback.created_at.isoformat(),
     )

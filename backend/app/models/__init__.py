@@ -5,6 +5,7 @@ from .prompt import Prompt, PromptVersion
 from .test import TestSuite, TestCase, TestRun, TestResult
 from .optimization import PromptOptimization
 from .evaluation import SavedEvaluation
+from .feedback import UserFeedback
 from .user import User
 from .membership import OrganizationMember
 from .session import UserSession
@@ -21,6 +22,7 @@ __all__ = [
     "TestResult",
     "PromptOptimization",
     "SavedEvaluation",
+    "UserFeedback",
     "User",
     "OrganizationMember",
     "UserSession",
