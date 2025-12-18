@@ -4,7 +4,7 @@ import json
 import sys
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -21,7 +21,7 @@ from ..database import get_db
 from ..models.organization import Organization
 from ..models.optimization import PromptOptimization
 from ..models.evaluation import SavedEvaluation
-from ..auth import get_api_key, get_current_org
+from ..auth import get_api_key, get_current_org, get_current_org_dual
 from ..models.api_key import ApiKey
 from ..usage import check_and_increment_usage
 from ..schemas.agents import (
@@ -214,11 +214,12 @@ async def analyze_prompt(request: AnalyzeRequest) -> AnalysisResponse:
 @router.post("/optimize", response_model=OptimizeResponse)
 async def optimize_prompt(
     request: OptimizeRequest,
-    api_key: ApiKey = Depends(get_api_key),
+    fastapi_request: Request,
+    org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db),
 ) -> OptimizeResponse:
     # Check and increment optimization usage
-    await check_and_increment_usage(str(api_key.org_id), db, "optimizations")
+    await check_and_increment_usage(str(org.id), db, "optimizations")
 
     registry = get_registry()
     optimizer = PromptOptimizer()
@@ -257,12 +258,13 @@ async def optimize_prompt(
 @router.post("/optimizations", response_model=SavedOptimizationResponse)
 async def save_optimization(
     request: SaveOptimizationRequest,
-    api_key: ApiKey = Depends(get_api_key),
+    fastapi_request: Request,
+    org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db)
 ) -> SavedOptimizationResponse:
     """Save an optimization result to the database."""
     optimization = PromptOptimization(
-        org_id=api_key.org_id,
+        org_id=org.id,
         original_prompt=request.original_prompt,
         optimized_prompt=request.optimized_prompt,
         task_description=request.task_description,
@@ -294,22 +296,23 @@ async def save_optimization(
 
 @router.get("/optimizations", response_model=OptimizationListResponse)
 async def list_optimizations(
+    fastapi_request: Request,
     limit: int = 20,
     offset: int = 0,
-    api_key: ApiKey = Depends(get_api_key),
+    org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db)
 ) -> OptimizationListResponse:
     """List saved optimizations with pagination, filtered by organization."""
     # Count total for this organization
     count_result = await db.execute(
-        select(PromptOptimization).where(PromptOptimization.org_id == api_key.org_id)
+        select(PromptOptimization).where(PromptOptimization.org_id == org.id)
     )
     total = len(count_result.scalars().all())
 
     # Get paginated results for this organization
     result = await db.execute(
         select(PromptOptimization)
-        .where(PromptOptimization.org_id == api_key.org_id)
+        .where(PromptOptimization.org_id == org.id)
         .order_by(PromptOptimization.created_at.desc())
         .offset(offset)
         .limit(limit)
@@ -365,12 +368,13 @@ async def get_optimization(optimization_id: str, db: AsyncSession = Depends(get_
 @router.post("/evaluations", response_model=SavedEvaluationResponse)
 async def save_evaluation(
     request: SaveEvaluationRequest,
-    api_key: ApiKey = Depends(get_api_key),
+    fastapi_request: Request,
+    org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db)
 ) -> SavedEvaluationResponse:
     """Save an evaluation result to the database."""
     evaluation = SavedEvaluation(
-        org_id=api_key.org_id,
+        org_id=org.id,
         eval_type="evaluation",
         request=request.request,
         response=request.response,
@@ -396,12 +400,13 @@ async def save_evaluation(
 @router.post("/comparisons", response_model=SavedEvaluationResponse)
 async def save_comparison(
     request: SaveComparisonRequest,
-    api_key: ApiKey = Depends(get_api_key),
+    fastapi_request: Request,
+    org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db)
 ) -> SavedEvaluationResponse:
     """Save a comparison result to the database."""
     evaluation = SavedEvaluation(
-        org_id=api_key.org_id,
+        org_id=org.id,
         eval_type="comparison",
         request=request.request,
         response_a=request.response_a,
@@ -432,20 +437,21 @@ async def save_comparison(
 
 @router.get("/evaluations", response_model=EvaluationListResponse)
 async def list_evaluations(
+    fastapi_request: Request,
     limit: int = 20,
     offset: int = 0,
-    api_key: ApiKey = Depends(get_api_key),
+    org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db)
 ) -> EvaluationListResponse:
     """List saved evaluations with pagination, filtered by organization."""
     count_result = await db.execute(
-        select(SavedEvaluation).where(SavedEvaluation.org_id == api_key.org_id)
+        select(SavedEvaluation).where(SavedEvaluation.org_id == org.id)
     )
     total = len(count_result.scalars().all())
 
     result = await db.execute(
         select(SavedEvaluation)
-        .where(SavedEvaluation.org_id == api_key.org_id)
+        .where(SavedEvaluation.org_id == org.id)
         .order_by(SavedEvaluation.created_at.desc())
         .offset(offset)
         .limit(limit)
