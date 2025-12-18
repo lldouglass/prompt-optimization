@@ -34,6 +34,7 @@ const mockOptimizationResult: OptimizationResult = {
     overall_quality: 'fair',
     priority_improvements: ['Add role definition', 'Specify output format'],
   },
+  few_shot_research: null,
 }
 
 function renderAgentsPage() {

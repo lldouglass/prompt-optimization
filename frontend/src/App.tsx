@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider, useAuth } from "@/lib/auth"
 import { Layout } from "@/components/Layout"
+import { LandingPage } from "@/pages/Landing"
 import { LoginPage } from "@/pages/Login"
 import { DashboardPage } from "@/pages/Dashboard"
 import { SettingsPage } from "@/pages/Settings"
@@ -18,7 +19,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth()
   if (isAuthenticated) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
   return <>{children}</>
 }
@@ -26,6 +27,15 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
+      {/* Public landing page */}
+      <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <LandingPage />
+          </PublicRoute>
+        }
+      />
       <Route
         path="/login"
         element={
@@ -34,6 +44,7 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      {/* Protected app routes */}
       <Route
         element={
           <ProtectedRoute>
@@ -41,7 +52,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<DashboardPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/agents" element={<AgentsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/optimizations" element={<OptimizationsPage />} />

@@ -4,7 +4,8 @@ import { useAuth } from "@/lib/auth"
 import { adminApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardHeader, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import { Onboarding } from "@/components/Onboarding"
 import { Zap } from "lucide-react"
 
 export function LoginPage() {
@@ -16,6 +17,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [createdKey, setCreatedKey] = useState("")
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,7 +26,8 @@ export function LoginPage() {
 
     try {
       // Try to fetch requests to validate the key
-      const res = await fetch("http://localhost:8000/api/v1/requests?limit=1", {
+      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000"
+      const res = await fetch(`${apiBase}/api/v1/requests?limit=1`, {
         headers: { Authorization: `Bearer ${apiKey}` },
       })
 
@@ -38,7 +41,7 @@ export function LoginPage() {
         { id: "unknown", key_prefix: apiKey.slice(0, 16), name: null, created_at: new Date().toISOString(), last_used_at: null },
         apiKey
       )
-      navigate("/")
+      navigate("/dashboard")
     } catch {
       setError("Invalid API key. Please check and try again.")
     } finally {
@@ -57,6 +60,7 @@ export function LoginPage() {
 
       setCreatedKey(key.key!)
       login(org, key, key.key!)
+      setShowOnboarding(true)
     } catch {
       setError("Failed to create organization. Please try again.")
     } finally {
@@ -64,31 +68,18 @@ export function LoginPage() {
     }
   }
 
-  if (createdKey) {
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false)
+    navigate("/dashboard")
+  }
+
+  // Show onboarding after new account creation
+  if (showOnboarding && createdKey) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-              <Zap className="h-6 w-6 text-green-600" />
-            </div>
-            <CardTitle>Organization Created!</CardTitle>
-            <CardDescription>
-              Save your API key now - it won't be shown again
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-muted p-3 rounded-md font-mono text-sm break-all">
-              {createdKey}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button className="w-full" onClick={() => navigate("/")}>
-              Continue to Dashboard
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
+      <Onboarding
+        apiKey={createdKey}
+        onComplete={handleOnboardingComplete}
+      />
     )
   }
 

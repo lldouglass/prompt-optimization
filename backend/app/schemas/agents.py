@@ -110,6 +110,20 @@ class AnalysisResponse(BaseModel):
     priority_improvements: list[str]
 
 
+class FewShotExampleResponse(BaseModel):
+    """A single few-shot example."""
+    input: str
+    output: str
+    rationale: str = ""
+
+
+class FewShotResearchResponse(BaseModel):
+    """Research results for few-shot examples."""
+    examples: list[FewShotExampleResponse] = []
+    format_recommendation: str = ""
+    research_notes: str = ""
+
+
 class OptimizeRequest(BaseModel):
     """Request to optimize a prompt."""
     prompt_template: str
@@ -127,6 +141,7 @@ class OptimizeResponse(BaseModel):
     improvements: list[str]
     reasoning: str
     analysis: AnalysisResponse | None = None
+    few_shot_research: FewShotResearchResponse | None = None
 
 
 class SaveOptimizationRequest(BaseModel):

@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useLocation } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { agentApi } from "@/lib/api"
+import { useAuth } from "@/lib/auth"
+import { agentApi, createAuthenticatedAgentApi } from "@/lib/api"
 import type { Judgment, CompareResult, OptimizationResult } from "@/lib/api"
-import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save } from "lucide-react"
+import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp } from "lucide-react"
 
 type TabMode = "evaluate" | "compare" | "optimize"
 
@@ -17,8 +18,15 @@ interface LocationState {
 
 export function AgentsPage() {
   const location = useLocation()
+  const { rawApiKey } = useAuth()
   const state = location.state as LocationState | null
   const hasAutoRun = useRef(false)
+
+  // Create authenticated API
+  const authAgentApi = useMemo(
+    () => (rawApiKey ? createAuthenticatedAgentApi(rawApiKey) : null),
+    [rawApiKey]
+  )
 
   const [activeTab, setActiveTab] = useState<TabMode>(state?.autoEvaluate ? "evaluate" : "optimize")
 
@@ -43,8 +51,22 @@ export function AgentsPage() {
   const [optimizeSamples, setOptimizeSamples] = useState("")
   const [optimizeResult, setOptimizeResult] = useState<OptimizationResult | null>(null)
   const [optimizeLoading, setOptimizeLoading] = useState(false)
+  const [optimizeError, setOptimizeError] = useState<string | null>(null)
   const [saveLoading, setSaveLoading] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [expandedExamples, setExpandedExamples] = useState<Set<number>>(new Set())
+
+  const toggleExample = (index: number) => {
+    setExpandedExamples(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(index)) {
+        newSet.delete(index)
+      } else {
+        newSet.add(index)
+      }
+      return newSet
+    })
+  }
 
   const runEvaluate = async (request?: string, response?: string) => {
     const reqText = request ?? evalRequest
@@ -101,11 +123,13 @@ export function AgentsPage() {
   }
 
   const runOptimize = async () => {
-    if (!optimizePrompt.trim() || !optimizeTask.trim()) return
+    if (!optimizePrompt.trim() || !optimizeTask.trim() || !authAgentApi) return
 
     setOptimizeLoading(true)
     setOptimizeResult(null)
+    setOptimizeError(null)
     setSaved(false)
+    setExpandedExamples(new Set())
 
     try {
       // Parse sample inputs (one per line)
@@ -114,7 +138,7 @@ export function AgentsPage() {
         .map((s) => s.trim())
         .filter((s) => s.length > 0)
 
-      const result = await agentApi.optimize(
+      const result = await authAgentApi.optimize(
         optimizePrompt,
         optimizeTask,
         sampleInputs.length > 0 ? sampleInputs : undefined
@@ -122,17 +146,22 @@ export function AgentsPage() {
       setOptimizeResult(result)
     } catch (error) {
       console.error("Optimize error:", error)
+      if (error instanceof Error) {
+        setOptimizeError(error.message)
+      } else {
+        setOptimizeError("Failed to optimize prompt")
+      }
     } finally {
       setOptimizeLoading(false)
     }
   }
 
   const saveOptimization = async () => {
-    if (!optimizeResult) return
+    if (!optimizeResult || !authAgentApi) return
 
     setSaveLoading(true)
     try {
-      await agentApi.saveOptimization(optimizeResult, optimizeTask)
+      await authAgentApi.saveOptimization(optimizeResult, optimizeTask)
       setSaved(true)
     } catch (error) {
       console.error("Save error:", error)
@@ -492,6 +521,15 @@ export function AgentsPage() {
                   </>
                 )}
               </Button>
+
+              {optimizeError && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-red-800 dark:text-red-200">
+                    {optimizeError}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -686,6 +724,88 @@ export function AgentsPage() {
                         </ul>
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Few-Shot Research */}
+              {optimizeResult.few_shot_research && optimizeResult.few_shot_research.examples.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Lightbulb className="h-4 w-4 text-yellow-500" />
+                      Generated Few-Shot Examples
+                    </CardTitle>
+                    <CardDescription>
+                      {optimizeResult.few_shot_research.examples.length} examples researched and added to the optimized prompt
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {optimizeResult.few_shot_research.research_notes && (
+                      <div className="p-3 bg-muted rounded-lg">
+                        <div className="text-sm font-medium text-muted-foreground mb-1">Research Notes</div>
+                        <div className="text-sm">{optimizeResult.few_shot_research.research_notes}</div>
+                      </div>
+                    )}
+
+                    {optimizeResult.few_shot_research.format_recommendation && (
+                      <div className="text-sm">
+                        <span className="font-medium">Format: </span>
+                        <code className="px-1.5 py-0.5 bg-muted rounded text-xs">
+                          {optimizeResult.few_shot_research.format_recommendation}
+                        </code>
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      {optimizeResult.few_shot_research.examples.map((example, i) => (
+                        <div key={i} className="border rounded-lg overflow-hidden">
+                          <button
+                            onClick={() => toggleExample(i)}
+                            className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">
+                                Example {i + 1}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground truncate max-w-md">
+                                {example.input.substring(0, 60)}...
+                              </span>
+                            </div>
+                            {expandedExamples.has(i) ? (
+                              <ChevronUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            )}
+                          </button>
+
+                          {expandedExamples.has(i) && (
+                            <div className="p-3 border-t space-y-3">
+                              <div>
+                                <div className="text-xs font-medium text-muted-foreground mb-1">Input</div>
+                                <div className="bg-muted p-2 rounded text-sm font-mono whitespace-pre-wrap">
+                                  {example.input}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs font-medium text-muted-foreground mb-1">Output</div>
+                                <div className="bg-muted p-2 rounded text-sm font-mono whitespace-pre-wrap max-h-64 overflow-auto">
+                                  {example.output}
+                                </div>
+                              </div>
+                              {example.rationale && (
+                                <div>
+                                  <div className="text-xs font-medium text-muted-foreground mb-1">Rationale</div>
+                                  <div className="text-sm italic text-muted-foreground">
+                                    {example.rationale}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               )}

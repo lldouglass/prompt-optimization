@@ -1,21 +1,31 @@
 import { useState, useEffect, useCallback } from "react"
+import { useSearchParams } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
-import { adminApi, type ApiKey } from "@/lib/api"
+import { adminApi, createAuthenticatedApi, type ApiKey, type BillingInfo } from "@/lib/api"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import { formatDate } from "@/lib/utils"
-import { Plus, Trash2, Copy, Check, Key } from "lucide-react"
+import { Plus, Trash2, Copy, Check, Key, CreditCard, Zap, AlertCircle, ExternalLink } from "lucide-react"
 
 export function SettingsPage() {
-  const { organization, apiKey: currentKey } = useAuth()
+  const { organization, apiKey: currentKey, rawApiKey } = useAuth()
+  const [searchParams] = useSearchParams()
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [loading, setLoading] = useState(true)
   const [newKeyName, setNewKeyName] = useState("")
   const [creating, setCreating] = useState(false)
   const [newKey, setNewKey] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // Billing state
+  const [billing, setBilling] = useState<BillingInfo | null>(null)
+  const [billingLoading, setBillingLoading] = useState(true)
+  const [upgrading, setUpgrading] = useState<string | null>(null)
+
+  const checkoutStatus = searchParams.get("checkout")
 
   const fetchKeys = useCallback(async () => {
     if (!organization) return
@@ -30,9 +40,61 @@ export function SettingsPage() {
     }
   }, [organization])
 
+  const fetchBilling = useCallback(async () => {
+    if (!rawApiKey) return
+    setBillingLoading(true)
+    try {
+      const api = createAuthenticatedApi(rawApiKey)
+      const info = await api.getBillingInfo()
+      setBilling(info)
+    } catch (err) {
+      console.error("Failed to fetch billing info:", err)
+    } finally {
+      setBillingLoading(false)
+    }
+  }, [rawApiKey])
+
   useEffect(() => {
     fetchKeys()
-  }, [fetchKeys])
+    fetchBilling()
+  }, [fetchKeys, fetchBilling])
+
+  const handleUpgrade = async (plan: string) => {
+    if (!rawApiKey) return
+    setUpgrading(plan)
+    try {
+      const api = createAuthenticatedApi(rawApiKey)
+      const { checkout_url } = await api.createCheckoutSession(plan)
+      window.location.href = checkout_url
+    } catch (err) {
+      console.error("Failed to create checkout:", err)
+      alert("Failed to start checkout. Please try again.")
+    } finally {
+      setUpgrading(null)
+    }
+  }
+
+  const handleManageBilling = async () => {
+    if (!rawApiKey) return
+    try {
+      const api = createAuthenticatedApi(rawApiKey)
+      const { portal_url } = await api.createPortalSession()
+      window.location.href = portal_url
+    } catch (err) {
+      console.error("Failed to open billing portal:", err)
+      alert("Failed to open billing portal. Please try again.")
+    }
+  }
+
+  const getUsagePercent = (used: number, limit: number) => {
+    if (limit === -1) return 0 // unlimited
+    return Math.min((used / limit) * 100, 100)
+  }
+
+  const formatLimit = (limit: number) => {
+    if (limit === -1) return "Unlimited"
+    return limit.toLocaleString()
+  }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,8 +134,154 @@ export function SettingsPage() {
     <div className="p-6 space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your organization and API keys</p>
+        <p className="text-muted-foreground">Manage your organization, billing, and API keys</p>
       </div>
+
+      {/* Checkout Status */}
+      {checkoutStatus === "success" && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-2 text-green-800">
+              <Check className="h-5 w-5" />
+              <span className="font-medium">Payment successful! Your subscription is now active.</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {checkoutStatus === "canceled" && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-2 text-yellow-800">
+              <AlertCircle className="h-5 w-5" />
+              <span className="font-medium">Checkout was canceled. No changes were made to your subscription.</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Billing & Subscription */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Subscription & Billing
+          </CardTitle>
+          <CardDescription>Manage your plan and view usage</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {billingLoading ? (
+            <p className="text-muted-foreground">Loading billing info...</p>
+          ) : billing ? (
+            <>
+              {/* Current Plan */}
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-lg capitalize">{billing.subscription.plan}</span>
+                    <Badge variant={billing.subscription.status === "active" ? "default" : "destructive"}>
+                      {billing.subscription.status}
+                    </Badge>
+                  </div>
+                  {billing.subscription.period_end && (
+                    <p className="text-sm text-muted-foreground">
+                      {billing.subscription.status === "active" ? "Renews" : "Ends"}{" "}
+                      {formatDate(billing.subscription.period_end)}
+                    </p>
+                  )}
+                </div>
+                {billing.subscription.plan !== "free" && billing.subscription.stripe_customer_id && (
+                  <Button variant="outline" onClick={handleManageBilling}>
+                    Manage Billing <ExternalLink className="h-4 w-4 ml-2" />
+                  </Button>
+                )}
+              </div>
+
+              {/* Usage */}
+              <div className="space-y-4">
+                <h4 className="font-medium">Usage This Month</h4>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>API Requests</span>
+                      <span>
+                        {billing.usage.requests_this_month.toLocaleString()} / {formatLimit(billing.usage.requests_limit)}
+                      </span>
+                    </div>
+                    <Progress
+                      value={getUsagePercent(billing.usage.requests_this_month, billing.usage.requests_limit)}
+                      className="h-2"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Prompt Optimizations</span>
+                      <span>
+                        {billing.usage.optimizations_this_month.toLocaleString()} / {formatLimit(billing.usage.optimizations_limit)}
+                      </span>
+                    </div>
+                    <Progress
+                      value={getUsagePercent(billing.usage.optimizations_this_month, billing.usage.optimizations_limit)}
+                      className="h-2"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Upgrade Options */}
+              {billing.subscription.plan === "free" && (
+                <div className="space-y-3">
+                  <h4 className="font-medium">Upgrade Your Plan</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold">Pro</span>
+                        <span className="text-lg font-bold">$99/mo</span>
+                      </div>
+                      <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                        <li>50,000 requests/month</li>
+                        <li>100 optimizations/month</li>
+                        <li>90-day data retention</li>
+                      </ul>
+                      <Button
+                        className="w-full"
+                        onClick={() => handleUpgrade("pro")}
+                        disabled={upgrading === "pro"}
+                      >
+                        <Zap className="h-4 w-4 mr-2" />
+                        {upgrading === "pro" ? "Loading..." : "Upgrade to Pro"}
+                      </Button>
+                    </div>
+                    <div className="p-4 border-2 border-primary rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">Team</span>
+                          <Badge>Popular</Badge>
+                        </div>
+                        <span className="text-lg font-bold">$299/mo</span>
+                      </div>
+                      <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                        <li>500,000 requests/month</li>
+                        <li>Unlimited optimizations</li>
+                        <li>1-year data retention</li>
+                      </ul>
+                      <Button
+                        className="w-full"
+                        onClick={() => handleUpgrade("team")}
+                        disabled={upgrading === "team"}
+                      >
+                        <Zap className="h-4 w-4 mr-2" />
+                        {upgrading === "team" ? "Loading..." : "Upgrade to Team"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-muted-foreground">Unable to load billing information</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Organization Info */}
       <Card>

@@ -9,6 +9,7 @@ from ..database import get_db
 from ..models import Organization, Prompt, Request
 from ..schemas import LogCreate, LogResponse
 from ..auth import get_current_org
+from ..usage import check_and_increment_usage
 
 # Add project root to path for agent imports
 project_root = Path(__file__).parent.parent.parent.parent
@@ -83,6 +84,9 @@ async def create_log(
     """Log a new LLM request and trigger automatic evaluation."""
     from ..config import get_settings
     settings = get_settings()
+
+    # Check and increment usage limit
+    await check_and_increment_usage(str(org.id), db, "requests")
 
     # Look up prompt by slug if provided
     prompt_id: UUID | None = None

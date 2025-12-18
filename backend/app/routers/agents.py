@@ -16,7 +16,11 @@ from llm import OpenAIClient, MockLLMClient
 from prompts import SkillRegistry
 
 from ..database import get_db
+from ..models.organization import Organization
 from ..models.optimization import PromptOptimization
+from ..auth import get_api_key, get_current_org
+from ..models.api_key import ApiKey
+from ..usage import check_and_increment_usage
 from ..schemas.agents import (
     PlanRequest,
     PlanResponse,
@@ -34,6 +38,8 @@ from ..schemas.agents import (
     AnalysisIssue,
     OptimizeRequest,
     OptimizeResponse,
+    FewShotExampleResponse,
+    FewShotResearchResponse,
     SaveOptimizationRequest,
     SavedOptimizationResponse,
     OptimizationListResponse,
@@ -138,7 +144,14 @@ async def analyze_prompt(request: AnalyzeRequest) -> AnalysisResponse:
 
 
 @router.post("/optimize", response_model=OptimizeResponse)
-async def optimize_prompt(request: OptimizeRequest) -> OptimizeResponse:
+async def optimize_prompt(
+    request: OptimizeRequest,
+    api_key: ApiKey = Depends(get_api_key),
+    db: AsyncSession = Depends(get_db),
+) -> OptimizeResponse:
+    # Check and increment optimization usage
+    await check_and_increment_usage(str(api_key.organization_id), db, "optimizations")
+
     registry = get_registry()
     optimizer = PromptOptimizer()
     prompt_template = request.prompt_template
@@ -153,7 +166,16 @@ async def optimize_prompt(request: OptimizeRequest) -> OptimizeResponse:
         analysis_response = AnalysisResponse(
             issues=[AnalysisIssue(category=issue.get("category", "unknown"), description=issue.get("description", ""), severity=issue.get("severity", "medium")) for issue in result.analysis.issues],
             strengths=result.analysis.strengths, overall_quality=result.analysis.overall_quality, priority_improvements=result.analysis.priority_improvements)
-    return OptimizeResponse(original_prompt=result.original_prompt, optimized_prompt=result.optimized_prompt, original_score=result.original_score, optimized_score=result.optimized_score, improvements=result.improvements, reasoning=result.reasoning, analysis=analysis_response)
+
+    few_shot_response = None
+    if result.few_shot_research:
+        few_shot_response = FewShotResearchResponse(
+            examples=[FewShotExampleResponse(input=ex.input, output=ex.output, rationale=ex.rationale) for ex in result.few_shot_research.examples],
+            format_recommendation=result.few_shot_research.format_recommendation,
+            research_notes=result.few_shot_research.research_notes
+        )
+
+    return OptimizeResponse(original_prompt=result.original_prompt, optimized_prompt=result.optimized_prompt, original_score=result.original_score, optimized_score=result.optimized_score, improvements=result.improvements, reasoning=result.reasoning, analysis=analysis_response, few_shot_research=few_shot_response)
 
 
 @router.post("/optimizations", response_model=SavedOptimizationResponse)

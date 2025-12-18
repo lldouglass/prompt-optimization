@@ -5,7 +5,7 @@ import { LayoutDashboard, Settings, LogOut, Zap, Bot, History } from "lucide-rea
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Requests" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "Requests" },
   { to: "/agents", icon: Bot, label: "Agents" },
   { to: "/optimizations", icon: History, label: "Optimizations" },
   { to: "/settings", icon: Settings, label: "Settings" },
@@ -20,7 +20,7 @@ export function Layout() {
       {/* Sidebar */}
       <aside className="w-64 border-r bg-card flex flex-col">
         <div className="p-4 border-b">
-          <Link to="/" className="flex items-center gap-2 font-semibold text-lg">
+          <Link to="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
             <Zap className="h-6 w-6 text-primary" />
             PromptLab
           </Link>

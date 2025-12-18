@@ -1,4 +1,6 @@
-const API_BASE = "http://localhost:8000/api/v1"
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api/v1`
+  : "http://localhost:8000/api/v1"
 
 // Types
 export interface Organization {
@@ -114,6 +116,32 @@ export function createAuthenticatedApi(apiKey: string) {
       if (!res.ok) throw new Error("Failed to evaluate request")
       return res.json()
     },
+
+    // Billing endpoints
+    async getBillingInfo(): Promise<BillingInfo> {
+      const res = await fetch(`${API_BASE}/billing`, { headers })
+      if (!res.ok) throw new Error("Failed to get billing info")
+      return res.json()
+    },
+
+    async createCheckoutSession(plan: string): Promise<CheckoutSessionResponse> {
+      const res = await fetch(`${API_BASE}/billing/checkout`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ plan }),
+      })
+      if (!res.ok) throw new Error("Failed to create checkout session")
+      return res.json()
+    },
+
+    async createPortalSession(): Promise<PortalSessionResponse> {
+      const res = await fetch(`${API_BASE}/billing/portal`, {
+        method: "POST",
+        headers,
+      })
+      if (!res.ok) throw new Error("Failed to create portal session")
+      return res.json()
+    },
   }
 }
 
@@ -177,6 +205,18 @@ export interface PromptAnalysis {
   priority_improvements: string[]
 }
 
+export interface FewShotExample {
+  input: string
+  output: string
+  rationale: string
+}
+
+export interface FewShotResearch {
+  examples: FewShotExample[]
+  format_recommendation: string
+  research_notes: string
+}
+
 export interface OptimizationResult {
   original_prompt: string
   optimized_prompt: string
@@ -185,6 +225,7 @@ export interface OptimizationResult {
   improvements: string[]
   reasoning: string
   analysis: PromptAnalysis | null
+  few_shot_research: FewShotResearch | null
 }
 
 export interface SavedOptimization {
@@ -202,7 +243,97 @@ export interface SavedOptimization {
   created_at: string
 }
 
-// Agent API (no auth required for now)
+// Billing types
+export interface SubscriptionInfo {
+  plan: string
+  status: string
+  period_end: string | null
+  stripe_customer_id: string | null
+}
+
+export interface UsageInfo {
+  requests_this_month: number
+  optimizations_this_month: number
+  requests_limit: number
+  optimizations_limit: number
+  usage_reset_at: string | null
+}
+
+export interface BillingInfo {
+  subscription: SubscriptionInfo
+  usage: UsageInfo
+}
+
+export interface CheckoutSessionResponse {
+  checkout_url: string
+  session_id: string
+}
+
+export interface PortalSessionResponse {
+  portal_url: string
+}
+
+// Create authenticated agent API
+export function createAuthenticatedAgentApi(apiKey: string) {
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
+  }
+
+  return {
+    async optimize(
+      promptTemplate: string,
+      taskDescription: string,
+      sampleInputs?: string[],
+      skillName?: string
+    ): Promise<OptimizationResult> {
+      const res = await fetch(`${API_BASE}/agents/optimize`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          prompt_template: promptTemplate,
+          task_description: taskDescription,
+          sample_inputs: sampleInputs || [],
+          skill_name: skillName,
+        }),
+      })
+      if (!res.ok) {
+        if (res.status === 429) {
+          const data = await res.json()
+          throw new Error(data.detail || "Optimization limit exceeded")
+        }
+        throw new Error("Failed to optimize prompt")
+      }
+      return res.json()
+    },
+
+    async saveOptimization(
+      result: OptimizationResult,
+      taskDescription: string,
+      skillName?: string
+    ): Promise<SavedOptimization> {
+      const res = await fetch(`${API_BASE}/agents/optimizations`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          original_prompt: result.original_prompt,
+          optimized_prompt: result.optimized_prompt,
+          task_description: taskDescription,
+          original_score: result.original_score,
+          optimized_score: result.optimized_score,
+          improvements: result.improvements,
+          reasoning: result.reasoning,
+          analysis: result.analysis,
+          skill_name: skillName,
+        }),
+      })
+      if (!res.ok) throw new Error("Failed to save optimization")
+      return res.json()
+    },
+  }
+}
+
+// Agent API (no auth required for some endpoints)
 export const agentApi = {
   async listSkills(): Promise<{ skills: Skill[]; total: number }> {
     const res = await fetch(`${API_BASE}/agents/skills`)
