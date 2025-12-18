@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { useAuth } from "@/lib/auth"
-import { createAuthenticatedApi, type LoggedRequest } from "@/lib/api"
+import { sessionApi, type LoggedRequest } from "@/lib/api"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,24 +9,21 @@ import { RefreshCw, MessageSquare, Clock, Coins, Star } from "lucide-react"
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const { rawApiKey } = useAuth()
   const [requests, setRequests] = useState<LoggedRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRequest, setSelectedRequest] = useState<LoggedRequest | null>(null)
 
   const fetchRequests = useCallback(async () => {
-    if (!rawApiKey) return
     setLoading(true)
     try {
-      const api = createAuthenticatedApi(rawApiKey)
-      const data = await api.listRequests({ limit: 50 })
+      const data = await sessionApi.listRequests({ limit: 50 })
       setRequests(data)
     } catch (err) {
       console.error("Failed to fetch requests:", err)
     } finally {
       setLoading(false)
     }
-  }, [rawApiKey])
+  }, [])
 
   const handleEvaluateInAgents = () => {
     if (!selectedRequest) return

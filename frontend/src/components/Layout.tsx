@@ -5,14 +5,14 @@ import { LayoutDashboard, Settings, LogOut, Zap, Bot, Library } from "lucide-rea
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Requests" },
   { to: "/agents", icon: Bot, label: "Agents" },
   { to: "/library", icon: Library, label: "Prompt Library" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "Requests" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ]
 
 export function Layout() {
-  const { organization, logout } = useAuth()
+  const { user, organization, logout } = useAuth()
   const location = useLocation()
 
   return (
@@ -45,8 +45,26 @@ export function Layout() {
         </nav>
 
         <div className="p-4 border-t">
-          <div className="text-sm text-muted-foreground mb-2 truncate">
-            {organization?.name}
+          <div className="flex items-center gap-3 mb-3">
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt={user.name || user.email}
+                className="h-8 w-8 rounded-full"
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
+                {(user?.name || user?.email || "?")[0].toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium truncate">
+                {user?.name || user?.email}
+              </div>
+              <div className="text-xs text-muted-foreground truncate">
+                {organization?.name}
+              </div>
+            </div>
           </div>
           <Button
             variant="ghost"

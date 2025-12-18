@@ -1,35 +1,25 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth"
-import { createAuthenticatedAgentApi } from "@/lib/api"
+import { sessionApi } from "@/lib/api"
 import type { SavedOptimization } from "@/lib/api"
 import { Loader2, Library, ChevronDown, ChevronUp, Copy, Check } from "lucide-react"
 
 export function PromptLibraryPage() {
-  const { rawApiKey } = useAuth()
   const [optimizations, setOptimizations] = useState<SavedOptimization[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
 
-  const authAgentApi = useMemo(
-    () => (rawApiKey ? createAuthenticatedAgentApi(rawApiKey) : null),
-    [rawApiKey]
-  )
-
   useEffect(() => {
-    if (authAgentApi) {
-      loadOptimizations()
-    }
-  }, [authAgentApi])
+    loadOptimizations()
+  }, [])
 
   const loadOptimizations = async () => {
-    if (!authAgentApi) return
     setLoading(true)
     try {
-      const result = await authAgentApi.listOptimizations(50, 0)
+      const result = await sessionApi.listOptimizations(50, 0)
       setOptimizations(result.optimizations)
       setTotal(result.total)
     } catch (error) {

@@ -2,7 +2,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from .routers import logs_router, admin_router, requests_router, agents_router, billing_router
+from .config import get_settings
+from .routers import logs_router, admin_router, requests_router, agents_router, billing_router, auth_router
+
+settings = get_settings()
 
 
 @asynccontextmanager
@@ -20,12 +23,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware
+# CORS middleware - secure configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -35,6 +38,7 @@ app.include_router(logs_router)
 app.include_router(requests_router)
 app.include_router(agents_router)
 app.include_router(billing_router)
+app.include_router(auth_router)
 
 
 @app.get("/health")

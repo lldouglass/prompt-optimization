@@ -2,6 +2,33 @@ const API_BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api/v1`
   : "http://localhost:8000/api/v1"
 
+// Auth Types
+export interface User {
+  id: string
+  email: string
+  name: string | null
+  avatar_url: string | null
+  email_verified: boolean
+  created_at: string
+}
+
+export interface OrganizationBasic {
+  id: string
+  name: string
+  subscription_plan: string
+}
+
+export interface Membership {
+  organization: OrganizationBasic
+  role: string
+}
+
+export interface AuthResponse {
+  user: User
+  memberships: Membership[]
+  current_organization: OrganizationBasic | null
+}
+
 // Types
 export interface Organization {
   id: string
@@ -337,6 +364,207 @@ export function createAuthenticatedAgentApi(apiKey: string) {
       return res.json()
     },
   }
+}
+
+// Session-based authenticated API (uses cookies)
+export const sessionApi = {
+  async listRequests(params?: { limit?: number; offset?: number; trace_id?: string }): Promise<LoggedRequest[]> {
+    const searchParams = new URLSearchParams()
+    if (params?.limit) searchParams.set("limit", String(params.limit))
+    if (params?.offset) searchParams.set("offset", String(params.offset))
+    if (params?.trace_id) searchParams.set("trace_id", params.trace_id)
+
+    const res = await fetch(`${API_BASE}/requests?${searchParams}`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list requests")
+    return res.json()
+  },
+
+  async getRequest(id: string): Promise<LoggedRequest> {
+    const res = await fetch(`${API_BASE}/requests/${id}`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to get request")
+    return res.json()
+  },
+
+  async evaluateRequest(id: string): Promise<LoggedRequest> {
+    const res = await fetch(`${API_BASE}/requests/${id}/evaluate`, {
+      method: "POST",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to evaluate request")
+    return res.json()
+  },
+
+  async getBillingInfo(): Promise<BillingInfo> {
+    const res = await fetch(`${API_BASE}/billing`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to get billing info")
+    return res.json()
+  },
+
+  async createCheckoutSession(plan: string): Promise<CheckoutSessionResponse> {
+    const res = await fetch(`${API_BASE}/billing/checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ plan }),
+    })
+    if (!res.ok) throw new Error("Failed to create checkout session")
+    return res.json()
+  },
+
+  async createPortalSession(): Promise<PortalSessionResponse> {
+    const res = await fetch(`${API_BASE}/billing/portal`, {
+      method: "POST",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to create portal session")
+    return res.json()
+  },
+
+  async optimize(
+    promptTemplate: string,
+    taskDescription: string,
+    sampleInputs?: string[],
+    skillName?: string
+  ): Promise<OptimizationResult> {
+    const res = await fetch(`${API_BASE}/agents/optimize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        prompt_template: promptTemplate,
+        task_description: taskDescription,
+        sample_inputs: sampleInputs || [],
+        skill_name: skillName,
+      }),
+    })
+    if (!res.ok) {
+      if (res.status === 429) {
+        const data = await res.json()
+        throw new Error(data.detail || "Optimization limit exceeded")
+      }
+      throw new Error("Failed to optimize prompt")
+    }
+    return res.json()
+  },
+
+  async saveOptimization(
+    result: OptimizationResult,
+    taskDescription: string,
+    skillName?: string
+  ): Promise<SavedOptimization> {
+    const res = await fetch(`${API_BASE}/agents/optimizations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        original_prompt: result.original_prompt,
+        optimized_prompt: result.optimized_prompt,
+        task_description: taskDescription,
+        original_score: result.original_score,
+        optimized_score: result.optimized_score,
+        improvements: result.improvements,
+        reasoning: result.reasoning,
+        analysis: result.analysis,
+        skill_name: skillName,
+      }),
+    })
+    if (!res.ok) throw new Error("Failed to save optimization")
+    return res.json()
+  },
+
+  async listOptimizations(limit = 20, offset = 0): Promise<{ optimizations: SavedOptimization[]; total: number }> {
+    const res = await fetch(`${API_BASE}/agents/optimizations?limit=${limit}&offset=${offset}`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list optimizations")
+    return res.json()
+  },
+
+  async listApiKeys(orgId: string): Promise<ApiKey[]> {
+    const res = await fetch(`${API_BASE}/admin/organizations/${orgId}/api-keys`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list API keys")
+    return res.json()
+  },
+
+  async createApiKey(orgId: string, name?: string): Promise<ApiKey> {
+    const res = await fetch(`${API_BASE}/admin/organizations/${orgId}/api-keys`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ name }),
+    })
+    if (!res.ok) throw new Error("Failed to create API key")
+    return res.json()
+  },
+
+  async deleteApiKey(keyId: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/admin/api-keys/${keyId}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to delete API key")
+  },
+}
+
+// Auth API (cookie-based sessions)
+export const authApi = {
+  async register(email: string, password: string, name: string | null, organizationName: string): Promise<AuthResponse> {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        email,
+        password,
+        name,
+        organization_name: organizationName,
+      }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.detail || "Registration failed")
+    }
+    return res.json()
+  },
+
+  async login(email: string, password: string): Promise<AuthResponse> {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.detail || "Invalid email or password")
+    }
+    return res.json()
+  },
+
+  async logout(): Promise<void> {
+    await fetch(`${API_BASE}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    })
+  },
+
+  async getMe(): Promise<AuthResponse> {
+    const res = await fetch(`${API_BASE}/auth/me`, {
+      credentials: "include",
+    })
+    if (!res.ok) {
+      throw new Error("Not authenticated")
+    }
+    return res.json()
+  },
 }
 
 // Agent API (no auth required for some endpoints)

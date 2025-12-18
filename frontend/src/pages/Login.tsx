@@ -1,23 +1,22 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
-import { adminApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Onboarding } from "@/components/Onboarding"
-import { Zap } from "lucide-react"
+import { Zap, Mail, Lock, User, Building2 } from "lucide-react"
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { login } = useAuth()
-  const [mode, setMode] = useState<"login" | "create">("login")
-  const [apiKey, setApiKey] = useState("")
+  const { login, register } = useAuth()
+  const [mode, setMode] = useState<"login" | "register">("login")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
   const [orgName, setOrgName] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [createdKey, setCreatedKey] = useState("")
-  const [showOnboarding, setShowOnboarding] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,62 +24,28 @@ export function LoginPage() {
     setLoading(true)
 
     try {
-      // Try to fetch requests to validate the key
-      const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000"
-      const res = await fetch(`${apiBase}/api/v1/requests?limit=1`, {
-        headers: { Authorization: `Bearer ${apiKey}` },
-      })
-
-      if (!res.ok) {
-        throw new Error("Invalid API key")
-      }
-
-      // We don't have org info from this endpoint, create a placeholder
-      login(
-        { id: "unknown", name: "Organization", created_at: new Date().toISOString() },
-        { id: "unknown", key_prefix: apiKey.slice(0, 16), name: null, created_at: new Date().toISOString(), last_used_at: null },
-        apiKey
-      )
-      navigate("/dashboard")
-    } catch {
-      setError("Invalid API key. Please check and try again.")
+      await login(email, password)
+      navigate("/agents")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed")
     } finally {
       setLoading(false)
     }
   }
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setLoading(true)
 
     try {
-      const org = await adminApi.createOrganization(orgName)
-      const key = await adminApi.createApiKey(org.id, "Default Key")
-
-      setCreatedKey(key.key!)
-      login(org, key, key.key!)
-      setShowOnboarding(true)
-    } catch {
-      setError("Failed to create organization. Please try again.")
+      await register(email, password, name || null, orgName)
+      navigate("/agents")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed")
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false)
-    navigate("/dashboard")
-  }
-
-  // Show onboarding after new account creation
-  if (showOnboarding && createdKey) {
-    return (
-      <Onboarding
-        apiKey={createdKey}
-        onComplete={handleOnboardingComplete}
-      />
-    )
   }
 
   return (
@@ -92,20 +57,41 @@ export function LoginPage() {
             <span className="text-2xl font-bold">PromptLab</span>
           </div>
           <CardDescription>
-            {mode === "login" ? "Sign in with your API key" : "Create a new organization"}
+            {mode === "login" ? "Sign in to your account" : "Create a new account"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {mode === "login" ? (
             <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <Input
-                  type="password"
-                  placeholder="pl_live_..."
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  required
-                />
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
@@ -113,19 +99,70 @@ export function LoginPage() {
               </Button>
             </form>
           ) : (
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <Input
-                  type="text"
-                  placeholder="Organization name"
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  required
-                />
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="reg-email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="reg-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reg-password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="reg-password"
+                    type="password"
+                    placeholder="At least 8 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-9"
+                    minLength={8}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Your Name (optional)</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="org-name">Organization Name</Label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="org-name"
+                    type="text"
+                    placeholder="My Company"
+                    value={orgName}
+                    onChange={(e) => setOrgName(e.target.value)}
+                    className="pl-9"
+                    required
+                  />
+                </div>
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating..." : "Create Organization"}
+                {loading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
           )}
@@ -134,11 +171,11 @@ export function LoginPage() {
           <Button
             variant="link"
             onClick={() => {
-              setMode(mode === "login" ? "create" : "login")
+              setMode(mode === "login" ? "register" : "login")
               setError("")
             }}
           >
-            {mode === "login" ? "Create new organization" : "Already have an API key?"}
+            {mode === "login" ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
           </Button>
         </CardFooter>
       </Card>

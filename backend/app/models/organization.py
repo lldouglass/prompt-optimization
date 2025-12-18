@@ -30,3 +30,4 @@ class Organization(Base):
     prompts: Mapped[list["Prompt"]] = relationship(back_populates="organization", cascade="all, delete-orphan")
     test_suites: Mapped[list["TestSuite"]] = relationship(back_populates="organization", cascade="all, delete-orphan")
     optimizations: Mapped[list["PromptOptimization"]] = relationship(back_populates="organization", cascade="all, delete-orphan")
+    members: Mapped[list["OrganizationMember"]] = relationship(back_populates="organization", cascade="all, delete-orphan")

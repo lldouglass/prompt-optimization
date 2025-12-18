@@ -16,6 +16,14 @@ class Settings(BaseSettings):
     # App URL for Stripe redirects
     app_url: str = "http://localhost:5173"
 
+    # CORS settings
+    cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+
+    # Auth settings
+    secret_key: str = "CHANGE-ME-IN-PRODUCTION-USE-SECURE-RANDOM-KEY"
+    session_cookie_name: str = "promptlab_session"
+    session_expire_days: int = 30
+
     class Config:
         env_file = ".env"
         extra = "ignore"

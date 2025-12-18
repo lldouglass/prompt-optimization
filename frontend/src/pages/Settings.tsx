@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
-import { adminApi, createAuthenticatedApi, type ApiKey, type BillingInfo } from "@/lib/api"
+import { sessionApi, type ApiKey, type BillingInfo } from "@/lib/api"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +11,7 @@ import { formatDate } from "@/lib/utils"
 import { Plus, Trash2, Copy, Check, Key, CreditCard, Zap, AlertCircle, ExternalLink } from "lucide-react"
 
 export function SettingsPage() {
-  const { organization, apiKey: currentKey, rawApiKey } = useAuth()
+  const { organization } = useAuth()
   const [searchParams] = useSearchParams()
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,7 +31,7 @@ export function SettingsPage() {
     if (!organization) return
     setLoading(true)
     try {
-      const keys = await adminApi.listApiKeys(organization.id)
+      const keys = await sessionApi.listApiKeys(organization.id)
       setApiKeys(keys)
     } catch (err) {
       console.error("Failed to fetch API keys:", err)
@@ -41,18 +41,16 @@ export function SettingsPage() {
   }, [organization])
 
   const fetchBilling = useCallback(async () => {
-    if (!rawApiKey) return
     setBillingLoading(true)
     try {
-      const api = createAuthenticatedApi(rawApiKey)
-      const info = await api.getBillingInfo()
+      const info = await sessionApi.getBillingInfo()
       setBilling(info)
     } catch (err) {
       console.error("Failed to fetch billing info:", err)
     } finally {
       setBillingLoading(false)
     }
-  }, [rawApiKey])
+  }, [])
 
   useEffect(() => {
     fetchKeys()
@@ -60,11 +58,9 @@ export function SettingsPage() {
   }, [fetchKeys, fetchBilling])
 
   const handleUpgrade = async (plan: string) => {
-    if (!rawApiKey) return
     setUpgrading(plan)
     try {
-      const api = createAuthenticatedApi(rawApiKey)
-      const { checkout_url } = await api.createCheckoutSession(plan)
+      const { checkout_url } = await sessionApi.createCheckoutSession(plan)
       window.location.href = checkout_url
     } catch (err) {
       console.error("Failed to create checkout:", err)
@@ -75,10 +71,8 @@ export function SettingsPage() {
   }
 
   const handleManageBilling = async () => {
-    if (!rawApiKey) return
     try {
-      const api = createAuthenticatedApi(rawApiKey)
-      const { portal_url } = await api.createPortalSession()
+      const { portal_url } = await sessionApi.createPortalSession()
       window.location.href = portal_url
     } catch (err) {
       console.error("Failed to open billing portal:", err)
@@ -101,7 +95,7 @@ export function SettingsPage() {
     if (!organization) return
     setCreating(true)
     try {
-      const key = await adminApi.createApiKey(organization.id, newKeyName || undefined)
+      const key = await sessionApi.createApiKey(organization.id, newKeyName || undefined)
       setNewKey(key.key!)
       setNewKeyName("")
       fetchKeys()
@@ -115,7 +109,7 @@ export function SettingsPage() {
   const handleDelete = async (keyId: string) => {
     if (!confirm("Are you sure you want to delete this API key?")) return
     try {
-      await adminApi.deleteApiKey(keyId)
+      await sessionApi.deleteApiKey(keyId)
       fetchKeys()
     } catch (err) {
       console.error("Failed to delete API key:", err)
@@ -371,9 +365,6 @@ export function SettingsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{key.name || "Unnamed"}</span>
-                        {currentKey?.id === key.id && (
-                          <Badge variant="success">Current</Badge>
-                        )}
                       </div>
                       <p className="text-sm text-muted-foreground font-mono">
                         {key.key_prefix}...

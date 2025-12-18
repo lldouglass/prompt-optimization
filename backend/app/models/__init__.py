@@ -4,6 +4,9 @@ from .request import Request
 from .prompt import Prompt, PromptVersion
 from .test import TestSuite, TestCase, TestRun, TestResult
 from .optimization import PromptOptimization
+from .user import User
+from .membership import OrganizationMember
+from .session import UserSession
 
 __all__ = [
     "Organization",
@@ -16,4 +19,7 @@ __all__ = [
     "TestRun",
     "TestResult",
     "PromptOptimization",
+    "User",
+    "OrganizationMember",
+    "UserSession",
 ]

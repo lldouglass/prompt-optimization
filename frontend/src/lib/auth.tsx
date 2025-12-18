@@ -1,49 +1,82 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import type { Organization, ApiKey } from "./api"
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
+import { authApi, type User, type OrganizationBasic, type Membership } from "./api"
 
 interface AuthState {
-  organization: Organization | null
-  apiKey: ApiKey | null
-  rawApiKey: string | null
+  user: User | null
+  organization: OrganizationBasic | null
+  memberships: Membership[]
+  isLoading: boolean
 }
 
 interface AuthContextType extends AuthState {
-  login: (org: Organization, apiKey: ApiKey, rawKey: string) => void
-  logout: () => void
+  login: (email: string, password: string) => Promise<void>
+  register: (email: string, password: string, name: string | null, organizationName: string) => Promise<void>
+  logout: () => Promise<void>
   isAuthenticated: boolean
+  refreshAuth: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-const STORAGE_KEY = "promptlab_auth"
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        return JSON.parse(stored)
-      } catch {
-        return { organization: null, apiKey: null, rawApiKey: null }
-      }
-    }
-    return { organization: null, apiKey: null, rawApiKey: null }
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    organization: null,
+    memberships: [],
+    isLoading: true,
   })
 
-  useEffect(() => {
-    if (state.organization && state.apiKey && state.rawApiKey) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-    } else {
-      localStorage.removeItem(STORAGE_KEY)
+  const refreshAuth = useCallback(async () => {
+    try {
+      const response = await authApi.getMe()
+      setState({
+        user: response.user,
+        organization: response.current_organization,
+        memberships: response.memberships,
+        isLoading: false,
+      })
+    } catch {
+      setState({
+        user: null,
+        organization: null,
+        memberships: [],
+        isLoading: false,
+      })
     }
-  }, [state])
+  }, [])
 
-  const login = (org: Organization, apiKey: ApiKey, rawKey: string) => {
-    setState({ organization: org, apiKey, rawApiKey: rawKey })
+  useEffect(() => {
+    refreshAuth()
+  }, [refreshAuth])
+
+  const login = async (email: string, password: string) => {
+    const response = await authApi.login(email, password)
+    setState({
+      user: response.user,
+      organization: response.current_organization,
+      memberships: response.memberships,
+      isLoading: false,
+    })
   }
 
-  const logout = () => {
-    setState({ organization: null, apiKey: null, rawApiKey: null })
+  const register = async (email: string, password: string, name: string | null, organizationName: string) => {
+    const response = await authApi.register(email, password, name, organizationName)
+    setState({
+      user: response.user,
+      organization: response.current_organization,
+      memberships: response.memberships,
+      isLoading: false,
+    })
+  }
+
+  const logout = async () => {
+    await authApi.logout()
+    setState({
+      user: null,
+      organization: null,
+      memberships: [],
+      isLoading: false,
+    })
   }
 
   return (
@@ -51,8 +84,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         ...state,
         login,
+        register,
         logout,
-        isAuthenticated: !!state.rawApiKey,
+        isAuthenticated: !!state.user,
+        refreshAuth,
       }}
     >
       {children}

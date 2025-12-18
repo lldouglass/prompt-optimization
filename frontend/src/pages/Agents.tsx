@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useLocation } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useAuth } from "@/lib/auth"
-import { agentApi, createAuthenticatedAgentApi } from "@/lib/api"
+import { agentApi, sessionApi } from "@/lib/api"
 import type { Judgment, CompareResult, OptimizationResult } from "@/lib/api"
 import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp } from "lucide-react"
 
@@ -18,15 +17,8 @@ interface LocationState {
 
 export function AgentsPage() {
   const location = useLocation()
-  const { rawApiKey } = useAuth()
   const state = location.state as LocationState | null
   const hasAutoRun = useRef(false)
-
-  // Create authenticated API
-  const authAgentApi = useMemo(
-    () => (rawApiKey ? createAuthenticatedAgentApi(rawApiKey) : null),
-    [rawApiKey]
-  )
 
   const [activeTab, setActiveTab] = useState<TabMode>(state?.autoEvaluate ? "evaluate" : "optimize")
 
@@ -125,11 +117,6 @@ export function AgentsPage() {
   const runOptimize = async () => {
     if (!optimizePrompt.trim() || !optimizeTask.trim()) return
 
-    if (!authAgentApi) {
-      setOptimizeError("Not authenticated. Please log out and log back in with your API key.")
-      return
-    }
-
     setOptimizeLoading(true)
     setOptimizeResult(null)
     setOptimizeError(null)
@@ -143,7 +130,7 @@ export function AgentsPage() {
         .map((s) => s.trim())
         .filter((s) => s.length > 0)
 
-      const result = await authAgentApi.optimize(
+      const result = await sessionApi.optimize(
         optimizePrompt,
         optimizeTask,
         sampleInputs.length > 0 ? sampleInputs : undefined
@@ -162,11 +149,11 @@ export function AgentsPage() {
   }
 
   const saveOptimization = async () => {
-    if (!optimizeResult || !authAgentApi) return
+    if (!optimizeResult) return
 
     setSaveLoading(true)
     try {
-      await authAgentApi.saveOptimization(optimizeResult, optimizeTask)
+      await sessionApi.saveOptimization(optimizeResult, optimizeTask)
       setSaved(true)
     } catch (error) {
       console.error("Save error:", error)
