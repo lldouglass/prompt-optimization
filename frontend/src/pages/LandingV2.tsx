@@ -13,10 +13,8 @@ import {
   Check,
   Code2,
   Target,
-  Quote,
   Play,
   ChevronDown,
-  Users,
   Building2,
   Timer,
   Star
@@ -32,39 +30,6 @@ import { useState } from "react"
 // - Reduce cognitive load with focused messaging
 // - Trust signals and objection handling
 // ============================================================================
-
-// Testimonials with real names and roles (Uber-style)
-const testimonials = [
-  {
-    quote: "PromptLab cut our prompt engineering time by 70%. What used to take hours of iteration now takes minutes.",
-    author: "Sarah Chen",
-    role: "ML Engineer",
-    company: "DataFlow AI",
-    improvement: "32 to 91",
-    avatar: "SC"
-  },
-  {
-    quote: "The scoring system gave us a shared language for prompt quality. Our entire team now writes better prompts.",
-    author: "Marcus Rodriguez",
-    role: "Engineering Lead",
-    company: "Nexus Labs",
-    improvement: "28 to 87",
-    avatar: "MR"
-  },
-  {
-    quote: "We integrated the SDK in 15 minutes. Now every API call is tracked and our prompts keep improving.",
-    author: "Emily Watson",
-    role: "CTO",
-    company: "VoiceStack",
-    improvement: "41 to 94",
-    avatar: "EW"
-  }
-]
-
-// Customer logos for social proof
-const customerLogos = [
-  "TechCorp", "DataFlow AI", "Nexus Labs", "VoiceStack", "CloudBase", "AIFirst"
-]
 
 // Pricing tiers
 const pricingTiers = [
@@ -221,20 +186,6 @@ export function LandingPageV2() {
           ================================================================ */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto text-center">
-          {/* Trust badge - immediate social proof */}
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="flex -space-x-2">
-              {["SC", "MR", "EW", "JD"].map((initials, i) => (
-                <div key={i} className="h-8 w-8 rounded-full bg-primary/10 border-2 border-background flex items-center justify-center text-xs font-medium">
-                  {initials}
-                </div>
-              ))}
-            </div>
-            <span className="text-sm text-muted-foreground">
-              Trusted by <span className="font-semibold text-foreground">2,000+</span> developers
-            </span>
-          </div>
-
           {/* Main headline - Problem/Solution in one */}
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
             Stop Guessing.
@@ -261,24 +212,6 @@ export function LandingPageV2() {
           <p className="text-sm text-muted-foreground">
             No credit card required. 10 free optimizations per month.
           </p>
-        </div>
-      </section>
-
-      {/* ================================================================
-          SOCIAL PROOF BAR - Customer logos (Figma-style)
-          ================================================================ */}
-      <section className="py-12 border-y bg-muted/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-muted-foreground mb-8">
-            TRUSTED BY ENGINEERING TEAMS AT
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
-            {customerLogos.map((logo) => (
-              <div key={logo} className="text-muted-foreground/60 font-semibold text-lg">
-                {logo}
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -463,51 +396,6 @@ export function LandingPageV2() {
                 Copy the optimized prompt with auto-generated few-shot examples and structure.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ================================================================
-          TESTIMONIALS - Social proof with specifics (Uber-style)
-          ================================================================ */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <Badge className="mb-4" variant="secondary">
-              <Users className="h-3 w-3 mr-1" />
-              Customer Stories
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Real Results from Real Teams
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, i) => (
-              <Card key={i} className="relative">
-                <CardHeader>
-                  <Quote className="h-8 w-8 text-primary/20 absolute top-6 right-6" />
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center font-semibold">
-                      {testimonial.avatar}
-                    </div>
-                    <div>
-                      <CardTitle className="text-base">{testimonial.author}</CardTitle>
-                      <CardDescription>{testimonial.role}, {testimonial.company}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4">"{testimonial.quote}"</p>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="font-mono text-red-500">{testimonial.improvement.split(" to ")[0]}</span>
-                    <ArrowRight className="h-3 w-3" />
-                    <span className="font-mono text-green-500">{testimonial.improvement.split(" to ")[1]}</span>
-                    <span className="text-muted-foreground">score improvement</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </div>
         </div>
       </section>
@@ -714,7 +602,7 @@ export function LandingPageV2() {
             Ready to Write Better Prompts?
           </h2>
           <p className="text-xl opacity-90 mb-8">
-            Join 2,000+ developers using PromptLab to build more reliable AI products.
+            Start building more reliable AI products with research-backed prompt optimization.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/login">
