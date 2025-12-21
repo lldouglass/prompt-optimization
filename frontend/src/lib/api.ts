@@ -319,6 +319,8 @@ export interface UsageInfo {
   optimizations_this_month: number
   requests_limit: number
   optimizations_limit: number
+  tokens_used_this_month: number
+  estimated_cost_cents: number
   usage_reset_at: string | null
 }
 

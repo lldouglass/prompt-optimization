@@ -29,6 +29,55 @@ for _env_path in _env_locations:
 
 
 # =============================================================================
+# Token usage tracking
+# =============================================================================
+
+_usage_tracker = {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0,
+    "call_count": 0,
+}
+
+
+def get_usage() -> dict[str, int]:
+    """Get the current token usage since last reset."""
+    return _usage_tracker.copy()
+
+
+def reset_usage() -> dict[str, int]:
+    """Reset the usage tracker and return the final counts."""
+    global _usage_tracker
+    final = _usage_tracker.copy()
+    _usage_tracker = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "call_count": 0,
+    }
+    return final
+
+
+def calculate_cost_cents(prompt_tokens: int, completion_tokens: int, model: str = "gpt-4o-mini") -> int:
+    """Calculate estimated cost in cents (hundredths of a dollar).
+
+    Pricing for gpt-4o-mini:
+    - Input: $0.15 per 1M tokens = $0.00000015 per token
+    - Output: $0.60 per 1M tokens = $0.0000006 per token
+    """
+    if "gpt-4o-mini" in model:
+        input_cost = prompt_tokens * 0.00000015
+        output_cost = completion_tokens * 0.0000006
+    else:
+        # Default to gpt-4o pricing for other models
+        input_cost = prompt_tokens * 0.0000025
+        output_cost = completion_tokens * 0.00001
+
+    total_dollars = input_cost + output_cost
+    return int(total_dollars * 100)  # Convert to cents
+
+
+# =============================================================================
 # Simple chat() function interface (for Judge agent compatibility)
 # =============================================================================
 
@@ -62,6 +111,14 @@ def chat(model: str, messages: list[dict[str, str]]) -> str:
         messages=messages,
         temperature=0.2,
     )
+
+    # Track token usage
+    if response.usage:
+        _usage_tracker["prompt_tokens"] += response.usage.prompt_tokens
+        _usage_tracker["completion_tokens"] += response.usage.completion_tokens
+        _usage_tracker["total_tokens"] += response.usage.total_tokens
+        _usage_tracker["call_count"] += 1
+
     return response.choices[0].message.content or ""
 
 

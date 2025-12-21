@@ -5,8 +5,7 @@ from sqlalchemy import select
 from datetime import datetime
 
 from ..database import get_db
-from ..auth import get_api_key
-from ..models.api_key import ApiKey
+from ..auth import get_current_org_dual
 from ..models.organization import Organization
 from ..config import get_settings
 from ..schemas.billing import (
@@ -19,7 +18,7 @@ from ..schemas.billing import (
     get_plan_limits,
 )
 
-router = APIRouter(prefix="/billing", tags=["billing"])
+router = APIRouter(prefix="/api/v1/billing", tags=["billing"])
 settings = get_settings()
 
 
@@ -30,17 +29,10 @@ def init_stripe():
 
 @router.get("", response_model=BillingInfo)
 async def get_billing_info(
-    api_key: ApiKey = Depends(get_api_key),
+    org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db),
 ):
     """Get current billing and usage information."""
-    result = await db.execute(
-        select(Organization).where(Organization.id == api_key.organization_id)
-    )
-    org = result.scalar_one_or_none()
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
-
     limits = get_plan_limits(org.subscription_plan)
 
     return BillingInfo(
@@ -55,6 +47,8 @@ async def get_billing_info(
             optimizations_this_month=org.optimizations_this_month,
             requests_limit=limits["requests_per_month"],
             optimizations_limit=limits["optimizations_per_month"],
+            tokens_used_this_month=org.tokens_used_this_month,
+            estimated_cost_cents=org.estimated_cost_cents,
             usage_reset_at=org.usage_reset_at,
         ),
     )
@@ -63,7 +57,7 @@ async def get_billing_info(
 @router.post("/checkout", response_model=CheckoutSessionResponse)
 async def create_checkout_session(
     request: CreateCheckoutRequest,
-    api_key: ApiKey = Depends(get_api_key),
+    org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a Stripe checkout session for subscription."""
@@ -71,13 +65,6 @@ async def create_checkout_session(
 
     if not settings.stripe_secret_key:
         raise HTTPException(status_code=503, detail="Stripe not configured")
-
-    result = await db.execute(
-        select(Organization).where(Organization.id == api_key.organization_id)
-    )
-    org = result.scalar_one_or_none()
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
 
     # Get price ID based on plan
     price_id = None
@@ -127,7 +114,7 @@ async def create_checkout_session(
 
 @router.post("/portal", response_model=PortalSessionResponse)
 async def create_portal_session(
-    api_key: ApiKey = Depends(get_api_key),
+    org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a Stripe customer portal session for managing subscription."""
@@ -135,13 +122,6 @@ async def create_portal_session(
 
     if not settings.stripe_secret_key:
         raise HTTPException(status_code=503, detail="Stripe not configured")
-
-    result = await db.execute(
-        select(Organization).where(Organization.id == api_key.organization_id)
-    )
-    org = result.scalar_one_or_none()
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
 
     if not org.stripe_customer_id:
         raise HTTPException(status_code=400, detail="No billing account set up")

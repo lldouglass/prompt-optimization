@@ -15,6 +15,7 @@ sys.path.insert(0, str(project_root))
 from agents import Planner, LegacyJudge, PromptOptimizer
 from agents.hallucination_checker import HallucinationChecker
 from llm import OpenAIClient, MockLLMClient
+from llm.client import reset_usage, calculate_cost_cents
 from prompts import SkillRegistry
 
 from ..database import get_db
@@ -227,6 +228,9 @@ async def optimize_prompt(
     # Check and increment optimization usage
     await check_and_increment_usage(str(org.id), db, "optimizations")
 
+    # Reset token tracking before optimization
+    reset_usage()
+
     registry = get_registry()
     optimizer = PromptOptimizer()
     prompt_template = request.prompt_template
@@ -236,6 +240,14 @@ async def optimize_prompt(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Skill not found: {request.skill_name}")
         prompt_template = skill.prompt_template
     result = optimizer.optimize(prompt_template=prompt_template, task_description=request.task_description, sample_inputs=request.sample_inputs if request.sample_inputs else None)
+
+    # Track token usage for this optimization
+    usage = reset_usage()
+    if usage["total_tokens"] > 0:
+        cost_cents = calculate_cost_cents(usage["prompt_tokens"], usage["completion_tokens"])
+        org.tokens_used_this_month += usage["total_tokens"]
+        org.estimated_cost_cents += cost_cents
+        await db.commit()
     analysis_response = None
     if result.analysis:
         analysis_response = AnalysisResponse(

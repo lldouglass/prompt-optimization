@@ -225,6 +225,23 @@ export function SettingsPage() {
                     />
                   </div>
                 </div>
+
+                {/* Token Usage & Cost (admin view) */}
+                {(billing.usage.tokens_used_this_month > 0 || billing.usage.estimated_cost_cents > 0) && (
+                  <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                    <h5 className="text-sm font-medium mb-2">LLM Usage (Your Cost)</h5>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Tokens Used</span>
+                        <p className="font-mono">{billing.usage.tokens_used_this_month.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Estimated Cost</span>
+                        <p className="font-mono">${(billing.usage.estimated_cost_cents / 100).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Upgrade Options */}
@@ -238,8 +255,8 @@ export function SettingsPage() {
                         <span className="text-lg font-bold">$15/mo</span>
                       </div>
                       <ul className="text-sm text-muted-foreground space-y-1 mb-4">
-                        <li>10,000 requests/month</li>
-                        <li>50 optimizations/month</li>
+                        <li>25,000 requests/month</li>
+                        <li>200 optimizations/month</li>
                         <li>30-day data retention</li>
                       </ul>
                       <Button

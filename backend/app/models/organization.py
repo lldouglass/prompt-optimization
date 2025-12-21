@@ -22,6 +22,8 @@ class Organization(Base):
     # Usage tracking
     requests_this_month: Mapped[int] = mapped_column(Integer, default=0)
     optimizations_this_month: Mapped[int] = mapped_column(Integer, default=0)
+    tokens_used_this_month: Mapped[int] = mapped_column(Integer, default=0)
+    estimated_cost_cents: Mapped[int] = mapped_column(Integer, default=0)  # Cost in cents (e.g., 23 = $0.23)
     usage_reset_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships

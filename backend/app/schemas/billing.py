@@ -14,6 +14,8 @@ class UsageInfo(BaseModel):
     optimizations_this_month: int
     requests_limit: int
     optimizations_limit: int
+    tokens_used_this_month: int = 0
+    estimated_cost_cents: int = 0  # Cost in cents (e.g., 23 = $0.23)
     usage_reset_at: datetime | None = None
 
 
@@ -44,8 +46,8 @@ PLAN_LIMITS = {
         "team_members": 1,
     },
     "team": {  # Premium plan ($15/mo) - uses "team" internally for Stripe mapping
-        "requests_per_month": 10000,
-        "optimizations_per_month": 50,
+        "requests_per_month": 25000,
+        "optimizations_per_month": 200,
         "data_retention_days": 30,
         "team_members": 3,
     },
