@@ -41,6 +41,7 @@ const pricingTiers = [
     features: [
       "1,000 logged requests/month",
       "10 prompt optimizations/month",
+      "Standard optimization mode",
       "7-day data retention",
       "Basic analytics"
     ],
@@ -55,8 +56,9 @@ const pricingTiers = [
     features: [
       "10,000 logged requests/month",
       "50 prompt optimizations/month",
+      "Enhanced mode with web search",
+      "Judge evaluation before return",
       "30-day data retention",
-      "Advanced analytics",
       "Email support"
     ],
     cta: "Start Free Trial",
@@ -70,6 +72,8 @@ const pricingTiers = [
     features: [
       "100,000 logged requests/month",
       "Unlimited optimizations",
+      "Enhanced mode with web search",
+      "Judge evaluation + auto-retry",
       "90-day data retention",
       "A/B testing suite",
       "Priority support"
@@ -85,6 +89,7 @@ const pricingTiers = [
     features: [
       "Unlimited requests",
       "Unlimited optimizations",
+      "Enhanced mode with web search",
       "On-premise deployment",
       "SSO & SAML",
       "Dedicated support"
@@ -122,6 +127,11 @@ const platformFeatures = [
     description: "Transform vague prompts into precise instructions using 2025 best practices from OpenAI, Anthropic, and Google."
   },
   {
+    icon: Target,
+    title: "Web-Enhanced Examples",
+    description: "Paid plans use real-time web search to find grounded few-shot examples from documentation and GitHub."
+  },
+  {
     icon: BarChart3,
     title: "Request Logging",
     description: "Capture every LLM API call with full request/response data, token counts, and latency metrics."
@@ -133,8 +143,8 @@ const platformFeatures = [
   },
   {
     icon: Shield,
-    title: "Quality Scoring",
-    description: "Score responses for correctness, completeness, clarity, and hallucination detection."
+    title: "Judge Evaluation",
+    description: "AI Judge evaluates optimized prompts before returning, detecting regressions and ensuring quality."
   },
   {
     icon: Clock,
@@ -167,6 +177,8 @@ export function LandingPageV2() {
               <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How it works</a>
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
               <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+              <Link to="/docs" className="text-muted-foreground hover:text-foreground transition-colors">Docs</Link>
+              <Link to="/education" className="text-muted-foreground hover:text-foreground transition-colors">Learn</Link>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/login">
@@ -639,7 +651,15 @@ export function LandingPageV2() {
                 <li><a href="#how-it-works" className="hover:text-foreground">How it works</a></li>
                 <li><a href="#features" className="hover:text-foreground">Features</a></li>
                 <li><a href="#pricing" className="hover:text-foreground">Pricing</a></li>
-                <li><a href="#" className="hover:text-foreground">Documentation</a></li>
+                <li><Link to="/docs" className="hover:text-foreground">Documentation</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Learn</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link to="/education" className="hover:text-foreground">Best Practices</Link></li>
+                <li><Link to="/education#privacy" className="hover:text-foreground">Privacy Guidelines</Link></li>
+                <li><Link to="/docs#sdk" className="hover:text-foreground">Python SDK</Link></li>
               </ul>
             </div>
             <div>

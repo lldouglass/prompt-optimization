@@ -9,6 +9,8 @@ import { AgentsPage } from "@/pages/Agents"
 import { PromptLibraryPage } from "@/pages/PromptLibrary"
 import { VerifyEmailPage } from "@/pages/VerifyEmail"
 import { VerifyEmailPendingPage } from "@/pages/VerifyEmailPending"
+import { EducationPage } from "@/pages/Education"
+import { DocumentationPage } from "@/pages/Documentation"
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
@@ -52,6 +54,9 @@ function AppRoutes() {
       <Route path="/" element={<LandingPageV2 />} />
       {/* Landing page also at /home for logged-in users */}
       <Route path="/home" element={<LandingPageV2 />} />
+      {/* Public documentation and education pages */}
+      <Route path="/docs" element={<DocumentationPage />} />
+      <Route path="/education" element={<EducationPage />} />
       <Route
         path="/login"
         element={
