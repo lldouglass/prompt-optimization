@@ -59,6 +59,8 @@ from ..schemas.agents import (
     SaveComparisonRequest,
     SavedEvaluationResponse,
     EvaluationListResponse,
+    WebSourceResponse,
+    JudgeEvaluationResponse,
 )
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
@@ -239,7 +241,40 @@ async def optimize_prompt(
         if not skill:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Skill not found: {request.skill_name}")
         prompt_template = skill.prompt_template
-    result = optimizer.optimize(prompt_template=prompt_template, task_description=request.task_description, sample_inputs=request.sample_inputs if request.sample_inputs else None)
+
+    # Determine optimization mode based on request or tier
+    # Enhanced mode available for pro, team, and enterprise tiers
+    paid_tiers = ["pro", "team", "enterprise"]
+    is_paid_tier = org.subscription_plan in paid_tiers
+
+    # Use requested mode, or auto-detect based on tier
+    use_enhanced = False
+    if request.mode == "enhanced":
+        if not is_paid_tier:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Enhanced optimization mode requires a paid subscription (Premium or Pro)"
+            )
+        use_enhanced = True
+    elif request.mode == "standard":
+        use_enhanced = False
+    else:
+        # Auto-detect: use enhanced for paid tiers
+        use_enhanced = is_paid_tier
+
+    # Run optimization
+    if use_enhanced:
+        result = await optimizer.optimize_enhanced(
+            prompt_template=prompt_template,
+            task_description=request.task_description,
+            sample_inputs=request.sample_inputs if request.sample_inputs else None
+        )
+    else:
+        result = optimizer.optimize(
+            prompt_template=prompt_template,
+            task_description=request.task_description,
+            sample_inputs=request.sample_inputs if request.sample_inputs else None
+        )
 
     # Track token usage for this optimization
     usage = reset_usage()
@@ -248,12 +283,15 @@ async def optimize_prompt(
         org.tokens_used_this_month += usage["total_tokens"]
         org.estimated_cost_cents += cost_cents
         await db.commit()
+
+    # Build analysis response
     analysis_response = None
     if result.analysis:
         analysis_response = AnalysisResponse(
             issues=[AnalysisIssue(category=issue.get("category", "unknown"), description=issue.get("description", ""), severity=issue.get("severity", "medium")) for issue in result.analysis.issues],
             strengths=result.analysis.strengths, overall_quality=result.analysis.overall_quality, priority_improvements=result.analysis.priority_improvements)
 
+    # Build few-shot response
     few_shot_response = None
     if result.few_shot_research:
         examples_list = []
@@ -270,7 +308,49 @@ async def optimize_prompt(
             research_notes=result.few_shot_research.research_notes
         )
 
-    return OptimizeResponse(original_prompt=result.original_prompt, optimized_prompt=result.optimized_prompt, original_score=result.original_score, optimized_score=result.optimized_score, improvements=result.improvements, reasoning=result.reasoning, analysis=analysis_response, few_shot_research=few_shot_response)
+    # Build enhanced mode fields
+    web_sources = None
+    judge_evaluation = None
+    iterations_used = 1
+    mode = "standard"
+
+    if use_enhanced and hasattr(result, 'web_sources'):
+        mode = "enhanced"
+        iterations_used = getattr(result, 'iterations_used', 1)
+
+        # Web sources
+        if result.web_sources:
+            web_sources = [
+                WebSourceResponse(url=s.url, title=s.title, content=s.content)
+                for s in result.web_sources
+            ]
+
+        # Judge evaluation
+        if result.judge_evaluation:
+            judge_evaluation = JudgeEvaluationResponse(
+                judge_score=result.judge_evaluation.judge_score,
+                is_improvement=result.judge_evaluation.is_improvement,
+                improvement_margin=result.judge_evaluation.improvement_margin,
+                tags=result.judge_evaluation.tags,
+                rationale=result.judge_evaluation.rationale,
+                has_regressions=result.judge_evaluation.has_regressions,
+                regression_details=result.judge_evaluation.regression_details
+            )
+
+    return OptimizeResponse(
+        original_prompt=result.original_prompt,
+        optimized_prompt=result.optimized_prompt,
+        original_score=result.original_score,
+        optimized_score=result.optimized_score,
+        improvements=result.improvements,
+        reasoning=result.reasoning,
+        analysis=analysis_response,
+        few_shot_research=few_shot_response,
+        mode=mode,
+        web_sources=web_sources,
+        judge_evaluation=judge_evaluation,
+        iterations_used=iterations_used
+    )
 
 
 @router.post("/optimizations", response_model=SavedOptimizationResponse)

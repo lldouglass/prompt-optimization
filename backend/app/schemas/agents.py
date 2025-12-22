@@ -1,5 +1,6 @@
 """Schemas for agent endpoints."""
 
+from typing import Literal
 from pydantic import BaseModel
 
 
@@ -150,6 +151,25 @@ class OptimizeRequest(BaseModel):
     task_description: str
     sample_inputs: list[str] = []
     skill_name: str | None = None  # If loading from registry
+    mode: Literal["standard", "enhanced"] | None = None  # None = auto-detect from tier
+
+
+class WebSourceResponse(BaseModel):
+    """A web source used for few-shot research."""
+    url: str
+    title: str
+    content: str
+
+
+class JudgeEvaluationResponse(BaseModel):
+    """Judge evaluation results for optimization quality."""
+    judge_score: float
+    is_improvement: bool
+    improvement_margin: str | None = None  # "slightly", "moderately", "strongly"
+    tags: list[str] = []
+    rationale: str = ""
+    has_regressions: bool = False
+    regression_details: str = ""
 
 
 class OptimizeResponse(BaseModel):
@@ -162,6 +182,11 @@ class OptimizeResponse(BaseModel):
     reasoning: str
     analysis: AnalysisResponse | None = None
     few_shot_research: FewShotResearchResponse | None = None
+    # Enhanced mode fields
+    mode: str = "standard"
+    web_sources: list[WebSourceResponse] | None = None
+    judge_evaluation: JudgeEvaluationResponse | None = None
+    iterations_used: int = 1
 
 
 class SaveOptimizationRequest(BaseModel):

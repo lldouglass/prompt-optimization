@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     api_key_prefix: str = "pl_live_"
     openai_api_key: str | None = None
 
+    # Tavily API for web search (enhanced optimization)
+    tavily_api_key: str | None = None
+
     # Stripe settings
     stripe_secret_key: str | None = None
     stripe_webhook_secret: str | None = None

@@ -7,11 +7,13 @@ best practices to generate improved versions.
 
 import json
 import re
+import asyncio
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Literal
 
 import llm.client as llm_client
 from .judge import Judge
+from .web_researcher import WebResearcher, WebSource, WebResearchResult
 
 
 class OptimizerError(Exception):
@@ -409,6 +411,63 @@ class OptimizationResult:
         }
 
 
+@dataclass
+class JudgeEvaluation:
+    """Evaluation result from the Judge agent."""
+    judge_score: float
+    is_improvement: bool
+    improvement_margin: Optional[str] = None  # "slightly", "moderately", "strongly"
+    tags: List[str] = field(default_factory=list)
+    rationale: str = ""
+    has_regressions: bool = False
+    regression_details: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "judge_score": self.judge_score,
+            "is_improvement": self.is_improvement,
+            "improvement_margin": self.improvement_margin,
+            "tags": self.tags,
+            "rationale": self.rationale,
+            "has_regressions": self.has_regressions,
+            "regression_details": self.regression_details
+        }
+
+
+@dataclass
+class EnhancedOptimizationResult:
+    """Result of enhanced prompt optimization with web research and judge evaluation."""
+    original_prompt: str
+    optimized_prompt: str
+    original_score: float
+    optimized_score: float
+    improvements: List[str] = field(default_factory=list)
+    reasoning: str = ""
+    analysis: Optional[PromptAnalysis] = None
+    few_shot_research: Optional[FewShotResearch] = None
+    # Enhanced fields
+    mode: str = "enhanced"
+    web_sources: List[WebSource] = field(default_factory=list)
+    judge_evaluation: Optional[JudgeEvaluation] = None
+    iterations_used: int = 1
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "original_prompt": self.original_prompt,
+            "optimized_prompt": self.optimized_prompt,
+            "original_score": self.original_score,
+            "optimized_score": self.optimized_score,
+            "improvements": self.improvements,
+            "reasoning": self.reasoning,
+            "analysis": self.analysis.to_dict() if self.analysis else None,
+            "few_shot_research": self.few_shot_research.to_dict() if self.few_shot_research else None,
+            "mode": self.mode,
+            "web_sources": [{"url": s.url, "title": s.title, "content": s.content} for s in self.web_sources],
+            "judge_evaluation": self.judge_evaluation.to_dict() if self.judge_evaluation else None,
+            "iterations_used": self.iterations_used
+        }
+
+
 class PromptOptimizer:
     """
     Optimizes prompts using Judge evaluation and prompt engineering best practices.
@@ -772,3 +831,214 @@ Generate an optimized version of this prompt that addresses the identified issue
         except json.JSONDecodeError as e:
             # Return original if parsing fails
             return fallback_prompt, [], f"Parsing failed: {e}"
+
+    async def optimize_enhanced(
+        self,
+        prompt_template: str,
+        task_description: str,
+        sample_inputs: Optional[List[str]] = None
+    ) -> EnhancedOptimizationResult:
+        """
+        Enhanced optimization with web-researched examples and Judge evaluation.
+
+        This method is intended for paid tiers and provides:
+        - Web search for real-world few-shot examples (via Tavily)
+        - Judge evaluation to verify improvement quality
+        - Single retry if regression is detected
+
+        Args:
+            prompt_template: The prompt to optimize
+            task_description: What the prompt should accomplish
+            sample_inputs: Optional sample inputs for testing
+
+        Returns:
+            EnhancedOptimizationResult with web sources and judge evaluation
+        """
+        web_sources: List[WebSource] = []
+        iterations_used = 1
+
+        # Step 1: Analyze the original prompt
+        analysis = self.analyze(prompt_template, task_description)
+
+        # Step 2: Research few-shot examples using web search
+        few_shot_research = None
+        web_research_result = None
+
+        if analysis.needs_few_shot_examples():
+            web_researcher = WebResearcher(model=self.model)
+
+            if web_researcher.is_available:
+                # Use web search for examples
+                web_research_result = await web_researcher.research_examples(
+                    prompt_template,
+                    task_description
+                )
+                web_sources = web_research_result.sources
+
+                # Convert web research to FewShotResearch format
+                if web_research_result.examples:
+                    few_shot_research = FewShotResearch(
+                        examples=[
+                            FewShotExample(
+                                input=ex.get("input", ""),
+                                output=ex.get("output", ""),
+                                rationale=ex.get("rationale", "")
+                            )
+                            for ex in web_research_result.examples
+                        ],
+                        format_recommendation="Input: {input}\nOutput: {output}",
+                        research_notes=web_research_result.research_notes
+                    )
+
+            # Fallback to LLM-generated examples if web search unavailable or failed
+            if not few_shot_research:
+                few_shot_research = self.research_few_shot_examples(
+                    prompt_template,
+                    task_description
+                )
+
+        # Step 3: Score the original prompt
+        original_score = self._score_prompt(
+            prompt_template,
+            task_description,
+            sample_inputs or ["Provide a general response"]
+        )
+
+        # Step 4: Generate optimized version
+        optimized_prompt, improvements, reasoning = self._generate_optimized(
+            prompt_template,
+            task_description,
+            analysis,
+            few_shot_research
+        )
+
+        # Step 5: Score the optimized prompt
+        optimized_score = self._score_prompt(
+            optimized_prompt,
+            task_description,
+            sample_inputs or ["Provide a general response"]
+        )
+
+        # Step 6: Judge evaluation - verify improvement quality
+        judge_evaluation = self._evaluate_with_judge(
+            prompt_template,
+            optimized_prompt,
+            task_description
+        )
+
+        # Step 7: Retry if regression detected
+        if judge_evaluation.has_regressions and not judge_evaluation.is_improvement:
+            iterations_used = 2
+
+            # Re-optimize with feedback about regressions
+            retry_feedback = f"""
+Previous optimization attempt caused regressions:
+{judge_evaluation.regression_details}
+
+Original rationale: {judge_evaluation.rationale}
+
+Please create a new optimization that:
+1. Addresses the original issues identified in the analysis
+2. Does NOT introduce the regressions mentioned above
+3. Preserves the strengths of the original prompt
+"""
+            # Add regression feedback to analysis
+            analysis_with_feedback = PromptAnalysis(
+                issues=analysis.issues + [{"category": "regression", "description": judge_evaluation.regression_details, "severity": "high"}],
+                strengths=analysis.strengths,
+                overall_quality=analysis.overall_quality,
+                priority_improvements=[retry_feedback] + analysis.priority_improvements
+            )
+
+            # Retry optimization
+            optimized_prompt, improvements, reasoning = self._generate_optimized(
+                prompt_template,
+                task_description,
+                analysis_with_feedback,
+                few_shot_research
+            )
+
+            # Re-score
+            optimized_score = self._score_prompt(
+                optimized_prompt,
+                task_description,
+                sample_inputs or ["Provide a general response"]
+            )
+
+            # Re-evaluate with Judge
+            judge_evaluation = self._evaluate_with_judge(
+                prompt_template,
+                optimized_prompt,
+                task_description
+            )
+
+        return EnhancedOptimizationResult(
+            original_prompt=prompt_template,
+            optimized_prompt=optimized_prompt,
+            original_score=original_score,
+            optimized_score=optimized_score,
+            improvements=improvements,
+            reasoning=reasoning,
+            analysis=analysis,
+            few_shot_research=few_shot_research,
+            mode="enhanced",
+            web_sources=web_sources,
+            judge_evaluation=judge_evaluation,
+            iterations_used=iterations_used
+        )
+
+    def _evaluate_with_judge(
+        self,
+        original_prompt: str,
+        optimized_prompt: str,
+        task_description: str
+    ) -> JudgeEvaluation:
+        """
+        Use Judge agent to evaluate the optimization quality.
+
+        Performs pairwise comparison and checks for regressions.
+        """
+        # Use pairwise comparison to determine if optimized is better
+        try:
+            comparison = self.judge.evaluate_pairwise(
+                task_description=f"Evaluate prompt quality for: {task_description}",
+                user_input="Which prompt template is more effective and follows best practices?",
+                output_a=original_prompt,
+                output_b=optimized_prompt
+            )
+
+            is_improvement = comparison.get("winner") == "B"
+            margin = comparison.get("margin", "slightly")
+            tags = comparison.get("tags", [])
+            rationale = comparison.get("rationale", "")
+
+            # Check for regression indicators
+            regression_tags = ["missing_key_detail", "less_clear", "lost_functionality", "worse_structure"]
+            detected_regressions = [t for t in tags if any(r in t.lower() for r in regression_tags)]
+            has_regressions = len(detected_regressions) > 0 or (not is_improvement and margin in ["moderately", "strongly"])
+
+            regression_details = ""
+            if has_regressions:
+                if detected_regressions:
+                    regression_details = f"Detected issues: {', '.join(detected_regressions)}. "
+                if not is_improvement:
+                    regression_details += f"Original prompt was {margin} better. {rationale}"
+
+            return JudgeEvaluation(
+                judge_score=8.0 if is_improvement else 5.0,  # Simplified score
+                is_improvement=is_improvement,
+                improvement_margin=margin if is_improvement else None,
+                tags=tags,
+                rationale=rationale,
+                has_regressions=has_regressions,
+                regression_details=regression_details
+            )
+
+        except Exception as e:
+            # Fallback if Judge evaluation fails
+            return JudgeEvaluation(
+                judge_score=0.0,
+                is_improvement=True,  # Assume improvement if we can't evaluate
+                rationale=f"Judge evaluation failed: {str(e)}",
+                has_regressions=False
+            )
