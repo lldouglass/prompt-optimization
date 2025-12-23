@@ -8,7 +8,8 @@
       "Bash(mkdir:*)",
       "Bash(python -m pytest:*)",
       "Bash(uv run python:*)",
-      "Bash(python -m py_compile:*)"
+      "Bash(python -m py_compile:*)",
+      "Bash(uv run:*)"
     ],
     "deny": [],
     "ask": []

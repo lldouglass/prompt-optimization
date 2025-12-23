@@ -3,8 +3,8 @@ from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql+asyncpg://localhost/promptlab"
-    api_key_prefix: str = "pl_live_"
+    database_url: str = "postgresql+asyncpg://localhost/clarynt"
+    api_key_prefix: str = "cl_live_"
     openai_api_key: str | None = None
 
     # Tavily API for web search (enhanced optimization)
@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     # Auth settings
     secret_key: str = "CHANGE-ME-IN-PRODUCTION-USE-SECURE-RANDOM-KEY"
-    session_cookie_name: str = "promptlab_session"
+    session_cookie_name: str = "clarynt_session"
     session_expire_days: int = 30
     verification_token_expire_hours: int = 24
 
@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str | None = None
     smtp_password: str | None = None
-    smtp_from_email: str = "noreply@promptlab.ai"
-    smtp_from_name: str = "PromptLab"
+    smtp_from_email: str = "noreply@clarynt.net"
+    smtp_from_name: str = "Clarynt"
     smtp_use_tls: bool = True
 
     class Config:

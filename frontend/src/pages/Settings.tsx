@@ -424,7 +424,7 @@ export function SettingsPage() {
         </CardHeader>
         <CardContent>
           <pre className="p-4 bg-muted rounded-lg text-sm overflow-x-auto">
-{`from promptlab import PromptLab, track
+{`from clarynt import Clarynt, track
 from openai import OpenAI
 
 # Option 1: Track OpenAI client
@@ -435,7 +435,7 @@ response = client.chat.completions.create(
 )
 
 # Option 2: Manual logging
-lab = PromptLab(api_key="your_api_key")
+lab = Clarynt(api_key="your_api_key")
 lab.api.log_request({
     "model": "gpt-4",
     "provider": "openai",

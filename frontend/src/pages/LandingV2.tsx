@@ -103,7 +103,7 @@ const pricingTiers = [
 const faqItems = [
   {
     question: "How is this different from just using ChatGPT to improve my prompts?",
-    answer: "PromptLab uses a research-backed 100-point scoring system based on official guides from OpenAI, Anthropic, and Google DeepMind. Unlike generic AI suggestions, we apply specific, measurable criteria and automatically generate few-shot examples - something you can't easily do manually."
+    answer: "Clarynt uses a research-backed 100-point scoring system based on official guides from OpenAI, Anthropic, and Google DeepMind. Unlike generic AI suggestions, we apply specific, measurable criteria and automatically generate few-shot examples - something you can't easily do manually."
   },
   {
     question: "How long does it take to integrate?",
@@ -171,7 +171,7 @@ export function LandingPageV2() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
               <Zap className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">PromptLab</span>
+              <span className="text-xl font-bold">Clarynt</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How it works</a>
@@ -207,7 +207,7 @@ export function LandingPageV2() {
 
           {/* Value prop - Specific, measurable benefit */}
           <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
-            Most prompts score under 40/100. PromptLab's AI optimizer uses research from OpenAI, Anthropic, and Google to help you write prompts that score 85+.
+            Most prompts score under 40/100. Clarynt's AI optimizer uses research from OpenAI, Anthropic, and Google to help you write prompts that score 85+.
           </p>
 
           {/* Single primary CTA */}
@@ -639,7 +639,7 @@ export function LandingPageV2() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Zap className="h-6 w-6 text-primary" />
-                <span className="text-lg font-bold">PromptLab</span>
+                <span className="text-lg font-bold">Clarynt</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Research-backed prompt optimization for production AI applications.
@@ -681,7 +681,7 @@ export function LandingPageV2() {
             </div>
           </div>
           <div className="border-t mt-12 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} PromptLab. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Clarynt. All rights reserved.</p>
           </div>
         </div>
       </footer>

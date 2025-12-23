@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "promptlab"
+name = "clarynt"
 version = "0.1.0"
 description = "Prompt testing and optimization SDK"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "PromptLab"}
+    {name = "Clarynt"}
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -35,4 +35,4 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["promptlab*"]
+include = ["clarynt*"]

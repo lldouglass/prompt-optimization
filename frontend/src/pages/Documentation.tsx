@@ -74,7 +74,7 @@ export function DocumentationPage() {
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center gap-2">
               <BookOpen className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">PromptLab Docs</span>
+              <span className="text-xl font-bold">Clarynt Docs</span>
             </Link>
             <div className="flex items-center gap-4">
               <Link to="/education">
@@ -135,9 +135,9 @@ export function DocumentationPage() {
               <div className="space-y-8">
                 <div>
                   <Badge variant="secondary" className="mb-4">Getting Started</Badge>
-                  <h1 className="text-4xl font-bold mb-4">Welcome to PromptLab</h1>
+                  <h1 className="text-4xl font-bold mb-4">Welcome to Clarynt</h1>
                   <p className="text-lg text-muted-foreground">
-                    PromptLab is an LLMOps platform for prompt optimization, testing, and monitoring.
+                    Clarynt is an LLMOps platform for prompt optimization, testing, and monitoring.
                     Get better results from AI by writing research-backed prompts.
                   </p>
                 </div>
@@ -153,7 +153,7 @@ export function DocumentationPage() {
                       <div>
                         <h3 className="font-semibold mb-2">Create an Account</h3>
                         <p className="text-muted-foreground mb-2">
-                          Sign up for free at PromptLab. No credit card required.
+                          Sign up for free at Clarynt. No credit card required.
                         </p>
                         <Link to="/login">
                           <Button variant="outline" size="sm">
@@ -183,7 +183,7 @@ export function DocumentationPage() {
                         </p>
                         <CodeBlock
                           id="install-sdk"
-                          code={`pip install promptlab-sdk`}
+                          code={`pip install clarynt`}
                         />
                       </div>
                     </div>
@@ -748,7 +748,7 @@ export function DocumentationPage() {
                         <AlertCircle className="h-4 w-4" /> Security Warning
                       </h4>
                       <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                        API keys grant full access to your organization's PromptLab resources.
+                        API keys grant full access to your organization's Clarynt resources.
                         Never commit them to version control or share them publicly.
                       </p>
                     </div>
@@ -776,7 +776,7 @@ export function DocumentationPage() {
                   </Badge>
                   <h1 className="text-4xl font-bold mb-4">Python SDK</h1>
                   <p className="text-lg text-muted-foreground">
-                    Integrate PromptLab into your Python applications for automatic request logging.
+                    Integrate Clarynt into your Python applications for automatic request logging.
                   </p>
                 </div>
 
@@ -787,7 +787,7 @@ export function DocumentationPage() {
                   <CardContent>
                     <CodeBlock
                       id="sdk-install"
-                      code="pip install promptlab-sdk"
+                      code="pip install clarynt"
                     />
                   </CardContent>
                 </Card>
@@ -800,11 +800,11 @@ export function DocumentationPage() {
                   <CardContent>
                     <CodeBlock
                       id="sdk-wrap"
-                      code={`from promptlab import track
+                      code={`from clarynt import track
 from openai import OpenAI
 
 # Wrap your OpenAI client - all calls are automatically logged
-client = track(OpenAI(), api_key="your_promptlab_api_key")
+client = track(OpenAI(), api_key="your_clarynt_api_key")
 
 # Use normally - requests are logged in the background
 response = client.chat.completions.create(
@@ -829,9 +829,9 @@ print(response.choices[0].message.content)`}
                   <CardContent>
                     <CodeBlock
                       id="sdk-manual"
-                      code={`from promptlab import PromptLab
+                      code={`from clarynt import Clarynt
 
-lab = PromptLab(api_key="your_promptlab_api_key")
+lab = Clarynt(api_key="your_clarynt_api_key")
 
 # Log a request manually
 lab.api.log_request({
@@ -863,20 +863,20 @@ lab.api.log_request({
                     <CodeBlock
                       id="sdk-env"
                       code={`# Required
-export PROMPTLAB_API_KEY="your_api_key"
+export CLARYNT_API_KEY="your_api_key"
 
-# Optional - defaults to PromptLab cloud
-export PROMPTLAB_BASE_URL="https://api.promptlab.dev"`}
+# Optional - defaults to Clarynt cloud
+export CLARYNT_BASE_URL="https://api.clarynt.net"`}
                     />
                     <p className="text-sm text-muted-foreground mt-4">
                       When environment variables are set, you can initialize without parameters:
                     </p>
                     <CodeBlock
                       id="sdk-env-init"
-                      code={`from promptlab import track
+                      code={`from clarynt import track
 from openai import OpenAI
 
-# API key read from PROMPTLAB_API_KEY environment variable
+# API key read from CLARYNT_API_KEY environment variable
 client = track(OpenAI())`}
                     />
                   </CardContent>
@@ -1012,7 +1012,7 @@ client = track(OpenAI())`}
       {/* Footer */}
       <footer className="border-t py-8 px-4 sm:px-6 lg:px-8 mt-16">
         <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} PromptLab. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Clarynt. All rights reserved.</p>
         </div>
       </footer>
     </div>

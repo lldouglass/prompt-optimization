@@ -3,23 +3,23 @@ import time
 import threading
 from typing import Any
 
-from .api import PromptLabAPI
+from .api import ClaryntAPI
 
 
-class PromptLab:
-    """Main PromptLab client."""
+class Clarynt:
+    """Main Clarynt client."""
 
     def __init__(
         self,
         api_key: str | None = None,
         base_url: str | None = None,
     ):
-        self.api_key = api_key or os.getenv("PROMPTLAB_API_KEY")
+        self.api_key = api_key or os.getenv("CLARYNT_API_KEY")
         if not self.api_key:
             raise ValueError(
-                "PROMPTLAB_API_KEY not set. Pass api_key or set the environment variable."
+                "CLARYNT_API_KEY not set. Pass api_key or set the environment variable."
             )
-        self.api = PromptLabAPI(self.api_key, base_url=base_url)
+        self.api = ClaryntAPI(self.api_key, base_url=base_url)
 
     def track_openai(self, client: Any) -> "TrackedOpenAI":
         """Wrap an OpenAI client to enable tracking."""
@@ -38,7 +38,7 @@ def track(
     except ImportError:
         OpenAI = None
 
-    lab = PromptLab(api_key, base_url=base_url)
+    lab = Clarynt(api_key, base_url=base_url)
 
     if OpenAI and isinstance(client, OpenAI):
         return lab.track_openai(client)
@@ -49,7 +49,7 @@ def track(
 class TrackedOpenAI:
     """OpenAI client wrapper with automatic logging."""
 
-    def __init__(self, client: Any, api: PromptLabAPI):
+    def __init__(self, client: Any, api: ClaryntAPI):
         self._client = client
         self._api = api
         self.chat = TrackedChat(client.chat, api)
@@ -62,7 +62,7 @@ class TrackedOpenAI:
 class TrackedChat:
     """Wrapper for OpenAI chat namespace."""
 
-    def __init__(self, chat: Any, api: PromptLabAPI):
+    def __init__(self, chat: Any, api: ClaryntAPI):
         self._chat = chat
         self._api = api
         self.completions = TrackedCompletions(chat.completions, api)
@@ -74,7 +74,7 @@ class TrackedChat:
 class TrackedCompletions:
     """Wrapper for OpenAI chat.completions with logging."""
 
-    def __init__(self, completions: Any, api: PromptLabAPI):
+    def __init__(self, completions: Any, api: ClaryntAPI):
         self._completions = completions
         self._api = api
 

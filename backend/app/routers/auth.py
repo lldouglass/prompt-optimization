@@ -53,12 +53,13 @@ async def create_session(
     await db.commit()
 
     # Set HTTP-only cookie
+    # For cross-domain (frontend/backend on different domains), need secure=True and samesite="none"
     response.set_cookie(
         key=settings.session_cookie_name,
         value=token,
         httponly=True,
-        secure=False,  # Set to True in production with HTTPS
-        samesite="lax",
+        secure=True,
+        samesite="none",
         max_age=settings.session_expire_days * 24 * 60 * 60,
         path="/",
     )

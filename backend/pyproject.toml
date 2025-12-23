@@ -1,7 +1,7 @@
 [project]
-name = "promptlab-backend"
+name = "clarynt-backend"
 version = "0.1.0"
-description = "PromptLab API backend"
+description = "Clarynt API backend"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.109.0",

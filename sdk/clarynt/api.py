@@ -2,8 +2,8 @@ import httpx
 from typing import Any
 
 
-class PromptLabAPI:
-    """Client for PromptLab backend API."""
+class ClaryntAPI:
+    """Client for Clarynt backend API."""
 
     DEFAULT_BASE_URL = "http://localhost:8000"
 
@@ -50,7 +50,7 @@ class PromptLabAPI:
         """Close the HTTP client."""
         self._client.close()
 
-    def __enter__(self) -> "PromptLabAPI":
+    def __enter__(self) -> "ClaryntAPI":
         return self
 
     def __exit__(self, *args) -> None:

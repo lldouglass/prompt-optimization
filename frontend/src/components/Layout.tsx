@@ -22,7 +22,7 @@ export function Layout() {
         <div className="p-4 border-b">
           <Link to="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
             <Zap className="h-6 w-6 text-primary" />
-            PromptLab
+            Clarynt
           </Link>
         </div>
 

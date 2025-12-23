@@ -55,7 +55,7 @@ export function LoginPage() {
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex items-center gap-2">
             <Zap className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">PromptLab</span>
+            <span className="text-2xl font-bold">Clarynt</span>
           </div>
           <CardDescription>
             {mode === "login" ? "Sign in to your account" : "Create a new account"}

@@ -271,7 +271,7 @@ export function EducationPage() {
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center gap-2">
               <BookOpen className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">PromptLab Education</span>
+              <span className="text-xl font-bold">Clarynt Education</span>
             </Link>
             <div className="flex items-center gap-4">
               <Link to="/docs">
@@ -328,7 +328,7 @@ export function EducationPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">The 100-Point Scoring System</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              PromptLab evaluates prompts across 7 research-backed categories. Most prompts
+              Clarynt evaluates prompts across 7 research-backed categories. Most prompts
               in the wild score under 40/100. Learn how to achieve 85+.
             </p>
           </div>
@@ -567,7 +567,7 @@ export function EducationPage() {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Optimize Your Prompts?</h2>
           <p className="text-xl opacity-90 mb-8">
-            Use PromptLab to automatically score and improve your prompts using these best practices.
+            Use Clarynt to automatically score and improve your prompts using these best practices.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/login">
@@ -589,7 +589,7 @@ export function EducationPage() {
       {/* Footer */}
       <footer className="border-t py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} PromptLab. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Clarynt. All rights reserved.</p>
           <p className="mt-2">
             Best practices derived from official documentation and research from OpenAI, Anthropic, and Google DeepMind.
           </p>
