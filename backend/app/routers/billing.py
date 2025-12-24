@@ -196,6 +196,15 @@ async def handle_checkout_completed(session, db: AsyncSession):
     if not org:
         return
 
+    # Cancel any existing subscription before setting up the new one
+    # This handles upgrades/downgrades - user only pays for one subscription
+    if org.stripe_subscription_id and org.stripe_subscription_id != session.subscription:
+        try:
+            stripe.Subscription.cancel(org.stripe_subscription_id)
+        except stripe.error.InvalidRequestError:
+            # Subscription might already be canceled or not exist
+            pass
+
     # Get subscription details
     subscription = stripe.Subscription.retrieve(session.subscription)
 
@@ -211,7 +220,10 @@ async def handle_checkout_completed(session, db: AsyncSession):
     org.stripe_subscription_id = subscription.id
     org.subscription_plan = plan
     org.subscription_status = "active"
-    org.subscription_period_end = datetime.fromtimestamp(subscription.current_period_end)
+    # Handle both old and new Stripe API structures for period_end
+    period_end = subscription["items"]["data"][0].get("current_period_end") or subscription.get("current_period_end")
+    if period_end:
+        org.subscription_period_end = datetime.fromtimestamp(period_end)
 
     await db.commit()
 
@@ -229,7 +241,10 @@ async def handle_subscription_updated(subscription, db: AsyncSession):
 
     # Update status
     org.subscription_status = subscription.status
-    org.subscription_period_end = datetime.fromtimestamp(subscription.current_period_end)
+    # Handle both old and new Stripe API structures for period_end
+    period_end = subscription["items"]["data"][0].get("current_period_end") or subscription.get("current_period_end")
+    if period_end:
+        org.subscription_period_end = datetime.fromtimestamp(period_end)
 
     # Update plan if changed
     price_id = subscription["items"]["data"][0]["price"]["id"]

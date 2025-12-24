@@ -177,7 +177,7 @@ export function SettingsPage() {
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-lg capitalize">{billing.subscription.plan}</span>
+                    <span className="font-semibold text-lg capitalize">{billing.subscription.plan === "team" ? "Premium" : billing.subscription.plan}</span>
                     <Badge variant={billing.subscription.status === "active" ? "default" : "destructive"}>
                       {billing.subscription.status}
                     </Badge>
@@ -245,30 +245,32 @@ export function SettingsPage() {
               </div>
 
               {/* Upgrade Options */}
-              {billing.subscription.plan === "free" && (
+              {billing.subscription.plan !== "pro" && (
                 <div className="space-y-3">
                   <h4 className="font-medium">Upgrade Your Plan</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold">Premium</span>
-                        <span className="text-lg font-bold">$15/mo</span>
+                  <div className={`grid grid-cols-1 ${billing.subscription.plan === "free" ? "md:grid-cols-2" : ""} gap-4`}>
+                    {billing.subscription.plan === "free" && (
+                      <div className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-semibold">Premium</span>
+                          <span className="text-lg font-bold">$15/mo</span>
+                        </div>
+                        <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                          <li>25,000 requests/month</li>
+                          <li>200 optimizations/month</li>
+                          <li>30-day data retention</li>
+                        </ul>
+                        <Button
+                          className="w-full"
+                          variant="outline"
+                          onClick={() => handleUpgrade("team")}
+                          disabled={upgrading === "team"}
+                        >
+                          <Zap className="h-4 w-4 mr-2" />
+                          {upgrading === "team" ? "Loading..." : "Upgrade to Premium"}
+                        </Button>
                       </div>
-                      <ul className="text-sm text-muted-foreground space-y-1 mb-4">
-                        <li>25,000 requests/month</li>
-                        <li>200 optimizations/month</li>
-                        <li>30-day data retention</li>
-                      </ul>
-                      <Button
-                        className="w-full"
-                        variant="outline"
-                        onClick={() => handleUpgrade("team")}
-                        disabled={upgrading === "team"}
-                      >
-                        <Zap className="h-4 w-4 mr-2" />
-                        {upgrading === "team" ? "Loading..." : "Upgrade to Premium"}
-                      </Button>
-                    </div>
+                    )}
                     <div className="p-4 border-2 border-primary rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">

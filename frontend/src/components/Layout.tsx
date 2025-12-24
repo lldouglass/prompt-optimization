@@ -1,13 +1,15 @@
 import { Link, Outlet, useLocation } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Settings, LogOut, Zap, Bot, Library } from "lucide-react"
+import { LayoutDashboard, Settings, LogOut, Zap, Bot, Library, GraduationCap, BookOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { to: "/agents", icon: Bot, label: "Agents" },
   { to: "/library", icon: Library, label: "Prompt Library" },
   { to: "/dashboard", icon: LayoutDashboard, label: "Requests" },
+  { to: "/education", icon: GraduationCap, label: "Education" },
+  { to: "/docs", icon: BookOpen, label: "Documentation" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ]
 
