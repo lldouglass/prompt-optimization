@@ -21,6 +21,7 @@ export function AgentsPage() {
   const location = useLocation()
   const state = location.state as LocationState | null
   const hasAutoRun = useRef(false)
+  const optimizeResultsRef = useRef<HTMLDivElement>(null)
 
   const [activeTab, setActiveTab] = useState<TabMode>(state?.autoEvaluate ? "evaluate" : "optimize")
 
@@ -204,6 +205,11 @@ export function AgentsPage() {
         sampleInputs.length > 0 ? sampleInputs : undefined
       )
       setOptimizeResult(result)
+
+      // Auto-scroll to results
+      setTimeout(() => {
+        optimizeResultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }, 100)
 
       // Track optimization completed with scores
       track('optimization_completed', {
@@ -879,7 +885,7 @@ export function AgentsPage() {
           </Card>
 
           {optimizeResult && (
-            <>
+            <div ref={optimizeResultsRef}>
               {/* Score Comparison */}
               <Card>
                 <CardHeader>
@@ -1157,7 +1163,7 @@ export function AgentsPage() {
                   </CardContent>
                 </Card>
               )}
-            </>
+            </div>
           )}
         </>
       )}
