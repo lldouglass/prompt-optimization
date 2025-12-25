@@ -306,6 +306,36 @@ export interface SavedEvaluation {
   created_at: string
 }
 
+
+
+// Media optimization types
+export type MediaType = "photo" | "video"
+
+export interface MediaOptimizeRequest {
+  media_type: MediaType
+  subject: string
+  style_lighting?: string
+  existing_prompt?: string
+  // Photo-specific
+  issues_to_fix?: string[]
+  constraints?: string
+  // Video-specific
+  camera_movement?: string
+  shot_type?: string
+  motion_endpoints?: string
+}
+
+export interface MediaOptimizationResult {
+  optimized_prompt: string
+  original_prompt: string | null
+  original_score: number | null
+  optimized_score: number
+  improvements: string[]
+  reasoning: string
+  tips: string[]
+  media_type: MediaType
+}
+
 // Billing types
 export interface SubscriptionInfo {
   plan: string
@@ -579,7 +609,35 @@ export const sessionApi = {
     return res.json()
   },
 
-  async listApiKeys(orgId: string): Promise<ApiKey[]> {
+  
+  async optimizeMedia(request: MediaOptimizeRequest): Promise<MediaOptimizationResult> {
+    const res = await fetch(`${API_BASE}/agents/optimize-media`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        media_type: request.media_type,
+        subject: request.subject,
+        style_lighting: request.style_lighting || "",
+        existing_prompt: request.existing_prompt || "",
+        issues_to_fix: request.issues_to_fix || [],
+        constraints: request.constraints || "",
+        camera_movement: request.camera_movement || "",
+        shot_type: request.shot_type || "",
+        motion_endpoints: request.motion_endpoints || "",
+      }),
+    })
+    if (!res.ok) {
+      if (res.status === 429) {
+        const data = await res.json()
+        throw new Error(data.detail || "Optimization limit exceeded")
+      }
+      throw new Error("Failed to optimize media prompt")
+    }
+    return res.json()
+  },
+
+async listApiKeys(orgId: string): Promise<ApiKey[]> {
     const res = await fetch(`${API_BASE}/admin/organizations/${orgId}/api-keys`, {
       credentials: "include",
     })

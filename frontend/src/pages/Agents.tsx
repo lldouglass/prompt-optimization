@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FeedbackForm } from "@/components/FeedbackForm"
 import { agentApi, sessionApi } from "@/lib/api"
-import type { Judgment, CompareResult, OptimizationResult } from "@/lib/api"
+import type { Judgment, CompareResult, OptimizationResult, MediaOptimizationResult, MediaOptimizeRequest, MediaType } from "@/lib/api"
 import { track } from "@/lib/analytics"
-import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp, Search, AlertTriangle, ShieldCheck, HelpCircle } from "lucide-react"
+import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp, Search, AlertTriangle, ShieldCheck, HelpCircle, Camera, Video, Copy } from "lucide-react"
 
-type TabMode = "evaluate" | "compare" | "optimize"
+type TabMode = "evaluate" | "compare" | "optimize" | "media"
 
 interface LocationState {
   autoEvaluate?: boolean
@@ -86,7 +86,118 @@ export function AgentsPage() {
     })
   }
 
-  const runEvaluate = async (request?: string, response?: string) => {
+  
+  // Media optimization state
+  const [mediaType, setMediaType] = useState<MediaType>("photo")
+  const [mediaSubject, setMediaSubject] = useState("")
+  const [mediaStyleLighting, setMediaStyleLighting] = useState("")
+  const [mediaExistingPrompt, setMediaExistingPrompt] = useState("")
+  const [mediaIssuesToFix, setMediaIssuesToFix] = useState<string[]>([])
+  const [mediaConstraints, setMediaConstraints] = useState("")
+  const [mediaCameraMovement, setMediaCameraMovement] = useState("")
+  const [mediaShotType, setMediaShotType] = useState("")
+  const [mediaMotionEndpoints, setMediaMotionEndpoints] = useState("")
+  const [mediaResult, setMediaResult] = useState<MediaOptimizationResult | null>(null)
+  const [mediaLoading, setMediaLoading] = useState(false)
+  const [mediaError, setMediaError] = useState<string | null>(null)
+  const [mediaCopied, setMediaCopied] = useState(false)
+
+  const mediaResultsRef = useRef<HTMLDivElement>(null)
+
+  const photoIssueOptions = [
+    { value: "low_light", label: "Low light / Noise" },
+    { value: "motion_blur", label: "Motion blur" },
+    { value: "backlit", label: "Backlit / Highlights" },
+    { value: "color_cast", label: "Color cast" },
+    { value: "compression", label: "Compression artifacts" },
+  ]
+
+  const cameraMovementOptions = [
+    { value: "", label: "Select movement..." },
+    { value: "static", label: "Static" },
+    { value: "dolly_in", label: "Dolly in" },
+    { value: "dolly_out", label: "Dolly out" },
+    { value: "pan_left", label: "Pan left" },
+    { value: "pan_right", label: "Pan right" },
+    { value: "tracking", label: "Tracking" },
+    { value: "crane", label: "Crane" },
+    { value: "orbit", label: "Orbit" },
+    { value: "handheld", label: "Handheld" },
+    { value: "pov", label: "POV" },
+  ]
+
+  const shotTypeOptions = [
+    { value: "", label: "Select shot type..." },
+    { value: "wide", label: "Wide" },
+    { value: "medium", label: "Medium" },
+    { value: "close_up", label: "Close-up" },
+    { value: "extreme_close_up", label: "Extreme close-up" },
+    { value: "over_the_shoulder", label: "Over-the-shoulder" },
+  ]
+
+  const togglePhotoIssue = (issue: string) => {
+    setMediaIssuesToFix(prev =>
+      prev.includes(issue)
+        ? prev.filter(i => i !== issue)
+        : [...prev, issue]
+    )
+  }
+
+  const runMediaOptimize = async () => {
+    if (!mediaSubject.trim()) return
+
+    setMediaLoading(true)
+    setMediaResult(null)
+    setMediaError(null)
+    setMediaCopied(false)
+
+    try {
+      const request: MediaOptimizeRequest = {
+        media_type: mediaType,
+        subject: mediaSubject,
+        style_lighting: mediaStyleLighting,
+        existing_prompt: mediaExistingPrompt,
+        issues_to_fix: mediaIssuesToFix,
+        constraints: mediaConstraints,
+        camera_movement: mediaCameraMovement,
+        shot_type: mediaShotType,
+        motion_endpoints: mediaMotionEndpoints,
+      }
+
+      const result = await sessionApi.optimizeMedia(request)
+      setMediaResult(result)
+
+      // Auto-scroll to results
+      setTimeout(() => {
+        mediaResultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }, 100)
+
+      track('media_optimization_completed', {
+        media_type: mediaType,
+        optimized_score: result.optimized_score,
+        had_existing_prompt: !!mediaExistingPrompt,
+      })
+    } catch (error) {
+      console.error("Media optimize error:", error)
+      if (error instanceof Error) {
+        setMediaError(error.message)
+      } else {
+        setMediaError("Failed to optimize media prompt")
+      }
+    } finally {
+      setMediaLoading(false)
+    }
+  }
+
+  const copyMediaPrompt = () => {
+    if (mediaResult) {
+      navigator.clipboard.writeText(mediaResult.optimized_prompt)
+      setMediaCopied(true)
+      setTimeout(() => setMediaCopied(false), 2000)
+    }
+  }
+
+const runEvaluate = async (request?: string, response?: string) => {
     const reqText = request ?? evalRequest
     const resText = response ?? evalResponse
     if (!reqText.trim() || !resText.trim()) return
@@ -291,6 +402,18 @@ export function AgentsPage() {
           <Scale className="h-4 w-4 inline mr-2" />
           Compare
         </button>
+        <button
+          onClick={() => setActiveTab("media")}
+          className={`px-4 py-2 font-medium transition-colors ${
+            activeTab === "media"
+              ? "border-b-2 border-primary text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Camera className="h-4 w-4 inline mr-2" />
+          Media
+        </button>
+
       </div>
 
       {/* Evaluate Tab */}
@@ -1167,6 +1290,328 @@ export function AgentsPage() {
           )}
         </>
       )}
+      {/* Media Tab */}
+      {activeTab === "media" && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {mediaType === "photo" ? <Camera className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+                Media Prompt Optimizer
+              </CardTitle>
+              <CardDescription>
+                Generate optimized prompts for AI photo enhancement or video generation
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Media Type Toggle */}
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setMediaType("photo")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                    mediaType === "photo"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border hover:bg-muted"
+                  }`}
+                >
+                  <Camera className="h-4 w-4" />
+                  Photo
+                </button>
+                <button
+                  onClick={() => setMediaType("video")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                    mediaType === "video"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-border hover:bg-muted"
+                  }`}
+                >
+                  <Video className="h-4 w-4" />
+                  Video
+                </button>
+              </div>
+
+              {/* Subject (required) */}
+              <div>
+                <label className="text-sm font-medium">
+                  {mediaType === "photo" ? "Subject" : "Subject & Scene"} *
+                </label>
+                <textarea
+                  className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary mt-1"
+                  placeholder={mediaType === "photo"
+                    ? "What's in the image? e.g., 'Portrait of woman in coffee shop'"
+                    : "What's happening? e.g., 'Chef plating ramen in steamy kitchen'"
+                  }
+                  value={mediaSubject}
+                  onChange={(e) => setMediaSubject(e.target.value)}
+                />
+              </div>
+
+              {/* Style & Lighting */}
+              <div>
+                <label className="text-sm font-medium">Style & Lighting</label>
+                <textarea
+                  className="w-full min-h-[60px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary mt-1"
+                  placeholder={mediaType === "photo"
+                    ? "e.g., 'Warm tungsten, shallow depth of field, cinematic'"
+                    : "e.g., 'Cinematic, warm tones, dramatic shadows'"
+                  }
+                  value={mediaStyleLighting}
+                  onChange={(e) => setMediaStyleLighting(e.target.value)}
+                />
+              </div>
+
+              {/* Photo-specific fields */}
+              {mediaType === "photo" && (
+                <>
+                  {/* Issues to fix */}
+                  <div>
+                    <label className="text-sm font-medium">What needs to be fixed?</label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {photoIssueOptions.map((issue) => (
+                        <button
+                          key={issue.value}
+                          onClick={() => togglePhotoIssue(issue.value)}
+                          className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                            mediaIssuesToFix.includes(issue.value)
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "border-border hover:bg-muted"
+                          }`}
+                        >
+                          {issue.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Constraints */}
+                  <div>
+                    <label className="text-sm font-medium">Constraints (what must NOT change)</label>
+                    <textarea
+                      className="w-full min-h-[60px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary mt-1"
+                      placeholder="e.g., 'Preserve facial features, keep brand colors'"
+                      value={mediaConstraints}
+                      onChange={(e) => setMediaConstraints(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Video-specific fields */}
+              {mediaType === "video" && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Camera Movement */}
+                    <div>
+                      <label className="text-sm font-medium">Camera Movement</label>
+                      <select
+                        className="w-full p-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary mt-1"
+                        value={mediaCameraMovement}
+                        onChange={(e) => setMediaCameraMovement(e.target.value)}
+                      >
+                        {cameraMovementOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Shot Type */}
+                    <div>
+                      <label className="text-sm font-medium">Shot Type</label>
+                      <select
+                        className="w-full p-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary mt-1"
+                        value={mediaShotType}
+                        onChange={(e) => setMediaShotType(e.target.value)}
+                      >
+                        {shotTypeOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Motion Endpoints */}
+                  <div>
+                    <label className="text-sm font-medium">Motion Endpoints</label>
+                    <textarea
+                      className="w-full min-h-[60px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary mt-1"
+                      placeholder="How movement starts/ends, e.g., 'Slow push-in, settles on hands'"
+                      value={mediaMotionEndpoints}
+                      onChange={(e) => setMediaMotionEndpoints(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Existing prompt (optional) */}
+              <div>
+                <label className="text-sm font-medium">Existing Prompt (optional)</label>
+                <textarea
+                  className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary mt-1 font-mono text-sm"
+                  placeholder="Paste your current prompt to improve it, or leave blank to generate from scratch"
+                  value={mediaExistingPrompt}
+                  onChange={(e) => setMediaExistingPrompt(e.target.value)}
+                />
+              </div>
+
+              <Button
+                onClick={runMediaOptimize}
+                disabled={mediaLoading || !mediaSubject.trim()}
+              >
+                {mediaLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    {mediaExistingPrompt ? "Optimize Prompt" : "Generate Prompt"}
+                  </>
+                )}
+              </Button>
+
+              {mediaError && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-red-800 dark:text-red-200">
+                    {mediaError}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Media Results */}
+          {mediaResult && (
+            <div ref={mediaResultsRef} className="space-y-4">
+              {/* Score */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    {mediaResult.original_prompt ? "Optimization" : "Generation"} Results
+                  </CardTitle>
+                  {mediaResult.original_score !== null ? (
+                    <CardDescription>
+                      Score improved from {mediaResult.original_score.toFixed(1)} to{" "}
+                      {mediaResult.optimized_score.toFixed(1)}
+                      {mediaResult.optimized_score > mediaResult.original_score && (
+                        <span className="text-green-600 ml-2">
+                          (+{(mediaResult.optimized_score - mediaResult.original_score).toFixed(1)})
+                        </span>
+                      )}
+                    </CardDescription>
+                  ) : (
+                    <CardDescription>
+                      Quality Score: {mediaResult.optimized_score.toFixed(1)}/10
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Score bar */}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-muted rounded-full h-3">
+                        <div
+                          className="bg-green-500 h-3 rounded-full transition-all"
+                          style={{ width: `${(mediaResult.optimized_score / 10) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium w-10">
+                        {mediaResult.optimized_score.toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Improvements */}
+                  {mediaResult.improvements.length > 0 && (
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground mb-2">
+                        Improvements Made
+                      </div>
+                      <ul className="space-y-1">
+                        {mediaResult.improvements.map((improvement, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm">
+                            <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                            {improvement}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Reasoning */}
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground">Reasoning</div>
+                    <div className="mt-1 text-sm">{mediaResult.reasoning}</div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Generated Prompt */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    {mediaResult.media_type === "photo" ? "Photo" : "Video"} Prompt
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-muted p-4 rounded-lg whitespace-pre-wrap font-mono text-sm">
+                    {mediaResult.optimized_prompt}
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={copyMediaPrompt}
+                    >
+                      {mediaCopied ? (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy to Clipboard
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Tips */}
+              {mediaResult.tips.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Lightbulb className="h-4 w-4 text-yellow-500" />
+                      Tips for This Prompt
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {mediaResult.tips.map((tip, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm">
+                          <span className="text-yellow-500">-</span>
+                          {tip}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
     </div>
   )
 }

@@ -268,3 +268,36 @@ class EvaluationListResponse(BaseModel):
     """Response containing list of saved evaluations."""
     evaluations: list[SavedEvaluationResponse]
     total: int
+
+
+# Media Optimization schemas
+
+class MediaOptimizeRequest(BaseModel):
+    """Request to optimize a media (photo/video) prompt."""
+    media_type: Literal["photo", "video"]
+
+    # Common fields
+    subject: str  # Required - what's in the image/scene
+    style_lighting: str = ""  # Style and lighting description
+    existing_prompt: str = ""  # Optional - improve this prompt instead of generating new
+
+    # Photo-specific
+    issues_to_fix: list[str] = []  # ["low_light", "motion_blur", "backlit", "color_cast", "compression"]
+    constraints: str = ""  # What must NOT change
+
+    # Video-specific
+    camera_movement: str = ""  # "static", "dolly_in", "dolly_out", "pan_left", "pan_right", "tracking", "crane", "orbit", "handheld", "pov"
+    shot_type: str = ""  # "wide", "medium", "close_up", "extreme_close_up", "over_the_shoulder"
+    motion_endpoints: str = ""  # How movement starts/ends
+
+
+class MediaOptimizeResponse(BaseModel):
+    """Response containing optimized media prompt."""
+    optimized_prompt: str
+    original_prompt: str | None = None  # Only if existing_prompt was provided
+    original_score: float | None = None  # Only if existing_prompt was provided
+    optimized_score: float
+    improvements: list[str]
+    reasoning: str
+    tips: list[str]
+    media_type: str

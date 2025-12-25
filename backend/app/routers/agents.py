@@ -12,7 +12,7 @@ from sqlalchemy import select
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from agents import Planner, LegacyJudge, PromptOptimizer
+from agents import Planner, LegacyJudge, PromptOptimizer, MediaOptimizer
 from agents.hallucination_checker import HallucinationChecker
 from llm import OpenAIClient, MockLLMClient
 from llm.client import reset_usage, calculate_cost_cents
@@ -61,6 +61,8 @@ from ..schemas.agents import (
     EvaluationListResponse,
     WebSourceResponse,
     JudgeEvaluationResponse,
+    MediaOptimizeRequest,
+    MediaOptimizeResponse,
 )
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
@@ -352,6 +354,53 @@ async def optimize_prompt(
         iterations_used=iterations_used
     )
 
+
+
+
+@router.post("/optimize-media", response_model=MediaOptimizeResponse)
+async def optimize_media_prompt(
+    request: MediaOptimizeRequest,
+    org: Organization = Depends(get_current_org_dual),
+    db: AsyncSession = Depends(get_db),
+) -> MediaOptimizeResponse:
+    """Optimize a photo or video prompt."""
+    # Check and increment optimization usage
+    await check_and_increment_usage(str(org.id), db, "optimizations")
+
+    # Reset token tracking before optimization
+    reset_usage()
+
+    optimizer = MediaOptimizer()
+    result = optimizer.generate_prompt(
+        media_type=request.media_type,
+        subject=request.subject,
+        style_lighting=request.style_lighting,
+        issues_to_fix=request.issues_to_fix,
+        constraints=request.constraints,
+        camera_movement=request.camera_movement,
+        shot_type=request.shot_type,
+        motion_endpoints=request.motion_endpoints,
+        existing_prompt=request.existing_prompt,
+    )
+
+    # Track token usage
+    usage = reset_usage()
+    if usage["total_tokens"] > 0:
+        cost_cents = calculate_cost_cents(usage["prompt_tokens"], usage["completion_tokens"])
+        org.tokens_used_this_month += usage["total_tokens"]
+        org.estimated_cost_cents += cost_cents
+        await db.commit()
+
+    return MediaOptimizeResponse(
+        optimized_prompt=result.optimized_prompt,
+        original_prompt=result.original_prompt,
+        original_score=result.original_score,
+        optimized_score=result.optimized_score,
+        improvements=result.improvements,
+        reasoning=result.reasoning,
+        tips=result.tips,
+        media_type=result.media_type,
+    )
 
 @router.post("/optimizations", response_model=SavedOptimizationResponse)
 async def save_optimization(

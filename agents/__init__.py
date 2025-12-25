@@ -21,6 +21,12 @@ from .hallucination_checker import (
     HallucinationReport,
     ClaimVerification,
 )
+from .media_optimizer import (
+    MediaOptimizer,
+    MediaOptimizerError,
+    MediaOptimizationResult,
+    MediaAnalysis,
+)
 
 __all__ = [
     "Planner",
@@ -40,4 +46,8 @@ __all__ = [
     "HallucinationChecker",
     "HallucinationReport",
     "ClaimVerification",
+    "MediaOptimizer",
+    "MediaOptimizerError",
+    "MediaOptimizationResult",
+    "MediaAnalysis",
 ]
