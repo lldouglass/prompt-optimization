@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Zap, Mail, Lock, User, Building2 } from "lucide-react"
+import { Mail, Lock, User, Building2 } from "lucide-react"
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -54,7 +54,7 @@ export function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex items-center gap-2">
-            <Zap className="h-8 w-8 text-primary" />
+            <img src="/clarynt_icon.jpg" alt="Clarynt" className="h-8 w-8" />
             <span className="text-2xl font-bold">Clarynt</span>
           </div>
           <CardDescription>

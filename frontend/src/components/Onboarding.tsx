@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
-  Zap,
+  
   BarChart3,
   Sparkles,
   Code2,
@@ -118,7 +118,7 @@ export function Onboarding({ apiKey, onComplete }: OnboardingProps) {
           {step.id === "welcome" && (
             <div className="text-center space-y-4">
               <div className="mx-auto h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <Zap className="h-10 w-10 text-primary" />
+                <img src="/clarynt_icon.jpg" alt="Clarynt" className="h-10 w-10" />
               </div>
               <p className="text-muted-foreground">
                 PromptLab is your complete platform for logging, monitoring, and optimizing LLM API calls.
@@ -149,8 +149,8 @@ export function Onboarding({ apiKey, onComplete }: OnboardingProps) {
           {step.id === "features" && (
             <div className="grid gap-4">
               <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50">
-                <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <BarChart3 className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <h4 className="font-medium">Request Logging</h4>

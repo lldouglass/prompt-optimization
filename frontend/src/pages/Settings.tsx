@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { formatDate } from "@/lib/utils"
-import { Plus, Trash2, Copy, Check, Key, CreditCard, Zap, AlertCircle, ExternalLink } from "lucide-react"
+import { Plus, Trash2, Copy, Check, Key, CreditCard, Sparkles, AlertCircle, ExternalLink } from "lucide-react"
 import { track } from "@/lib/analytics"
 
 export function SettingsPage() {
@@ -266,7 +266,7 @@ export function SettingsPage() {
                           onClick={() => handleUpgrade("team")}
                           disabled={upgrading === "team"}
                         >
-                          <Zap className="h-4 w-4 mr-2" />
+                          <Sparkles className="h-4 w-4 mr-2" />
                           {upgrading === "team" ? "Loading..." : "Upgrade to Premium"}
                         </Button>
                       </div>
@@ -289,7 +289,7 @@ export function SettingsPage() {
                         onClick={() => handleUpgrade("pro")}
                         disabled={upgrading === "pro"}
                       >
-                        <Zap className="h-4 w-4 mr-2" />
+                        <Sparkles className="h-4 w-4 mr-2" />
                         {upgrading === "pro" ? "Loading..." : "Upgrade to Pro"}
                       </Button>
                     </div>

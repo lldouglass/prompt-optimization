@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
-  Zap,
+  
   BarChart3,
   Sparkles,
   GitCompare,
@@ -162,7 +162,7 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <Zap className="h-8 w-8 text-primary" />
+              <img src="/clarynt_icon.jpg" alt="Clarynt" className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold">PromptLab</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
@@ -583,7 +583,7 @@ export function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Zap className="h-6 w-6 text-primary" />
+                <img src="/clarynt_icon.jpg" alt="Clarynt" className="h-6 w-6 text-primary" />
                 <span className="text-lg font-bold">PromptLab</span>
               </div>
               <p className="text-sm text-muted-foreground">

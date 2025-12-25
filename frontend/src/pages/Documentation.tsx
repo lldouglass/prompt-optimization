@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   BookOpen,
-  Zap,
+  
   LayoutDashboard,
   Sparkles,
   Gavel,
@@ -33,7 +33,7 @@ const sections = [
   { id: "prompt-library", title: "Prompt Library", icon: Library },
   { id: "settings", title: "Settings & API Keys", icon: Settings },
   { id: "sdk", title: "Python SDK", icon: Code2 },
-  { id: "pricing", title: "Pricing & Limits", icon: Zap }
+  { id: "pricing", title: "Pricing & Limits", icon: Sparkles }
 ]
 
 export function DocumentationPage() {
@@ -404,7 +404,7 @@ export function DocumentationPage() {
                       <h4 className="font-semibold mb-2">Enhanced Mode Features</h4>
                       <div className="space-y-3">
                         <div className="flex items-start gap-3">
-                          <div className="h-6 w-6 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center flex-shrink-0 text-sm font-bold">1</div>
+                          <div className="h-6 w-6 rounded-full bg-primary/20 text-primary flex items-center justify-center flex-shrink-0 text-sm font-bold">1</div>
                           <div>
                             <p className="font-medium">Web-Enhanced Few-Shot Examples</p>
                             <p className="text-sm text-muted-foreground">
@@ -415,7 +415,7 @@ export function DocumentationPage() {
                           </div>
                         </div>
                         <div className="flex items-start gap-3">
-                          <div className="h-6 w-6 rounded-full bg-purple-500/20 text-purple-500 flex items-center justify-center flex-shrink-0 text-sm font-bold">2</div>
+                          <div className="h-6 w-6 rounded-full bg-primary/30 text-primary flex items-center justify-center flex-shrink-0 text-sm font-bold">2</div>
                           <div>
                             <p className="font-medium">Judge Evaluation</p>
                             <p className="text-sm text-muted-foreground">
@@ -889,7 +889,7 @@ client = track(OpenAI())`}
               <div className="space-y-8">
                 <div>
                   <Badge variant="secondary" className="mb-4">
-                    <Zap className="h-3 w-3 mr-1" />
+                    <Sparkles className="h-3 w-3 mr-1" />
                     Pricing
                   </Badge>
                   <h1 className="text-4xl font-bold mb-4">Pricing & Limits</h1>

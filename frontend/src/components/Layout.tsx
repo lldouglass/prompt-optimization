@@ -1,7 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Settings, LogOut, Zap, Bot, Library, GraduationCap, BookOpen } from "lucide-react"
+import { LayoutDashboard, Settings, LogOut, Bot, Library, GraduationCap, BookOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -23,7 +23,7 @@ export function Layout() {
       <aside className="w-64 border-r bg-card flex flex-col">
         <div className="p-4 border-b">
           <Link to="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
-            <Zap className="h-6 w-6 text-primary" />
+            <img src="/clarynt_icon.jpg" alt="Clarynt" className="h-6 w-6" />
             Clarynt
           </Link>
         </div>

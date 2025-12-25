@@ -3,12 +3,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
-  Zap,
+  
   BarChart3,
   Sparkles,
   GitCompare,
   Shield,
-  Clock,
   ArrowRight,
   Check,
   Code2,
@@ -16,7 +15,6 @@ import {
   Play,
   ChevronDown,
   Building2,
-  Timer,
   Star
 } from "lucide-react"
 import { useState } from "react"
@@ -147,11 +145,6 @@ const platformFeatures = [
     description: "AI Judge evaluates optimized prompts before returning, detecting regressions and ensuring quality."
   },
   {
-    icon: Clock,
-    title: "Real-time Monitoring",
-    description: "Watch API calls in real-time with instant performance insights."
-  },
-  {
     icon: Code2,
     title: "Simple SDK",
     description: "Drop-in Python SDK that works with OpenAI, Anthropic, and other providers."
@@ -170,7 +163,7 @@ export function LandingPageV2() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <Zap className="h-8 w-8 text-primary" />
+              <img src="/clarynt_icon.jpg" alt="Clarynt" className="h-8 w-8" />
               <span className="text-xl font-bold">Clarynt</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
@@ -224,35 +217,6 @@ export function LandingPageV2() {
           <p className="text-sm text-muted-foreground">
             No credit card required. 10 free optimizations per month.
           </p>
-        </div>
-      </section>
-
-      {/* ================================================================
-          PROBLEM AGITATION - Show the pain point
-          ================================================================ */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <Badge className="mb-4" variant="secondary">
-            <Timer className="h-3 w-3 mr-1" />
-            The Problem
-          </Badge>
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-            You're Wasting Hours on Prompt Engineering
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8 mt-12">
-            <div className="p-6 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
-              <div className="text-4xl font-bold text-red-600 mb-2">73%</div>
-              <p className="text-muted-foreground">of developers say they spend too much time iterating on prompts</p>
-            </div>
-            <div className="p-6 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
-              <div className="text-4xl font-bold text-red-600 mb-2">4.2 hrs</div>
-              <p className="text-muted-foreground">average time spent per week on prompt engineering alone</p>
-            </div>
-            <div className="p-6 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
-              <div className="text-4xl font-bold text-red-600 mb-2">38/100</div>
-              <p className="text-muted-foreground">average score of prompts written without optimization tools</p>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -638,7 +602,7 @@ export function LandingPageV2() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Zap className="h-6 w-6 text-primary" />
+                <img src="/clarynt_icon.jpg" alt="Clarynt" className="h-6 w-6" />
                 <span className="text-lg font-bold">Clarynt</span>
               </div>
               <p className="text-sm text-muted-foreground">
