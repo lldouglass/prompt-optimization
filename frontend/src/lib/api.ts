@@ -151,11 +151,11 @@ export function createAuthenticatedApi(apiKey: string) {
       return res.json()
     },
 
-    async createCheckoutSession(plan: string): Promise<CheckoutSessionResponse> {
+    async createCheckoutSession(plan: string, billingPeriod: "monthly" | "yearly" = "monthly"): Promise<CheckoutSessionResponse> {
       const res = await fetch(`${API_BASE}/billing/checkout`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, billing_period: billingPeriod }),
       })
       if (!res.ok) throw new Error("Failed to create checkout session")
       return res.json()
@@ -474,12 +474,12 @@ export const sessionApi = {
     return res.json()
   },
 
-  async createCheckoutSession(plan: string): Promise<CheckoutSessionResponse> {
+  async createCheckoutSession(plan: string, billingPeriod: "monthly" | "yearly" = "monthly"): Promise<CheckoutSessionResponse> {
     const res = await fetch(`${API_BASE}/billing/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ plan }),
+      body: JSON.stringify({ plan, billing_period: billingPeriod }),
     })
     if (!res.ok) throw new Error("Failed to create checkout session")
     return res.json()

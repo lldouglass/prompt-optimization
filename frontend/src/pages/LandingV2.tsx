@@ -33,7 +33,8 @@ import { useState } from "react"
 const pricingTiers = [
   {
     name: "Free",
-    price: "$0",
+    monthlyPrice: "$0",
+    yearlyPrice: "$0",
     period: "forever",
     description: "Start optimizing today",
     features: [
@@ -48,8 +49,11 @@ const pricingTiers = [
   },
   {
     name: "Premium",
-    price: "$15",
+    monthlyPrice: "$15",
+    yearlyPrice: "$12",
     period: "/month",
+    yearlyTotal: "$144/year",
+    savings: "Save $36/year",
     description: "For individual developers",
     features: [
       "10,000 logged requests/month",
@@ -64,8 +68,11 @@ const pricingTiers = [
   },
   {
     name: "Pro",
-    price: "$90",
+    monthlyPrice: "$90",
+    yearlyPrice: "$75",
     period: "/month",
+    yearlyTotal: "$900/year",
+    savings: "Save $180/year",
     description: "For teams & power users",
     features: [
       "100,000 logged requests/month",
@@ -77,11 +84,12 @@ const pricingTiers = [
       "Priority support"
     ],
     cta: "Start Free Trial",
-    highlighted: true
+    highlighted: false
   },
   {
     name: "Enterprise",
-    price: "Custom",
+    monthlyPrice: "Custom",
+    yearlyPrice: "Custom",
     period: "",
     description: "For large organizations",
     features: [
@@ -506,7 +514,7 @@ export function LandingPageV2() {
                   <CardTitle>{tier.name}</CardTitle>
                   <CardDescription>{tier.description}</CardDescription>
                   <div className="mt-4">
-                    <span className="text-4xl font-bold">{tier.price}</span>
+                    <span className="text-4xl font-bold">{tier.monthlyPrice}</span>
                     <span className="text-muted-foreground">{tier.period}</span>
                   </div>
                 </CardHeader>

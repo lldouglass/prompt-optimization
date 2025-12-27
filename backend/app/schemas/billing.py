@@ -26,6 +26,7 @@ class BillingInfo(BaseModel):
 
 class CreateCheckoutRequest(BaseModel):
     plan: str  # 'pro' or 'team'
+    billing_period: str = "monthly"  # 'monthly' or 'yearly'
 
 
 class CheckoutSessionResponse(BaseModel):

@@ -13,8 +13,10 @@ class Settings(BaseSettings):
     # Stripe settings
     stripe_secret_key: str | None = None
     stripe_webhook_secret: str | None = None
-    stripe_price_pro: str | None = None  # Price ID for Pro plan
-    stripe_price_team: str | None = None  # Price ID for Team plan
+    stripe_price_pro: str | None = None  # Price ID for Pro plan (monthly)
+    stripe_price_pro_yearly: str | None = None  # Price ID for Pro plan (yearly)
+    stripe_price_team: str | None = None  # Price ID for Team/Premium plan (monthly)
+    stripe_price_team_yearly: str | None = None  # Price ID for Team/Premium plan (yearly)
 
     # App URL for Stripe redirects
     app_url: str = "http://localhost:5173"

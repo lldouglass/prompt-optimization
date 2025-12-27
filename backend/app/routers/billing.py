@@ -27,6 +27,15 @@ def init_stripe():
         stripe.api_key = settings.stripe_secret_key
 
 
+def get_plan_from_price_id(price_id: str) -> str:
+    """Determine plan from Stripe price ID (handles both monthly and yearly)."""
+    if price_id in (settings.stripe_price_pro, settings.stripe_price_pro_yearly):
+        return "pro"
+    elif price_id in (settings.stripe_price_team, settings.stripe_price_team_yearly):
+        return "team"
+    return "free"
+
+
 @router.get("", response_model=BillingInfo)
 async def get_billing_info(
     org: Organization = Depends(get_current_org_dual),
@@ -66,17 +75,19 @@ async def create_checkout_session(
     if not settings.stripe_secret_key:
         raise HTTPException(status_code=503, detail="Stripe not configured")
 
-    # Get price ID based on plan
+    # Get price ID based on plan and billing period
     price_id = None
+    is_yearly = request.billing_period == "yearly"
+
     if request.plan == "pro":
-        price_id = settings.stripe_price_pro
+        price_id = settings.stripe_price_pro_yearly if is_yearly else settings.stripe_price_pro
     elif request.plan == "team":
-        price_id = settings.stripe_price_team
+        price_id = settings.stripe_price_team_yearly if is_yearly else settings.stripe_price_team
     else:
         raise HTTPException(status_code=400, detail="Invalid plan")
 
     if not price_id:
-        raise HTTPException(status_code=503, detail=f"Price for {request.plan} not configured")
+        raise HTTPException(status_code=503, detail=f"Price for {request.plan} ({request.billing_period}) not configured")
 
     # Create or get Stripe customer
     if org.stripe_customer_id:
@@ -208,14 +219,9 @@ async def handle_checkout_completed(session, db: AsyncSession):
     # Get subscription details
     subscription = stripe.Subscription.retrieve(session.subscription)
 
-    # Determine plan from price
+    # Determine plan from price (handles both monthly and yearly)
     price_id = subscription["items"]["data"][0]["price"]["id"]
-    if price_id == settings.stripe_price_pro:
-        plan = "pro"
-    elif price_id == settings.stripe_price_team:
-        plan = "team"
-    else:
-        plan = "free"
+    plan = get_plan_from_price_id(price_id)
 
     org.stripe_subscription_id = subscription.id
     org.subscription_plan = plan
@@ -246,12 +252,11 @@ async def handle_subscription_updated(subscription, db: AsyncSession):
     if period_end:
         org.subscription_period_end = datetime.fromtimestamp(period_end)
 
-    # Update plan if changed
+    # Update plan if changed (handles both monthly and yearly)
     price_id = subscription["items"]["data"][0]["price"]["id"]
-    if price_id == settings.stripe_price_pro:
-        org.subscription_plan = "pro"
-    elif price_id == settings.stripe_price_team:
-        org.subscription_plan = "team"
+    plan = get_plan_from_price_id(price_id)
+    if plan != "free":
+        org.subscription_plan = plan
 
     await db.commit()
 
@@ -267,11 +272,13 @@ async def handle_subscription_deleted(subscription, db: AsyncSession):
     if not org:
         return
 
-    org.subscription_plan = "free"
-    org.subscription_status = "canceled"
-    org.stripe_subscription_id = None
-
-    await db.commit()
+    # Only downgrade to free if this is the current subscription
+    # This prevents race conditions when upgrading (old sub cancelled, new sub created)
+    if org.stripe_subscription_id == subscription.id:
+        org.subscription_plan = "free"
+        org.subscription_status = "canceled"
+        org.stripe_subscription_id = None
+        await db.commit()
 
 
 async def handle_payment_failed(invoice, db: AsyncSession):

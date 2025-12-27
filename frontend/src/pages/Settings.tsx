@@ -25,6 +25,7 @@ export function SettingsPage() {
   const [billing, setBilling] = useState<BillingInfo | null>(null)
   const [billingLoading, setBillingLoading] = useState(true)
   const [upgrading, setUpgrading] = useState<string | null>(null)
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
 
   const checkoutStatus = searchParams.get("checkout")
 
@@ -63,10 +64,11 @@ export function SettingsPage() {
     // Track upgrade click
     track('upgrade_clicked', {
       plan,
+      billing_period: billingPeriod,
       current_plan: billing?.subscription.plan || 'free',
     })
     try {
-      const { checkout_url } = await sessionApi.createCheckoutSession(plan)
+      const { checkout_url } = await sessionApi.createCheckoutSession(plan, billingPeriod)
       window.location.href = checkout_url
     } catch (err) {
       console.error("Failed to create checkout:", err)
@@ -246,14 +248,42 @@ export function SettingsPage() {
 
               {/* Upgrade Options */}
               {billing.subscription.plan !== "pro" && (
-                <div className="space-y-3">
-                  <h4 className="font-medium">Upgrade Your Plan</h4>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Upgrade Your Plan</h4>
+                    <div className="flex items-center gap-2 p-1 bg-muted rounded-lg">
+                      <button
+                        onClick={() => setBillingPeriod("monthly")}
+                        className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                          billingPeriod === "monthly"
+                            ? "bg-background shadow-sm font-medium"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        onClick={() => setBillingPeriod("yearly")}
+                        className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                          billingPeriod === "yearly"
+                            ? "bg-background shadow-sm font-medium"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Yearly <span className="text-green-600 text-xs">Save 20%</span>
+                      </button>
+                    </div>
+                  </div>
                   <div className={`grid grid-cols-1 ${billing.subscription.plan === "free" ? "md:grid-cols-2" : ""} gap-4`}>
                     {billing.subscription.plan === "free" && (
                       <div className="p-4 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-semibold">Premium</span>
-                          <span className="text-lg font-bold">$15/mo</span>
+                          <div className="text-right">
+                            <span className="text-lg font-bold">{billingPeriod === "monthly" ? "$15" : "$144"}</span>
+                            <span className="text-muted-foreground">/{billingPeriod === "monthly" ? "mo" : "yr"}</span>
+                            {billingPeriod === "yearly" && <p className="text-xs text-green-600">$12/mo, save $36</p>}
+                          </div>
                         </div>
                         <ul className="text-sm text-muted-foreground space-y-1 mb-4">
                           <li>25,000 requests/month</li>
@@ -277,7 +307,11 @@ export function SettingsPage() {
                           <span className="font-semibold">Pro</span>
                           <Badge>Popular</Badge>
                         </div>
-                        <span className="text-lg font-bold">$90/mo</span>
+                        <div className="text-right">
+                          <span className="text-lg font-bold">{billingPeriod === "monthly" ? "$90" : "$864"}</span>
+                          <span className="text-muted-foreground">/{billingPeriod === "monthly" ? "mo" : "yr"}</span>
+                          {billingPeriod === "yearly" && <p className="text-xs text-green-600">$72/mo, save $216</p>}
+                        </div>
                       </div>
                       <ul className="text-sm text-muted-foreground space-y-1 mb-4">
                         <li>100,000 requests/month</li>
