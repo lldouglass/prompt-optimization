@@ -2,6 +2,39 @@ const API_BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api/v1`
   : "http://localhost:8000/api/v1"
 
+// Timeout constants (in milliseconds)
+const TIMEOUTS = {
+  DEFAULT: 30000,      // 30s for normal requests
+  OPTIMIZE: 120000,    // 2min for optimization (can be slow)
+  AUTH: 15000,         // 15s for auth operations
+  LONG: 60000,         // 60s for analysis/evaluation
+}
+
+// Fetch wrapper with timeout support using AbortController
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs: number = TIMEOUTS.DEFAULT
+): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out. Please check your connection and try again.')
+    }
+    throw error
+  }
+}
+
 // Auth Types
 export interface User {
   id: string
@@ -382,7 +415,7 @@ export function createAuthenticatedAgentApi(apiKey: string) {
       sampleInputs?: string[],
       skillName?: string
     ): Promise<OptimizationResult> {
-      const res = await fetch(`${API_BASE}/agents/optimize`, {
+      const res = await fetchWithTimeout(`${API_BASE}/agents/optimize`, {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -391,7 +424,7 @@ export function createAuthenticatedAgentApi(apiKey: string) {
           sample_inputs: sampleInputs || [],
           skill_name: skillName,
         }),
-      })
+      }, TIMEOUTS.OPTIMIZE)
       if (!res.ok) {
         if (res.status === 429) {
           const data = await res.json()
@@ -500,7 +533,7 @@ export const sessionApi = {
     sampleInputs?: string[],
     skillName?: string
   ): Promise<OptimizationResult> {
-    const res = await fetch(`${API_BASE}/agents/optimize`, {
+    const res = await fetchWithTimeout(`${API_BASE}/agents/optimize`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -510,7 +543,7 @@ export const sessionApi = {
         sample_inputs: sampleInputs || [],
         skill_name: skillName,
       }),
-    })
+    }, TIMEOUTS.OPTIMIZE)
     if (!res.ok) {
       if (res.status === 429) {
         const data = await res.json()
@@ -611,7 +644,7 @@ export const sessionApi = {
 
   
   async optimizeMedia(request: MediaOptimizeRequest): Promise<MediaOptimizationResult> {
-    const res = await fetch(`${API_BASE}/agents/optimize-media`, {
+    const res = await fetchWithTimeout(`${API_BASE}/agents/optimize-media`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -626,7 +659,7 @@ export const sessionApi = {
         shot_type: request.shot_type || "",
         motion_endpoints: request.motion_endpoints || "",
       }),
-    })
+    }, TIMEOUTS.OPTIMIZE)
     if (!res.ok) {
       if (res.status === 429) {
         const data = await res.json()
@@ -781,31 +814,31 @@ export const agentApi = {
   },
 
   async evaluate(request: string, response: string, rubric?: string): Promise<Judgment> {
-    const res = await fetch(`${API_BASE}/agents/evaluate`, {
+    const res = await fetchWithTimeout(`${API_BASE}/agents/evaluate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ request, response, rubric }),
-    })
+    }, TIMEOUTS.LONG)
     if (!res.ok) throw new Error("Failed to evaluate")
     return res.json()
   },
 
   async compare(request: string, responseA: string, responseB: string, rubric?: string): Promise<CompareResult> {
-    const res = await fetch(`${API_BASE}/agents/compare`, {
+    const res = await fetchWithTimeout(`${API_BASE}/agents/compare`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ request, response_a: responseA, response_b: responseB, rubric }),
-    })
+    }, TIMEOUTS.LONG)
     if (!res.ok) throw new Error("Failed to compare")
     return res.json()
   },
 
   async analyze(promptTemplate: string, taskDescription: string): Promise<PromptAnalysis> {
-    const res = await fetch(`${API_BASE}/agents/analyze`, {
+    const res = await fetchWithTimeout(`${API_BASE}/agents/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt_template: promptTemplate, task_description: taskDescription }),
-    })
+    }, TIMEOUTS.LONG)
     if (!res.ok) throw new Error("Failed to analyze prompt")
     return res.json()
   },
@@ -816,7 +849,7 @@ export const agentApi = {
     sampleInputs?: string[],
     skillName?: string
   ): Promise<OptimizationResult> {
-    const res = await fetch(`${API_BASE}/agents/optimize`, {
+    const res = await fetchWithTimeout(`${API_BASE}/agents/optimize`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -825,7 +858,7 @@ export const agentApi = {
         sample_inputs: sampleInputs || [],
         skill_name: skillName,
       }),
-    })
+    }, TIMEOUTS.OPTIMIZE)
     if (!res.ok) throw new Error("Failed to optimize prompt")
     return res.json()
   },
