@@ -22,7 +22,15 @@ class Settings(BaseSettings):
     app_url: str = "http://localhost:5173"
 
     # CORS settings
-    cors_origins: list[str] = ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"]
+    cors_origins: list[str] = [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:3000",
+        "https://clarynt-web.fly.dev",
+        "https://clarynt.net",
+        "https://www.clarynt.net",
+    ]
 
     # Auth settings
     secret_key: str = "CHANGE-ME-IN-PRODUCTION-USE-SECURE-RANDOM-KEY"
