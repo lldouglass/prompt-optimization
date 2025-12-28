@@ -53,15 +53,16 @@ async def create_session(
     await db.commit()
 
     # Set HTTP-only cookie
-    # For cross-domain (frontend/backend on different domains), need secure=True and samesite="none"
+    # Using shared cookie domain (.clarynt.net) for app/api subdomains
     response.set_cookie(
         key=settings.session_cookie_name,
         value=token,
         httponly=True,
         secure=True,
-        samesite="none",
+        samesite="lax",  # Can use lax since same parent domain
         max_age=settings.session_expire_days * 24 * 60 * 60,
         path="/",
+        domain=settings.cookie_domain,  # .clarynt.net - shared across subdomains
     )
 
 
@@ -222,6 +223,7 @@ async def logout(
     response.delete_cookie(
         key=settings.session_cookie_name,
         path="/",
+        domain=settings.cookie_domain,
     )
 
     return MessageResponse(message="Logged out successfully")

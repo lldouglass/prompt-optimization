@@ -28,11 +28,13 @@ class Settings(BaseSettings):
         "http://localhost:5175",
         "http://localhost:3000",
         "https://clarynt-web.fly.dev",
+        "https://app.clarynt.net",
         "https://clarynt.net",
         "https://www.clarynt.net",
     ]
 
     # Auth settings
+    cookie_domain: str | None = ".clarynt.net"  # Shared cookie domain for app/api subdomains
     secret_key: str = "CHANGE-ME-IN-PRODUCTION-USE-SECURE-RANDOM-KEY"
     session_cookie_name: str = "clarynt_session"
     session_expire_days: int = 30

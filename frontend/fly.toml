@@ -3,7 +3,7 @@ primary_region = 'iad'
 
 [build]
   [build.args]
-    VITE_API_URL = "https://clarynt-api.fly.dev"
+    VITE_API_URL = "https://api.clarynt.net"
 
 [http_service]
   internal_port = 8080
