@@ -2,8 +2,9 @@ import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { AnimatedDemo } from "@/components/AnimatedDemo"
 import {
-  
+
   BarChart3,
   Sparkles,
   GitCompare,
@@ -247,91 +248,17 @@ export function LandingPageV2() {
             </p>
           </div>
 
-          {/* Before/After Demo - Full width, visual impact */}
-          <div className="max-w-5xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-6">
-              {/* Before */}
-              <div className="bg-card rounded-2xl border-2 border-red-200 dark:border-red-800 p-8 relative">
-                <div className="absolute -top-4 left-6">
-                  <Badge variant="destructive" className="text-sm px-4 py-1">
-                    Before: 32/100
-                  </Badge>
-                </div>
-                <div className="mt-4">
-                  <div className="font-mono text-lg bg-red-50 dark:bg-red-950/20 p-6 rounded-xl">
-                    Write a summary of the article. Make it good and include the important parts.
-                  </div>
-                  <div className="mt-6 space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-red-500" />
-                      No role definition
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-red-500" />
-                      Vague instructions
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-red-500" />
-                      Missing output format
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-red-500" />
-                      No examples provided
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Animated Before/After Demo */}
+          <AnimatedDemo />
 
-              {/* After */}
-              <div className="bg-card rounded-2xl border-2 border-green-200 dark:border-green-800 p-8 relative">
-                <div className="absolute -top-4 left-6">
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-sm px-4 py-1">
-                    After: 89/100
-                  </Badge>
-                </div>
-                <div className="mt-4">
-                  <div className="font-mono text-sm bg-green-50 dark:bg-green-950/20 p-6 rounded-xl space-y-2">
-                    <p className="text-green-700 dark:text-green-400">&lt;role&gt;</p>
-                    <p>You are an expert content analyst specializing in extracting key insights.</p>
-                    <p className="text-green-700 dark:text-green-400">&lt;/role&gt;</p>
-                    <p className="text-green-700 dark:text-green-400">&lt;task&gt;</p>
-                    <p>Create a concise summary that:</p>
-                    <p>- Captures the main thesis in 1-2 sentences</p>
-                    <p>- Lists 3-5 key supporting points</p>
-                    <p>- Keeps total length under 150 words</p>
-                    <p className="text-green-700 dark:text-green-400">&lt;/task&gt;</p>
-                  </div>
-                  <div className="mt-6 space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-green-600">
-                      <Check className="h-4 w-4" />
-                      Expert role defined
-                    </div>
-                    <div className="flex items-center gap-2 text-green-600">
-                      <Check className="h-4 w-4" />
-                      Clear, specific instructions
-                    </div>
-                    <div className="flex items-center gap-2 text-green-600">
-                      <Check className="h-4 w-4" />
-                      Structured XML format
-                    </div>
-                    <div className="flex items-center gap-2 text-green-600">
-                      <Check className="h-4 w-4" />
-                      +57 point improvement
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* CTA after demo */}
-            <div className="text-center mt-12">
-              <Link to="/login">
-                <Button size="lg" className="text-lg px-8">
-                  <Play className="mr-2 h-5 w-5" />
-                  Try It Yourself
-                </Button>
-              </Link>
-            </div>
+          {/* CTA after demo */}
+          <div className="text-center mt-12">
+            <Link to="/login">
+              <Button size="lg" className="text-lg px-8">
+                <Play className="mr-2 h-5 w-5" />
+                Try It Yourself
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
