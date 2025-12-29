@@ -25,7 +25,7 @@ from ..models.evaluation import SavedEvaluation
 from ..models.feedback import UserFeedback
 from ..auth import get_api_key, get_current_org, get_current_org_dual, get_user_from_session
 from ..models.api_key import ApiKey
-from ..usage import check_and_increment_usage
+from ..usage import check_usage_limit, increment_usage
 from ..schemas.feedback import (
     FeedbackCreateRequest,
     FeedbackResponse,
@@ -229,8 +229,8 @@ async def optimize_prompt(
     org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db),
 ) -> OptimizeResponse:
-    # Check and increment optimization usage
-    await check_and_increment_usage(str(org.id), db, "optimizations")
+    # Check usage limit FIRST (doesn't increment - that happens after success)
+    await check_usage_limit(str(org.id), db, "optimizations")
 
     # Reset token tracking before optimization
     reset_usage()
@@ -339,6 +339,9 @@ async def optimize_prompt(
                 regression_details=result.judge_evaluation.regression_details
             )
 
+    # Only increment usage AFTER successful optimization
+    await increment_usage(str(org.id), db, "optimizations")
+
     return OptimizeResponse(
         original_prompt=result.original_prompt,
         optimized_prompt=result.optimized_prompt,
@@ -364,8 +367,8 @@ async def optimize_media_prompt(
     db: AsyncSession = Depends(get_db),
 ) -> MediaOptimizeResponse:
     """Optimize a photo or video prompt."""
-    # Check and increment optimization usage
-    await check_and_increment_usage(str(org.id), db, "optimizations")
+    # Check usage limit FIRST (doesn't increment - that happens after success)
+    await check_usage_limit(str(org.id), db, "optimizations")
 
     # Reset token tracking before optimization
     reset_usage()
@@ -390,6 +393,9 @@ async def optimize_media_prompt(
         org.tokens_used_this_month += usage["total_tokens"]
         org.estimated_cost_cents += cost_cents
         await db.commit()
+
+    # Only increment usage AFTER successful optimization
+    await increment_usage(str(org.id), db, "optimizations")
 
     return MediaOptimizeResponse(
         optimized_prompt=result.optimized_prompt,
