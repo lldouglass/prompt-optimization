@@ -385,6 +385,70 @@ export function LandingPageV2() {
       </section>
 
       {/* ================================================================
+          WHY PROMPT QUALITY MATTERS - Research validation
+          ================================================================ */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <Badge className="mb-4" variant="secondary">
+              <Target className="h-3 w-3 mr-1" />
+              The Research Is Clear
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Your Prompts Are Holding You Back
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Studies from Harvard and Google show that how you ask is just as important as what you ask.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-10">
+            <Card className="border-2">
+              <CardContent className="pt-6">
+                <div className="text-red-500 font-semibold mb-3">The Problem</div>
+                <p className="text-lg font-medium mb-2">
+                  Vague prompts give vague answers
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Harvard researchers found that people using AI without prompt training actually produced <span className="font-semibold text-foreground">worse work</span> than not using AI at all. The AI gave confident but wrong answers.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-primary">
+              <CardContent className="pt-6">
+                <div className="text-primary font-semibold mb-3">The Solution</div>
+                <p className="text-lg font-medium mb-2">
+                  Show the AI what you want
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Adding just 2-3 examples of good output cuts errors in half. That's why Clarynt automatically generates relevant examples for every prompt you optimize.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2">
+              <CardContent className="pt-6">
+                <div className="text-green-500 font-semibold mb-3">The Result</div>
+                <p className="text-lg font-medium mb-2">
+                  AI that actually follows instructions
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Structured prompts with clear roles, examples, and constraints get dramatically better results. The same AI model, completely different output.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center">
+            <Link to="/education" className="text-primary hover:underline inline-flex items-center gap-1">
+              See the research and learn best practices <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================
           FEATURES GRID - Platform capabilities
           ================================================================ */}
       <section id="features" className="py-24 px-4 sm:px-6 lg:px-8">
