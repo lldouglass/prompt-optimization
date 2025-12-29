@@ -4,10 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { FeedbackForm } from "@/components/FeedbackForm"
+import { FileUpload, filesToUploadedFiles } from "@/components/FileUpload"
+import type { UploadedFileState } from "@/components/FileUpload"
 import { agentApi, sessionApi } from "@/lib/api"
 import type { Judgment, CompareResult, OptimizationResult, MediaOptimizationResult, MediaOptimizeRequest, MediaType } from "@/lib/api"
 import { track } from "@/lib/analytics"
-import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp, Search, AlertTriangle, ShieldCheck, HelpCircle, Camera, Video, Copy, Gift, X } from "lucide-react"
+import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp, Search, AlertTriangle, ShieldCheck, HelpCircle, Camera, Video, Copy, Gift, X, FileText } from "lucide-react"
 
 type TabMode = "evaluate" | "compare" | "optimize" | "media"
 
@@ -109,6 +111,21 @@ export function AgentsPage() {
 
   const mediaResultsRef = useRef<HTMLDivElement>(null)
 
+  // File upload state (Premium/Pro only)
+  const [optimizeFiles, setOptimizeFiles] = useState<UploadedFileState[]>([])
+  const [mediaFiles, setMediaFiles] = useState<UploadedFileState[]>([])
+  const [isPremium, setIsPremium] = useState(false)
+
+  // Check subscription tier on mount
+  useEffect(() => {
+    sessionApi.getBillingInfo().then(billing => {
+      const paidTiers = ["pro", "team", "enterprise"]
+      setIsPremium(paidTiers.includes(billing.subscription.plan))
+    }).catch(() => {
+      // Silently fail - assume free tier
+    })
+  }, [])
+
   const photoIssueOptions = [
     { value: "low_light", label: "Low light / Noise" },
     { value: "motion_blur", label: "Motion blur" },
@@ -157,6 +174,9 @@ export function AgentsPage() {
     setMediaCopied(false)
 
     try {
+      // Prepare uploaded files for API
+      const uploadedFiles = filesToUploadedFiles(mediaFiles)
+
       const request: MediaOptimizeRequest = {
         media_type: mediaType,
         subject: mediaSubject,
@@ -167,6 +187,7 @@ export function AgentsPage() {
         camera_movement: mediaCameraMovement,
         shot_type: mediaShotType,
         motion_endpoints: mediaMotionEndpoints,
+        uploaded_files: uploadedFiles.length > 0 ? uploadedFiles : undefined,
       }
 
       const result = await sessionApi.optimizeMedia(request)
@@ -329,10 +350,15 @@ const runEvaluate = async (request?: string, response?: string) => {
         .map((s) => s.trim())
         .filter((s) => s.length > 0)
 
+      // Prepare uploaded files for API
+      const uploadedFiles = filesToUploadedFiles(optimizeFiles)
+
       const result = await sessionApi.optimize(
         optimizePrompt,
         optimizeTask,
-        sampleInputs.length > 0 ? sampleInputs : undefined
+        sampleInputs.length > 0 ? sampleInputs : undefined,
+        undefined,  // skillName
+        uploadedFiles.length > 0 ? uploadedFiles : undefined
       )
       setOptimizeResult(result)
 
@@ -1013,6 +1039,19 @@ const runEvaluate = async (request?: string, response?: string) => {
                 />
               </div>
 
+              <div>
+                <label className="text-sm font-medium">Reference files (optional)</label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Upload documents or images to inform the optimization
+                </p>
+                <FileUpload
+                  files={optimizeFiles}
+                  onFilesChange={setOptimizeFiles}
+                  isPremium={isPremium}
+                  onUpgradeClick={() => navigate("/settings")}
+                />
+              </div>
+
               <Button
                 onClick={runOptimize}
                 disabled={optimizeLoading || !optimizePrompt.trim() || !optimizeTask.trim()}
@@ -1107,6 +1146,39 @@ const runEvaluate = async (request?: string, response?: string) => {
                           </li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {/* Processed Files */}
+                  {optimizeResult.file_context && optimizeResult.file_context.length > 0 && (
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Processed Files
+                      </div>
+                      <div className="space-y-2">
+                        {optimizeResult.file_context.map((fc, i) => (
+                          <div
+                            key={i}
+                            className={`p-2 rounded-lg text-sm ${
+                              fc.status === "success"
+                                ? "bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800"
+                                : "bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{fc.file_name}</span>
+                              <Badge variant="outline" className="text-xs">{fc.extraction_method}</Badge>
+                            </div>
+                            {fc.status === "error" && (
+                              <p className="text-red-500 text-xs mt-1">{fc.error_message}</p>
+                            )}
+                            {fc.status === "success" && fc.extracted_text && (
+                              <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{fc.extracted_text}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -1491,6 +1563,20 @@ const runEvaluate = async (request?: string, response?: string) => {
                 />
               </div>
 
+              {/* Reference images (optional) */}
+              <div>
+                <label className="text-sm font-medium">Reference images (optional)</label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Upload reference images to guide the prompt generation
+                </p>
+                <FileUpload
+                  files={mediaFiles}
+                  onFilesChange={setMediaFiles}
+                  isPremium={isPremium}
+                  onUpgradeClick={() => navigate("/settings")}
+                />
+              </div>
+
               <Button
                 onClick={runMediaOptimize}
                 disabled={mediaLoading || !mediaSubject.trim()}
@@ -1575,6 +1661,39 @@ const runEvaluate = async (request?: string, response?: string) => {
                           </li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {/* Processed Files */}
+                  {mediaResult.file_context && mediaResult.file_context.length > 0 && (
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Reference Images Analyzed
+                      </div>
+                      <div className="space-y-2">
+                        {mediaResult.file_context.map((fc, i) => (
+                          <div
+                            key={i}
+                            className={`p-2 rounded-lg text-sm ${
+                              fc.status === "success"
+                                ? "bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800"
+                                : "bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{fc.file_name}</span>
+                              <Badge variant="outline" className="text-xs">{fc.extraction_method}</Badge>
+                            </div>
+                            {fc.status === "error" && (
+                              <p className="text-red-500 text-xs mt-1">{fc.error_message}</p>
+                            )}
+                            {fc.status === "success" && fc.extracted_text && (
+                              <p className="text-muted-foreground text-xs mt-1 line-clamp-2">{fc.extracted_text}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 

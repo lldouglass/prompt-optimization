@@ -112,6 +112,7 @@ const pricingTiers = [
       "10,000 logged requests/month",
       "50 prompt optimizations/month",
       "30-day data retention",
+      "File upload for context",
       "Advanced analytics",
       "Email support"
     ],
@@ -128,6 +129,7 @@ const pricingTiers = [
       "100,000 logged requests/month",
       "Unlimited optimizations",
       "90-day data retention",
+      "File upload for context",
       "A/B testing suite",
       "Priority support"
     ],

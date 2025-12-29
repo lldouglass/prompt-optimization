@@ -344,6 +344,7 @@ export function SettingsPage() {
                           <li>25,000 requests/month</li>
                           <li>200 optimizations/month</li>
                           <li>30-day data retention</li>
+                          <li>File upload for context</li>
                         </ul>
                         <Button
                           className="w-full"
@@ -372,6 +373,7 @@ export function SettingsPage() {
                         <li>100,000 requests/month</li>
                         <li>Unlimited optimizations</li>
                         <li>90-day data retention</li>
+                        <li>File upload for context</li>
                       </ul>
                       <Button
                         className="w-full"

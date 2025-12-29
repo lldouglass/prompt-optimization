@@ -4,6 +4,25 @@ from typing import Literal
 from pydantic import BaseModel
 
 
+# File upload schemas
+
+class UploadedFile(BaseModel):
+    """An uploaded file to be processed."""
+    file_name: str
+    file_data: str  # base64 encoded
+    mime_type: str | None = None
+
+
+class FileProcessingResult(BaseModel):
+    """Result of processing an uploaded file."""
+    file_name: str
+    file_type: str
+    extracted_text: str
+    extraction_method: str
+    status: Literal["success", "error"]
+    error_message: str | None = None
+
+
 class PlanRequest(BaseModel):
     """Request to create an execution plan."""
     user_request: str
@@ -152,6 +171,7 @@ class OptimizeRequest(BaseModel):
     sample_inputs: list[str] = []
     skill_name: str | None = None  # If loading from registry
     mode: Literal["standard", "enhanced"] | None = None  # None = auto-detect from tier
+    uploaded_files: list[UploadedFile] = []  # Premium/Pro only - files for context
 
 
 class WebSourceResponse(BaseModel):
@@ -187,6 +207,8 @@ class OptimizeResponse(BaseModel):
     web_sources: list[WebSourceResponse] | None = None
     judge_evaluation: JudgeEvaluationResponse | None = None
     iterations_used: int = 1
+    # File upload results
+    file_context: list[FileProcessingResult] | None = None
 
 
 class SaveOptimizationRequest(BaseModel):
@@ -290,6 +312,9 @@ class MediaOptimizeRequest(BaseModel):
     shot_type: str = ""  # "wide", "medium", "close_up", "extreme_close_up", "over_the_shoulder"
     motion_endpoints: str = ""  # How movement starts/ends
 
+    # File upload - reference images/videos (Premium/Pro only)
+    uploaded_files: list[UploadedFile] = []
+
 
 class MediaOptimizeResponse(BaseModel):
     """Response containing optimized media prompt."""
@@ -301,3 +326,5 @@ class MediaOptimizeResponse(BaseModel):
     reasoning: str
     tips: list[str]
     media_type: str
+    # File upload results
+    file_context: list[FileProcessingResult] | None = None

@@ -63,7 +63,9 @@ from ..schemas.agents import (
     JudgeEvaluationResponse,
     MediaOptimizeRequest,
     MediaOptimizeResponse,
+    FileProcessingResult,
 )
+from ..services.file_processor import process_file, FileProcessingError
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
 
@@ -235,6 +237,48 @@ async def optimize_prompt(
     # Reset token tracking before optimization
     reset_usage()
 
+    # Determine tier access
+    paid_tiers = ["pro", "team", "enterprise"]
+    is_paid_tier = org.subscription_plan in paid_tiers
+
+    # Process uploaded files (Premium/Pro only)
+    file_context_results: list[FileProcessingResult] = []
+    file_context_text = ""
+
+    if request.uploaded_files:
+        if not is_paid_tier:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="File upload requires a Premium or Pro subscription"
+            )
+
+        for uploaded in request.uploaded_files:
+            try:
+                content = await process_file(
+                    uploaded.file_data,
+                    uploaded.file_name,
+                    uploaded.mime_type
+                )
+                # Truncate extracted_text for response (full text goes to optimizer)
+                display_text = content.text[:500] + "..." if len(content.text) > 500 else content.text
+                file_context_results.append(FileProcessingResult(
+                    file_name=content.file_name,
+                    file_type=content.file_type,
+                    extracted_text=display_text,
+                    extraction_method=content.extraction_method,
+                    status="success"
+                ))
+                file_context_text += f"\n\n--- Content from {content.file_name} ---\n{content.text}"
+            except FileProcessingError as e:
+                file_context_results.append(FileProcessingResult(
+                    file_name=uploaded.file_name,
+                    file_type="unknown",
+                    extracted_text="",
+                    extraction_method="none",
+                    status="error",
+                    error_message=str(e)
+                ))
+
     registry = get_registry()
     optimizer = PromptOptimizer()
     prompt_template = request.prompt_template
@@ -244,10 +288,15 @@ async def optimize_prompt(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Skill not found: {request.skill_name}")
         prompt_template = skill.prompt_template
 
-    # Determine optimization mode based on request or tier
-    # Enhanced mode available for pro, team, and enterprise tiers
-    paid_tiers = ["pro", "team", "enterprise"]
-    is_paid_tier = org.subscription_plan in paid_tiers
+    # Enhance task description with file context
+    enhanced_task = request.task_description
+    if file_context_text:
+        enhanced_task = f"""{request.task_description}
+
+## Reference Material (from uploaded files)
+{file_context_text}
+
+Use this reference material to inform your optimization suggestions."""
 
     # Use requested mode, or auto-detect based on tier
     use_enhanced = False
@@ -268,13 +317,13 @@ async def optimize_prompt(
     if use_enhanced:
         result = await optimizer.optimize_enhanced(
             prompt_template=prompt_template,
-            task_description=request.task_description,
+            task_description=enhanced_task,
             sample_inputs=request.sample_inputs if request.sample_inputs else None
         )
     else:
         result = optimizer.optimize(
             prompt_template=prompt_template,
-            task_description=request.task_description,
+            task_description=enhanced_task,
             sample_inputs=request.sample_inputs if request.sample_inputs else None
         )
 
@@ -354,7 +403,8 @@ async def optimize_prompt(
         mode=mode,
         web_sources=web_sources,
         judge_evaluation=judge_evaluation,
-        iterations_used=iterations_used
+        iterations_used=iterations_used,
+        file_context=file_context_results if file_context_results else None
     )
 
 
@@ -373,10 +423,59 @@ async def optimize_media_prompt(
     # Reset token tracking before optimization
     reset_usage()
 
+    # Determine tier access
+    paid_tiers = ["pro", "team", "enterprise"]
+    is_paid_tier = org.subscription_plan in paid_tiers
+
+    # Process uploaded files (Premium/Pro only) - reference images
+    file_context_results: list[FileProcessingResult] = []
+    file_context_text = ""
+
+    if request.uploaded_files:
+        if not is_paid_tier:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="File upload requires a Premium or Pro subscription"
+            )
+
+        for uploaded in request.uploaded_files:
+            try:
+                content = await process_file(
+                    uploaded.file_data,
+                    uploaded.file_name,
+                    uploaded.mime_type
+                )
+                display_text = content.text[:500] + "..." if len(content.text) > 500 else content.text
+                file_context_results.append(FileProcessingResult(
+                    file_name=content.file_name,
+                    file_type=content.file_type,
+                    extracted_text=display_text,
+                    extraction_method=content.extraction_method,
+                    status="success"
+                ))
+                file_context_text += f"\n\n--- Reference from {content.file_name} ---\n{content.text}"
+            except FileProcessingError as e:
+                file_context_results.append(FileProcessingResult(
+                    file_name=uploaded.file_name,
+                    file_type="unknown",
+                    extracted_text="",
+                    extraction_method="none",
+                    status="error",
+                    error_message=str(e)
+                ))
+
+    # Enhance subject with file context if present
+    enhanced_subject = request.subject
+    if file_context_text:
+        enhanced_subject = f"""{request.subject}
+
+## Reference Image Analysis
+{file_context_text}"""
+
     optimizer = MediaOptimizer()
     result = optimizer.generate_prompt(
         media_type=request.media_type,
-        subject=request.subject,
+        subject=enhanced_subject,
         style_lighting=request.style_lighting,
         issues_to_fix=request.issues_to_fix,
         constraints=request.constraints,
@@ -406,6 +505,7 @@ async def optimize_media_prompt(
         reasoning=result.reasoning,
         tips=result.tips,
         media_type=result.media_type,
+        file_context=file_context_results if file_context_results else None
     )
 
 @router.post("/optimizations", response_model=SavedOptimizationResponse)

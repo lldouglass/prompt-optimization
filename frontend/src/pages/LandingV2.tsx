@@ -61,6 +61,7 @@ const pricingTiers = [
       "50 prompt optimizations/month",
       "Enhanced mode with web search",
       "Judge evaluation before return",
+      "File upload for context",
       "30-day data retention",
       "Email support"
     ],
@@ -80,6 +81,7 @@ const pricingTiers = [
       "Unlimited optimizations",
       "Enhanced mode with web search",
       "Judge evaluation + auto-retry",
+      "File upload for context",
       "90-day data retention",
       "A/B testing suite",
       "Priority support"

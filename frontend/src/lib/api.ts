@@ -304,6 +304,7 @@ export interface OptimizationResult {
   reasoning: string
   analysis: PromptAnalysis | null
   few_shot_research: FewShotResearch | null
+  file_context: FileProcessingResult[] | null
 }
 
 export interface SavedOptimization {
@@ -341,6 +342,22 @@ export interface SavedEvaluation {
 
 
 
+// File upload types
+export interface UploadedFile {
+  file_name: string
+  file_data: string  // base64 encoded
+  mime_type: string | null
+}
+
+export interface FileProcessingResult {
+  file_name: string
+  file_type: string
+  extracted_text: string
+  extraction_method: string
+  status: "success" | "error"
+  error_message: string | null
+}
+
 // Media optimization types
 export type MediaType = "photo" | "video"
 
@@ -356,6 +373,8 @@ export interface MediaOptimizeRequest {
   camera_movement?: string
   shot_type?: string
   motion_endpoints?: string
+  // File upload (Premium/Pro only)
+  uploaded_files?: UploadedFile[]
 }
 
 export interface MediaOptimizationResult {
@@ -367,6 +386,7 @@ export interface MediaOptimizationResult {
   reasoning: string
   tips: string[]
   media_type: MediaType
+  file_context: FileProcessingResult[] | null
 }
 
 // Billing types
@@ -552,7 +572,8 @@ export const sessionApi = {
     promptTemplate: string,
     taskDescription: string,
     sampleInputs?: string[],
-    skillName?: string
+    skillName?: string,
+    uploadedFiles?: UploadedFile[]
   ): Promise<OptimizationResult> {
     const res = await fetchWithTimeout(`${API_BASE}/agents/optimize`, {
       method: "POST",
@@ -563,12 +584,17 @@ export const sessionApi = {
         task_description: taskDescription,
         sample_inputs: sampleInputs || [],
         skill_name: skillName,
+        uploaded_files: uploadedFiles || [],
       }),
     }, TIMEOUTS.OPTIMIZE)
     if (!res.ok) {
       if (res.status === 429) {
         const data = await res.json()
         throw new Error(data.detail || "Optimization limit exceeded")
+      }
+      if (res.status === 403) {
+        const data = await res.json()
+        throw new Error(data.detail || "Premium feature not available")
       }
       throw new Error("Failed to optimize prompt")
     }
@@ -679,12 +705,17 @@ export const sessionApi = {
         camera_movement: request.camera_movement || "",
         shot_type: request.shot_type || "",
         motion_endpoints: request.motion_endpoints || "",
+        uploaded_files: request.uploaded_files || [],
       }),
     }, TIMEOUTS.OPTIMIZE)
     if (!res.ok) {
       if (res.status === 429) {
         const data = await res.json()
         throw new Error(data.detail || "Optimization limit exceeded")
+      }
+      if (res.status === 403) {
+        const data = await res.json()
+        throw new Error(data.detail || "Premium feature not available")
       }
       throw new Error("Failed to optimize media prompt")
     }
