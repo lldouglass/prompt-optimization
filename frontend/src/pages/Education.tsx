@@ -332,174 +332,118 @@ export function EducationPage() {
             </Badge>
             <h2 className="text-3xl font-bold mb-4">Why Prompt Quality Matters</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              The difference between a good prompt and a bad one isn't just about convenience—it fundamentally changes what AI can do for you.
+              Research from Harvard, Google, and other institutions shows that prompt quality directly determines AI output quality.
             </p>
           </div>
 
-          <div className="space-y-8 mb-12">
-            {/* The Core Problem */}
+          <div className="space-y-6">
+            {/* Harvard/BCG Study */}
             <Card className="border-2">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                  The Problem: AI Doesn't Read Your Mind
-                </CardTitle>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <Badge className="mb-2">Harvard Business School + BCG</Badge>
+                    <CardTitle>Poor prompts made work 23% worse than not using AI at all</CardTitle>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground">
-                  When you type "write me a summary," the AI has no idea what you actually want. How long? What style? What should it focus on? What's the audience? Without this context, AI makes guesses—and those guesses are often wrong.
+                  Researchers tested 758 Boston Consulting Group consultants on realistic business tasks. When consultants used AI without prompt guidance on complex tasks, their work quality <span className="font-semibold text-foreground">dropped 23%</span> compared to not using AI. The AI gave confident but wrong answers, and people trusted them.
                 </p>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-900">
-                    <div className="flex items-center gap-2 mb-2">
-                      <XCircle className="h-4 w-4 text-red-500" />
-                      <span className="font-medium text-red-700 dark:text-red-400">Vague Prompt</span>
-                    </div>
-                    <p className="text-sm text-red-600 dark:text-red-300">"Summarize this article"</p>
-                    <p className="text-xs text-red-500 dark:text-red-400 mt-2">Result: Generic, unfocused summary that may miss what you actually needed</p>
-                  </div>
-                  <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-900">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="font-medium text-green-700 dark:text-green-400">Clear Prompt</span>
-                    </div>
-                    <p className="text-sm text-green-600 dark:text-green-300">"Summarize this article in 3 bullet points for a technical audience, focusing on the methodology and results"</p>
-                    <p className="text-xs text-green-500 dark:text-green-400 mt-2">Result: Exactly what you needed, first try</p>
-                  </div>
+                <p className="text-muted-foreground">
+                  However, consultants who received prompt engineering training completed tasks <span className="font-semibold text-foreground">25% faster</span> and produced <span className="font-semibold text-foreground">40% higher quality work</span>.
+                </p>
+                <div className="flex items-center gap-2 pt-2">
+                  <a href="https://www.hbs.edu/faculty/Pages/item.aspx?num=64700" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                    Read the full study <ExternalLink className="h-3 w-3" />
+                  </a>
                 </div>
               </CardContent>
             </Card>
 
-            {/* What Research Shows */}
+            {/* Few-Shot Learning */}
             <Card className="border-2">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary" />
-                  What the Research Actually Shows
-                </CardTitle>
-                <CardDescription>
-                  Harvard, BCG, and leading AI labs have studied this extensively
-                </CardDescription>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <Badge className="mb-2">IEEE / Multiple Studies</Badge>
+                    <CardTitle>Adding 3 examples improves results by 50%</CardTitle>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-2xl font-bold text-primary">1</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-1">Bad prompts make AI worse than useless</h4>
-                      <p className="text-sm text-muted-foreground">
-                        A Harvard/BCG study found that when people used AI with poor prompts on complex tasks, their work quality <span className="font-medium text-foreground">dropped 23%</span> compared to not using AI at all. The AI confidently gave wrong answers, and people trusted them.
-                      </p>
-                      <a href="https://www.hbs.edu/faculty/Pages/item.aspx?num=64700" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mt-1">
-                        Harvard Business School Study <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-2xl font-bold text-primary">2</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-1">Good prompts unlock dramatically better results</h4>
-                      <p className="text-sm text-muted-foreground">
-                        The same study showed that with proper prompting guidance, people completed tasks <span className="font-medium text-foreground">25% faster</span> and produced <span className="font-medium text-foreground">40% higher quality work</span>. The difference wasn't the AI—it was how they talked to it.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-2xl font-bold text-primary">3</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-1">Simple techniques have outsized impact</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Adding just 3 examples of what you want improves results by <span className="font-medium text-foreground">50%</span>. Asking the AI to "think step by step" improves reasoning accuracy by <span className="font-medium text-foreground">18%</span>. These aren't complex techniques—they're simple habits that most people don't know.
-                      </p>
-                      <a href="https://arxiv.org/abs/2201.11903" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mt-1">
-                        Google Chain-of-Thought Research <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-2xl font-bold text-primary">4</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-1">Structure matters more than length</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Research shows that using clear delimiters (like XML tags) and organized sections helps AI understand complex instructions. Anthropic specifically trained Claude to recognize XML structure, resulting in <span className="font-medium text-foreground">15-20% better performance</span> just from formatting changes.
-                      </p>
-                      <a href="https://arxiv.org/abs/2402.07927" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mt-1">
-                        Systematic Survey of Prompt Engineering <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
-                  </div>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground">
+                  Multiple peer-reviewed studies show that "few-shot prompting"—including examples of what you want—dramatically improves AI performance. With just one example, document extraction improved by <span className="font-semibold text-foreground">32%</span>. With three examples, improvement reached <span className="font-semibold text-foreground">50%</span>.
+                </p>
+                <p className="text-muted-foreground">
+                  This is why Clarynt automatically researches and generates high-quality examples for your prompts.
+                </p>
+                <div className="flex items-center gap-2 pt-2">
+                  <a href="https://ieeexplore.ieee.org/document/10452390/" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                    Read the IEEE study <ExternalLink className="h-3 w-3" />
+                  </a>
                 </div>
               </CardContent>
             </Card>
 
-            {/* What This Means For You */}
-            <Card className="border-primary border-2">
+            {/* Chain of Thought */}
+            <Card className="border-2">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lightbulb className="h-5 w-5 text-primary" />
-                  What This Means For You
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-medium">Stop regenerating responses</div>
-                        <div className="text-sm text-muted-foreground">A clear prompt gets it right the first time instead of the fifth.</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-medium">Get usable outputs, not drafts</div>
-                        <div className="text-sm text-muted-foreground">Specific instructions mean less editing and rewriting after.</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-medium">Avoid confident wrong answers</div>
-                        <div className="text-sm text-muted-foreground">Constraints and context prevent the hallucinations that waste your time.</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-medium">Handle complex tasks reliably</div>
-                        <div className="text-sm text-muted-foreground">Structured prompts let AI tackle multi-step work it would otherwise fail at.</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-medium">Get consistent results</div>
-                        <div className="text-sm text-muted-foreground">The same prompt structure works reliably, not randomly.</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="font-medium">Actually save time</div>
-                        <div className="text-sm text-muted-foreground">25% faster with better quality means AI helps instead of creating more work.</div>
-                      </div>
-                    </div>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <Badge className="mb-2">Google Research</Badge>
+                    <CardTitle>"Think step by step" improves reasoning by 18%</CardTitle>
                   </div>
                 </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground">
+                  Google researchers discovered that simply asking AI to "think step by step" before answering improves accuracy on math and reasoning tasks by <span className="font-semibold text-foreground">17.9%</span>. This technique, called chain-of-thought prompting, helps AI break down complex problems instead of jumping to conclusions.
+                </p>
+                <p className="text-muted-foreground">
+                  Combined with self-consistency (checking multiple reasoning paths), improvements reached <span className="font-semibold text-foreground">11-12%</span> even on already-difficult benchmarks.
+                </p>
+                <div className="flex items-center gap-2 pt-2">
+                  <a href="https://arxiv.org/abs/2201.11903" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                    Read the Google paper <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Structure */}
+            <Card className="border-2">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <Badge className="mb-2">Anthropic / Prompt Engineering Survey</Badge>
+                    <CardTitle>Structured formatting improves performance by 15-20%</CardTitle>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground">
+                  A systematic survey of 58 prompting techniques found that how you format prompts matters as much as what you say. Using clear delimiters like XML tags helps AI parse complex instructions correctly.
+                </p>
+                <p className="text-muted-foreground">
+                  Anthropic specifically trained Claude to recognize XML structure, resulting in <span className="font-semibold text-foreground">15-20% better performance</span> from formatting alone—no change to the actual content.
+                </p>
+                <div className="flex items-center gap-2 pt-2">
+                  <a href="https://arxiv.org/abs/2406.06608" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                    Read the Prompt Report <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Summary */}
+            <Card className="border-primary border-2 bg-primary/5">
+              <CardContent className="pt-6">
+                <h3 className="font-semibold text-lg mb-4">The Bottom Line</h3>
+                <p className="text-muted-foreground">
+                  The research is clear: the same AI model can produce dramatically different results depending on how you prompt it. Poor prompts lead to poor outputs—sometimes worse than not using AI at all. Well-structured prompts with clear instructions and examples consistently outperform vague requests by 25-50% across multiple studies.
+                </p>
               </CardContent>
             </Card>
           </div>
