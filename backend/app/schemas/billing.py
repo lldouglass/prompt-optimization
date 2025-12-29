@@ -17,6 +17,9 @@ class UsageInfo(BaseModel):
     tokens_used_this_month: int = 0
     estimated_cost_cents: int = 0  # Cost in cents (e.g., 23 = $0.23)
     usage_reset_at: datetime | None = None
+    # Referral bonuses
+    bonus_optimizations: int = 0  # Extra optimizations from referrals
+    total_referrals: int = 0  # Count of successful referrals
 
 
 class BillingInfo(BaseModel):

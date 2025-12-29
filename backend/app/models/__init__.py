@@ -9,6 +9,7 @@ from .feedback import UserFeedback
 from .user import User
 from .membership import OrganizationMember
 from .session import UserSession
+from .referral import Referral
 
 __all__ = [
     "Organization",
@@ -26,4 +27,5 @@ __all__ = [
     "User",
     "OrganizationMember",
     "UserSession",
+    "Referral",
 ]

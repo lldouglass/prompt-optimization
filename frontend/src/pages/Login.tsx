@@ -1,22 +1,31 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Mail, Lock, User, Building2 } from "lucide-react"
+import { Mail, Lock, User, Building2, Gift } from "lucide-react"
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { login, register } = useAuth()
-  const [mode, setMode] = useState<"login" | "register">("login")
+  const referralCode = searchParams.get("ref")
+  const [mode, setMode] = useState<"login" | "register">(referralCode ? "register" : "login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
   const [orgName, setOrgName] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+
+  // Auto-switch to register mode if referral code is present
+  useEffect(() => {
+    if (referralCode) {
+      setMode("register")
+    }
+  }, [referralCode])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,7 +49,7 @@ export function LoginPage() {
     setLoading(true)
 
     try {
-      await register(email, password, name || null, orgName)
+      await register(email, password, name || null, orgName, referralCode || undefined)
       navigate("/agents")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed")
@@ -101,6 +110,14 @@ export function LoginPage() {
             </form>
           ) : (
             <form onSubmit={handleRegister} className="space-y-4">
+              {referralCode && (
+                <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg text-sm">
+                  <Gift className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>
+                    You'll get <span className="font-semibold text-primary">+25 bonus optimizations</span> as a welcome gift!
+                  </span>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="reg-email">Email</Label>
                 <div className="relative">

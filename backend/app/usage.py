@@ -54,12 +54,15 @@ async def check_and_increment_usage(
         org.requests_this_month += 1
 
     elif usage_type == "optimizations":
-        limit = limits["optimizations_per_month"]
+        base_limit = limits["optimizations_per_month"]
+        # Add bonus optimizations from referrals to the limit
+        effective_limit = base_limit + org.bonus_optimizations if base_limit != -1 else -1
         current = org.optimizations_this_month
-        if limit != -1 and current >= limit:
+        if effective_limit != -1 and current >= effective_limit:
+            bonus_msg = f" (+{org.bonus_optimizations} bonus)" if org.bonus_optimizations > 0 else ""
             raise HTTPException(
                 status_code=429,
-                detail=f"Optimization limit exceeded. Your {org.subscription_plan} plan allows {limit:,} optimizations/month. Upgrade your plan for more."
+                detail=f"Optimization limit exceeded. Your {org.subscription_plan} plan allows {base_limit:,}{bonus_msg} optimizations/month. Refer friends for more!"
             )
         org.optimizations_this_month += 1
 
@@ -78,6 +81,9 @@ async def get_usage_stats(org_id: str, db: AsyncSession) -> dict:
 
     limits = get_plan_limits(org.subscription_plan)
 
+    base_opt_limit = limits["optimizations_per_month"]
+    effective_opt_limit = base_opt_limit + org.bonus_optimizations if base_opt_limit != -1 else -1
+
     return {
         "requests": {
             "used": org.requests_this_month,
@@ -85,7 +91,10 @@ async def get_usage_stats(org_id: str, db: AsyncSession) -> dict:
         },
         "optimizations": {
             "used": org.optimizations_this_month,
-            "limit": limits["optimizations_per_month"],
+            "limit": effective_opt_limit,
+            "base_limit": base_opt_limit,
+            "bonus": org.bonus_optimizations,
         },
         "reset_at": org.usage_reset_at.isoformat() if org.usage_reset_at else None,
+        "total_referrals": org.total_referrals,
     }

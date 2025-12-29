@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { useLocation } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -7,7 +7,7 @@ import { FeedbackForm } from "@/components/FeedbackForm"
 import { agentApi, sessionApi } from "@/lib/api"
 import type { Judgment, CompareResult, OptimizationResult, MediaOptimizationResult, MediaOptimizeRequest, MediaType } from "@/lib/api"
 import { track } from "@/lib/analytics"
-import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp, Search, AlertTriangle, ShieldCheck, HelpCircle, Camera, Video, Copy } from "lucide-react"
+import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp, Search, AlertTriangle, ShieldCheck, HelpCircle, Camera, Video, Copy, Gift, X } from "lucide-react"
 
 type TabMode = "evaluate" | "compare" | "optimize" | "media"
 
@@ -19,11 +19,16 @@ interface LocationState {
 
 export function AgentsPage() {
   const location = useLocation()
+  const navigate = useNavigate()
   const state = location.state as LocationState | null
   const hasAutoRun = useRef(false)
   const optimizeResultsRef = useRef<HTMLDivElement>(null)
 
   const [activeTab, setActiveTab] = useState<TabMode>(state?.autoEvaluate ? "evaluate" : "optimize")
+
+  // Referral popup state
+  const [showReferralPopup, setShowReferralPopup] = useState(false)
+  const REFERRAL_POPUP_THRESHOLD = 8
 
   // Standalone evaluate state - initialize from navigation state if present
   const [evalRequest, setEvalRequest] = useState(state?.request || "")
@@ -177,6 +182,20 @@ export function AgentsPage() {
         optimized_score: result.optimized_score,
         had_existing_prompt: !!mediaExistingPrompt,
       })
+
+      // Check if we should show referral popup (after 8th optimization)
+      try {
+        const billing = await sessionApi.getBillingInfo()
+        if (billing.usage.optimizations_this_month === REFERRAL_POPUP_THRESHOLD) {
+          const dismissed = sessionStorage.getItem('referral_popup_dismissed')
+          if (!dismissed) {
+            setShowReferralPopup(true)
+            track('referral_popup_shown', { optimization_count: REFERRAL_POPUP_THRESHOLD })
+          }
+        }
+      } catch {
+        // Silently fail
+      }
     } catch (error) {
       console.error("Media optimize error:", error)
       if (error instanceof Error) {
@@ -329,6 +348,21 @@ const runEvaluate = async (request?: string, response?: string) => {
         score_improvement: result.optimized_score - result.original_score,
         improvements_count: result.improvements?.length || 0,
       })
+
+      // Check if we should show referral popup (after 8th optimization)
+      try {
+        const billing = await sessionApi.getBillingInfo()
+        if (billing.usage.optimizations_this_month === REFERRAL_POPUP_THRESHOLD) {
+          // Only show if they haven't dismissed it before this session
+          const dismissed = sessionStorage.getItem('referral_popup_dismissed')
+          if (!dismissed) {
+            setShowReferralPopup(true)
+            track('referral_popup_shown', { optimization_count: REFERRAL_POPUP_THRESHOLD })
+          }
+        }
+      } catch {
+        // Silently fail - don't interrupt the optimization flow
+      }
     } catch (error) {
       console.error("Optimize error:", error)
       track('optimization_failed', {
@@ -1610,6 +1644,60 @@ const runEvaluate = async (request?: string, response?: string) => {
             </div>
           )}
         </>
+      )}
+
+      {/* Referral Popup */}
+      {showReferralPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => {
+                setShowReferralPopup(false)
+                sessionStorage.setItem('referral_popup_dismissed', 'true')
+              }}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="text-center">
+              <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <Gift className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Need More Optimizations?</h3>
+              <p className="text-muted-foreground mb-4">
+                You've used {REFERRAL_POPUP_THRESHOLD} optimizations this month. Share Clarynt with friends and get <span className="text-primary font-semibold">+50 bonus optimizations</span> for each person who signs up!
+              </p>
+              <p className="text-sm text-muted-foreground mb-6">
+                Your friends get +25 bonus optimizations too.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowReferralPopup(false)
+                    sessionStorage.setItem('referral_popup_dismissed', 'true')
+                  }}
+                >
+                  Maybe Later
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => {
+                    setShowReferralPopup(false)
+                    sessionStorage.setItem('referral_popup_dismissed', 'true')
+                    track('referral_popup_clicked')
+                    navigate('/settings')
+                  }}
+                >
+                  <Gift className="h-4 w-4 mr-2" />
+                  Get Referral Link
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

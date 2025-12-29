@@ -11,7 +11,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, name: string | null, organizationName: string) => Promise<void>
+  register: (email: string, password: string, name: string | null, organizationName: string, referralCode?: string) => Promise<void>
   logout: () => Promise<void>
   verifyEmail: (token: string) => Promise<void>
   resendVerification: () => Promise<void>
@@ -70,8 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     track('login_completed')
   }
 
-  const register = async (email: string, password: string, name: string | null, organizationName: string) => {
-    const response = await authApi.register(email, password, name, organizationName)
+  const register = async (email: string, password: string, name: string | null, organizationName: string, referralCode?: string) => {
+    const response = await authApi.register(email, password, name, organizationName, referralCode)
     setState({
       user: response.user,
       organization: response.current_organization,
@@ -86,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     track('signup_completed', {
       organization_name: organizationName,
+      referred: !!referralCode,
     })
   }
 

@@ -26,6 +26,11 @@ class Organization(Base):
     estimated_cost_cents: Mapped[int] = mapped_column(Integer, default=0)  # Cost in cents (e.g., 23 = $0.23)
     usage_reset_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
+    # Referral program
+    referral_code: Mapped[str | None] = mapped_column(String(12), unique=True, nullable=True, index=True)
+    bonus_optimizations: Mapped[int] = mapped_column(Integer, default=0)  # Extra optimizations from referrals
+    total_referrals: Mapped[int] = mapped_column(Integer, default=0)  # Count of successful referrals
+
     # Relationships
     api_keys: Mapped[list["ApiKey"]] = relationship(back_populates="organization", cascade="all, delete-orphan")
     requests: Mapped[list["Request"]] = relationship(back_populates="organization", cascade="all, delete-orphan")

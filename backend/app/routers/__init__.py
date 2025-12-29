@@ -4,5 +4,6 @@ from .requests import router as requests_router
 from .agents import router as agents_router
 from .billing import router as billing_router
 from .auth import router as auth_router
+from .referral import router as referral_router
 
-__all__ = ["logs_router", "admin_router", "requests_router", "agents_router", "billing_router", "auth_router"]
+__all__ = ["logs_router", "admin_router", "requests_router", "agents_router", "billing_router", "auth_router", "referral_router"]

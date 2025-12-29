@@ -1,5 +1,6 @@
 """Router for authentication endpoints."""
 
+import secrets
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, status, Depends, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from ..database import get_db
 from ..config import get_settings
-from ..models import User, Organization, OrganizationMember, UserSession
+from ..models import User, Organization, OrganizationMember, UserSession, Referral
 from ..auth_utils import hash_password, verify_password, generate_session_token, hash_session_token, generate_verification_token
 from ..email import send_verification_email
 from ..schemas.auth import (
@@ -25,6 +26,18 @@ from ..schemas.auth import (
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 settings = get_settings()
+
+# Referral reward amounts
+REFERRER_REWARD = 50  # Optimizations given to referrer
+REFEREE_REWARD = 25   # Optimizations given to new user
+
+
+def generate_referral_code() -> str:
+    """Generate a unique referral code like CLRY-XXXX."""
+    # Use only alphanumeric characters for cleaner codes
+    chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # Excluded I,O,0,1 to avoid confusion
+    random_part = "".join(secrets.choice(chars) for _ in range(4))
+    return f"CLRY-{random_part}"
 
 
 def get_session_cookie_name() -> str:
@@ -126,6 +139,15 @@ async def register(
     verification_token = generate_verification_token()
     verification_expires = datetime.utcnow() + timedelta(hours=settings.verification_token_expire_hours)
 
+    # Check for valid referral code
+    referrer_org = None
+    if request_data.referral_code:
+        result = await db.execute(
+            select(Organization).where(Organization.referral_code == request_data.referral_code.upper())
+        )
+        referrer_org = result.scalar_one_or_none()
+        # Silently ignore invalid codes - user can still register
+
     # Create user
     user = User(
         email=request_data.email,
@@ -134,14 +156,46 @@ async def register(
         email_verified=False,
         verification_token=verification_token,
         verification_token_expires=verification_expires,
+        referred_by_org_id=referrer_org.id if referrer_org else None,
     )
     db.add(user)
     await db.flush()  # Get user.id
 
-    # Create organization
-    org = Organization(name=request_data.organization_name)
+    # Generate unique referral code for new org
+    referral_code = generate_referral_code()
+    # Ensure uniqueness (rare collision case)
+    while True:
+        existing = await db.execute(
+            select(Organization).where(Organization.referral_code == referral_code)
+        )
+        if not existing.scalar_one_or_none():
+            break
+        referral_code = generate_referral_code()
+
+    # Create organization with referral code and bonus if referred
+    org = Organization(
+        name=request_data.organization_name,
+        referral_code=referral_code,
+        bonus_optimizations=REFEREE_REWARD if referrer_org else 0,
+    )
     db.add(org)
     await db.flush()  # Get org.id
+
+    # If valid referral, reward the referrer and create tracking record
+    if referrer_org:
+        # Give referrer bonus optimizations
+        referrer_org.bonus_optimizations += REFERRER_REWARD
+        referrer_org.total_referrals += 1
+
+        # Create referral tracking record
+        referral = Referral(
+            referrer_org_id=referrer_org.id,
+            referred_user_id=user.id,
+            referred_org_id=org.id,
+            referrer_reward=REFERRER_REWARD,
+            referee_reward=REFEREE_REWARD,
+        )
+        db.add(referral)
 
     # Create membership (user is owner)
     membership = OrganizationMember(

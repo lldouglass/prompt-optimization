@@ -43,6 +43,9 @@ async def get_billing_info(
 ):
     """Get current billing and usage information."""
     limits = get_plan_limits(org.subscription_plan)
+    base_opt_limit = limits["optimizations_per_month"]
+    # Include bonus optimizations in the effective limit
+    effective_opt_limit = base_opt_limit + org.bonus_optimizations if base_opt_limit != -1 else -1
 
     return BillingInfo(
         subscription=SubscriptionInfo(
@@ -55,10 +58,12 @@ async def get_billing_info(
             requests_this_month=org.requests_this_month,
             optimizations_this_month=org.optimizations_this_month,
             requests_limit=limits["requests_per_month"],
-            optimizations_limit=limits["optimizations_per_month"],
+            optimizations_limit=effective_opt_limit,
             tokens_used_this_month=org.tokens_used_this_month,
             estimated_cost_cents=org.estimated_cost_cents,
             usage_reset_at=org.usage_reset_at,
+            bonus_optimizations=org.bonus_optimizations,
+            total_referrals=org.total_referrals,
         ),
     )
 

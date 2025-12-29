@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, DateTime, Boolean
+from sqlalchemy import String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..database import Base
 
@@ -28,6 +28,11 @@ class User(Base):
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    # Referral tracking
+    referred_by_org_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("organizations.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Relationships
     memberships: Mapped[list["OrganizationMember"]] = relationship(

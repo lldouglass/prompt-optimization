@@ -11,6 +11,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     name: str | None = Field(None, max_length=255)
     organization_name: str = Field(..., min_length=1, max_length=255)
+    referral_code: str | None = Field(None, max_length=12)  # Optional referral code
 
 
 class LoginRequest(BaseModel):

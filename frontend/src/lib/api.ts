@@ -385,6 +385,27 @@ export interface UsageInfo {
   tokens_used_this_month: number
   estimated_cost_cents: number
   usage_reset_at: string | null
+  bonus_optimizations: number
+  total_referrals: number
+}
+
+// Referral types
+export interface ReferralInfo {
+  referral_code: string
+  referral_link: string
+  total_referrals: number
+  bonus_optimizations_earned: number
+}
+
+export interface ReferralHistoryItem {
+  referred_email: string
+  created_at: string
+  reward_given: number
+}
+
+export interface ReferralHistoryResponse {
+  referrals: ReferralHistoryItem[]
+  total: number
 }
 
 export interface BillingInfo {
@@ -696,11 +717,28 @@ async listApiKeys(orgId: string): Promise<ApiKey[]> {
     })
     if (!res.ok) throw new Error("Failed to delete API key")
   },
+
+  // Referral endpoints
+  async getReferralInfo(): Promise<ReferralInfo> {
+    const res = await fetch(`${API_BASE}/referral/info`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to get referral info")
+    return res.json()
+  },
+
+  async getReferralHistory(): Promise<ReferralHistoryResponse> {
+    const res = await fetch(`${API_BASE}/referral/history`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to get referral history")
+    return res.json()
+  },
 }
 
 // Auth API (cookie-based sessions)
 export const authApi = {
-  async register(email: string, password: string, name: string | null, organizationName: string): Promise<AuthResponse> {
+  async register(email: string, password: string, name: string | null, organizationName: string, referralCode?: string): Promise<AuthResponse> {
     const res = await fetch(`${API_BASE}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -710,6 +748,7 @@ export const authApi = {
         password,
         name,
         organization_name: organizationName,
+        referral_code: referralCode || null,
       }),
     })
     if (!res.ok) {

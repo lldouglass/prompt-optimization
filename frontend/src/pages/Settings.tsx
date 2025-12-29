@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
-import { sessionApi, type ApiKey, type BillingInfo } from "@/lib/api"
+import { sessionApi, type ApiKey, type BillingInfo, type ReferralInfo } from "@/lib/api"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { formatDate } from "@/lib/utils"
-import { Plus, Trash2, Copy, Check, Key, CreditCard, Sparkles, AlertCircle, ExternalLink } from "lucide-react"
+import { Plus, Trash2, Copy, Check, Key, CreditCard, Sparkles, AlertCircle, ExternalLink, Gift, Users, Share2 } from "lucide-react"
 import { track } from "@/lib/analytics"
 
 export function SettingsPage() {
@@ -26,6 +26,11 @@ export function SettingsPage() {
   const [billingLoading, setBillingLoading] = useState(true)
   const [upgrading, setUpgrading] = useState<string | null>(null)
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly")
+
+  // Referral state
+  const [referral, setReferral] = useState<ReferralInfo | null>(null)
+  const [referralLoading, setReferralLoading] = useState(true)
+  const [referralCopied, setReferralCopied] = useState<"code" | "link" | null>(null)
 
   const checkoutStatus = searchParams.get("checkout")
 
@@ -54,10 +59,23 @@ export function SettingsPage() {
     }
   }, [])
 
+  const fetchReferral = useCallback(async () => {
+    setReferralLoading(true)
+    try {
+      const info = await sessionApi.getReferralInfo()
+      setReferral(info)
+    } catch (err) {
+      console.error("Failed to fetch referral info:", err)
+    } finally {
+      setReferralLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     fetchKeys()
     fetchBilling()
-  }, [fetchKeys, fetchBilling])
+    fetchReferral()
+  }, [fetchKeys, fetchBilling, fetchReferral])
 
   const handleUpgrade = async (plan: string) => {
     setUpgrading(plan)
@@ -129,6 +147,40 @@ export function SettingsPage() {
       navigator.clipboard.writeText(newKey)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const copyReferralCode = () => {
+    if (referral?.referral_code) {
+      navigator.clipboard.writeText(referral.referral_code)
+      setReferralCopied("code")
+      setTimeout(() => setReferralCopied(null), 2000)
+    }
+  }
+
+  const copyReferralLink = () => {
+    if (referral?.referral_link) {
+      navigator.clipboard.writeText(referral.referral_link)
+      setReferralCopied("link")
+      setTimeout(() => setReferralCopied(null), 2000)
+      track('referral_link_copied', { referral_code: referral.referral_code })
+    }
+  }
+
+  const shareToTwitter = () => {
+    if (referral?.referral_link) {
+      const text = encodeURIComponent("I've been using Clarynt to optimize my AI prompts and it's amazing! Sign up with my link and we both get bonus optimizations:")
+      const url = encodeURIComponent(referral.referral_link)
+      window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank")
+      track('referral_shared', { platform: 'twitter', referral_code: referral.referral_code })
+    }
+  }
+
+  const shareToLinkedIn = () => {
+    if (referral?.referral_link) {
+      const url = encodeURIComponent(referral.referral_link)
+      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank")
+      track('referral_shared', { platform: 'linkedin', referral_code: referral.referral_code })
     }
   }
 
@@ -219,6 +271,9 @@ export function SettingsPage() {
                       <span>Prompt Optimizations</span>
                       <span>
                         {billing.usage.optimizations_this_month.toLocaleString()} / {formatLimit(billing.usage.optimizations_limit)}
+                        {billing.usage.bonus_optimizations > 0 && (
+                          <span className="text-primary ml-1">(+{billing.usage.bonus_optimizations} bonus)</span>
+                        )}
                       </span>
                     </div>
                     <Progress
@@ -333,6 +388,99 @@ export function SettingsPage() {
             </>
           ) : (
             <p className="text-muted-foreground">Unable to load billing information</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Referral Program */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gift className="h-5 w-5" />
+            Referral Program
+          </CardTitle>
+          <CardDescription>
+            Share Clarynt and earn bonus optimizations for you and your friends
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {referralLoading ? (
+            <p className="text-muted-foreground">Loading referral info...</p>
+          ) : referral ? (
+            <>
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 border rounded-lg text-center">
+                  <Users className="h-6 w-6 mx-auto mb-2 text-primary" />
+                  <p className="text-2xl font-bold">{referral.total_referrals}</p>
+                  <p className="text-sm text-muted-foreground">Friends Referred</p>
+                </div>
+                <div className="p-4 border rounded-lg text-center">
+                  <Sparkles className="h-6 w-6 mx-auto mb-2 text-primary" />
+                  <p className="text-2xl font-bold">{referral.bonus_optimizations_earned}</p>
+                  <p className="text-sm text-muted-foreground">Bonus Optimizations</p>
+                </div>
+              </div>
+
+              {/* How it works */}
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-medium mb-2">How it works</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• You get <span className="text-foreground font-medium">+50 bonus optimizations</span> for each friend who signs up</li>
+                  <li>• Your friend gets <span className="text-foreground font-medium">+25 bonus optimizations</span> as a welcome gift</li>
+                  <li>• Bonus optimizations never expire and stack on top of your plan limits</li>
+                </ul>
+              </div>
+
+              {/* Referral Code */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Your Referral Code</label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-3 bg-muted rounded border font-mono text-lg tracking-wider">
+                    {referral.referral_code}
+                  </code>
+                  <Button variant="outline" size="icon" onClick={copyReferralCode}>
+                    {referralCopied === "code" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Referral Link */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Your Referral Link</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value={referral.referral_link}
+                    className="font-mono text-sm"
+                  />
+                  <Button variant="outline" size="icon" onClick={copyReferralLink}>
+                    {referralCopied === "link" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Share buttons */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Share</label>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={shareToTwitter} className="flex-1">
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Twitter
+                  </Button>
+                  <Button variant="outline" onClick={shareToLinkedIn} className="flex-1">
+                    <Share2 className="h-4 w-4 mr-2" />
+                    LinkedIn
+                  </Button>
+                  <Button variant="outline" onClick={copyReferralLink} className="flex-1">
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Link
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-muted-foreground">Unable to load referral information</p>
           )}
         </CardContent>
       </Card>
