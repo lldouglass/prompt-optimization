@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { FeedbackForm } from "@/components/FeedbackForm"
 import { FileUpload, filesToUploadedFiles } from "@/components/FileUpload"
 import type { UploadedFileState } from "@/components/FileUpload"
-import { agentApi, sessionApi } from "@/lib/api"
-import type { Judgment, CompareResult, OptimizationResult, MediaOptimizationResult, MediaOptimizeRequest, MediaType } from "@/lib/api"
+import { agentApi, sessionApi, connectAgentOptimizeWebSocket } from "@/lib/api"
+import type { Judgment, CompareResult, OptimizationResult, MediaOptimizationResult, MediaOptimizeRequest, MediaType, ToolCallInfo, PendingQuestion } from "@/lib/api"
 import { track } from "@/lib/analytics"
 import { CheckCircle, XCircle, Loader2, Scale, Gavel, Sparkles, ArrowRight, Save, AlertCircle, Lightbulb, ChevronDown, ChevronUp, Search, AlertTriangle, ShieldCheck, HelpCircle, Camera, Video, Copy, Gift, X, FileText } from "lucide-react"
 
@@ -80,6 +80,14 @@ export function AgentsPage() {
   const [saveLoading, setSaveLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [expandedExamples, setExpandedExamples] = useState<Set<number>>(new Set())
+
+  // Agent mode state (WebSocket-based optimization)
+  const [useAgentMode, setUseAgentMode] = useState(false)
+  const [agentToolCalls, setAgentToolCalls] = useState<ToolCallInfo[]>([])
+  const [agentQuestion, setAgentQuestion] = useState<PendingQuestion | null>(null)
+  const [agentAnswer, setAgentAnswer] = useState("")
+  const [agentProgress, setAgentProgress] = useState<string>("")
+  const wsRef = useRef<{ sendAnswer: (id: string, answer: string) => void; close: () => void } | null>(null)
 
   const toggleExample = (index: number) => {
     setExpandedExamples(prev => {
@@ -417,6 +425,116 @@ const runEvaluate = async (request?: string, response?: string) => {
       setSaveLoading(false)
     }
   }
+
+  // Agent-based optimization using WebSocket
+  const runAgentOptimize = async () => {
+    if (!optimizePrompt.trim() || !optimizeTask.trim()) return
+
+    setOptimizeLoading(true)
+    setOptimizeResult(null)
+    setOptimizeError(null)
+    setSaved(false)
+    setAgentToolCalls([])
+    setAgentQuestion(null)
+    setAgentAnswer("")
+    setAgentProgress("Starting agent...")
+
+    track('agent_optimization_started', {
+      prompt_length: optimizePrompt.length,
+      task_length: optimizeTask.length,
+    })
+
+    try {
+      // Parse sample inputs (one per line)
+      const sampleInputs = optimizeSamples
+        .split("\n")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
+
+      // Start the agent session
+      const session = await sessionApi.startAgentOptimization(
+        optimizePrompt,
+        optimizeTask,
+        sampleInputs.length > 0 ? sampleInputs : undefined
+      )
+
+      // Connect WebSocket
+      const ws = connectAgentOptimizeWebSocket(session.session_id, {
+        onProgress: (step, message) => {
+          setAgentProgress(message)
+        },
+        onToolCalled: (tool, args, resultSummary) => {
+          setAgentToolCalls(prev => [...prev, { tool, args, result_summary: resultSummary }])
+          setAgentProgress(`Used ${tool}...`)
+        },
+        onQuestion: (questionId, question, reason) => {
+          setAgentQuestion({ question_id: questionId, question, reason })
+          setAgentProgress("Waiting for your answer...")
+        },
+        onCompleted: (result) => {
+          setOptimizeResult(result)
+          setAgentProgress("")
+          setOptimizeLoading(false)
+          wsRef.current = null
+
+          // Auto-scroll to results
+          setTimeout(() => {
+            optimizeResultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+          }, 100)
+
+          track('agent_optimization_completed', {
+            original_score: result.original_score,
+            optimized_score: result.optimized_score,
+            tools_used: agentToolCalls.map(t => t.tool),
+          })
+        },
+        onError: (error) => {
+          setOptimizeError(error)
+          setAgentProgress("")
+          setOptimizeLoading(false)
+          wsRef.current = null
+
+          track('agent_optimization_failed', { error })
+        },
+        onClose: () => {
+          if (optimizeLoading && !optimizeResult) {
+            setOptimizeError("Connection closed unexpectedly")
+            setOptimizeLoading(false)
+          }
+          wsRef.current = null
+        },
+      })
+
+      wsRef.current = ws
+    } catch (error) {
+      console.error("Agent optimize error:", error)
+      track('agent_optimization_failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
+      if (error instanceof Error) {
+        setOptimizeError(error.message)
+      } else {
+        setOptimizeError("Failed to start agent optimization")
+      }
+      setOptimizeLoading(false)
+    }
+  }
+
+  const submitAgentAnswer = () => {
+    if (!agentQuestion || !agentAnswer.trim() || !wsRef.current) return
+
+    wsRef.current.sendAnswer(agentQuestion.question_id, agentAnswer)
+    setAgentQuestion(null)
+    setAgentAnswer("")
+    setAgentProgress("Continuing optimization...")
+  }
+
+  // Cleanup WebSocket on unmount
+  useEffect(() => {
+    return () => {
+      wsRef.current?.close()
+    }
+  }, [])
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
@@ -1052,22 +1170,82 @@ const runEvaluate = async (request?: string, response?: string) => {
                 />
               </div>
 
+              {/* Agent mode toggle */}
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useAgentMode}
+                    onChange={(e) => setUseAgentMode(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300"
+                  />
+                  <span className="text-sm font-medium">Smart Mode</span>
+                </label>
+                <span className="text-xs text-muted-foreground">
+                  (Agent decides if clarification or web search is needed)
+                </span>
+              </div>
+
               <Button
-                onClick={runOptimize}
+                onClick={useAgentMode ? runAgentOptimize : runOptimize}
                 disabled={optimizeLoading || !optimizePrompt.trim() || !optimizeTask.trim()}
               >
                 {optimizeLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Optimizing...
+                    {agentProgress || "Optimizing..."}
                   </>
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4 mr-2" />
-                    Optimize Prompt
+                    {useAgentMode ? "Optimize (Smart)" : "Optimize Prompt"}
                   </>
                 )}
               </Button>
+
+              {/* Agent tool progress badges */}
+              {useAgentMode && optimizeLoading && agentToolCalls.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {agentToolCalls.map((tc, i) => (
+                    <Badge key={i} variant="outline" className="text-xs">
+                      <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
+                      {tc.tool.replace(/_/g, ' ')}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Agent question card */}
+              {agentQuestion && (
+                <Card className="border-primary">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <HelpCircle className="h-4 w-4 text-primary" />
+                      Clarification Needed
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      {agentQuestion.reason}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm font-medium">{agentQuestion.question}</p>
+                    <textarea
+                      className="w-full min-h-[80px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Type your answer..."
+                      value={agentAnswer}
+                      onChange={(e) => setAgentAnswer(e.target.value)}
+                    />
+                    <Button
+                      onClick={submitAgentAnswer}
+                      disabled={!agentAnswer.trim()}
+                      size="sm"
+                    >
+                      <ArrowRight className="h-4 w-4 mr-2" />
+                      Continue
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
 
               {optimizeError && (
                 <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">

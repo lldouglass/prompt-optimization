@@ -7,8 +7,9 @@ Actual implementations can be swapped in later.
 
 import os
 from abc import ABC, abstractmethod
+import json
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 from pathlib import Path
 
@@ -120,6 +121,140 @@ def chat(model: str, messages: list[dict[str, str]]) -> str:
         _usage_tracker["call_count"] += 1
 
     return response.choices[0].message.content or ""
+
+
+# =============================================================================
+# Tool calling support for agent loops
+# =============================================================================
+
+@dataclass
+class ToolCall:
+    """Represents a tool call requested by the LLM."""
+    id: str
+    name: str
+    arguments: dict[str, Any]
+
+    @classmethod
+    def from_openai(cls, tool_call) -> "ToolCall":
+        """Create from OpenAI tool call object."""
+        return cls(
+            id=tool_call.id,
+            name=tool_call.function.name,
+            arguments=json.loads(tool_call.function.arguments),
+        )
+
+
+@dataclass
+class ChatWithToolsResponse:
+    """Response from chat_with_tools that may include tool calls."""
+    content: Optional[str]
+    tool_calls: list[ToolCall]
+    finish_reason: str
+    usage: dict[str, int]
+    raw_message: Any  # The original message object for adding to history
+
+    @property
+    def has_tool_calls(self) -> bool:
+        """Check if response contains tool calls."""
+        return len(self.tool_calls) > 0
+
+    def to_message_dict(self) -> dict:
+        """Convert to a dict suitable for adding to message history."""
+        msg = {"role": "assistant"}
+        if self.content:
+            msg["content"] = self.content
+        if self.tool_calls:
+            msg["tool_calls"] = [
+                {
+                    "id": tc.id,
+                    "type": "function",
+                    "function": {
+                        "name": tc.name,
+                        "arguments": json.dumps(tc.arguments),
+                    }
+                }
+                for tc in self.tool_calls
+            ]
+        return msg
+
+
+def chat_with_tools(
+    model: str,
+    messages: list[dict],
+    tools: list[dict],
+    tool_choice: str = "auto",
+    temperature: float = 0.2,
+) -> ChatWithToolsResponse:
+    """
+    Chat completion with tool/function calling support.
+
+    Args:
+        model: Model identifier (e.g., "gpt-4o-mini").
+        messages: List of message dicts (can include tool results).
+        tools: List of tool definitions in OpenAI format.
+        tool_choice: "auto", "none", or "required".
+        temperature: Sampling temperature.
+
+    Returns:
+        ChatWithToolsResponse with content and/or tool calls.
+
+    Example:
+        >>> tools = [{"type": "function", "function": {"name": "search", ...}}]
+        >>> response = chat_with_tools("gpt-4o-mini", messages, tools)
+        >>> if response.has_tool_calls:
+        ...     for tc in response.tool_calls:
+        ...         result = execute_tool(tc.name, tc.arguments)
+    """
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise NotImplementedError("OPENAI_API_KEY required for tool calling")
+
+    client = openai.OpenAI(api_key=api_key)
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        tools=tools,
+        tool_choice=tool_choice,
+        temperature=temperature,
+    )
+
+    # Track usage
+    usage = {}
+    if response.usage:
+        usage = {
+            "prompt_tokens": response.usage.prompt_tokens,
+            "completion_tokens": response.usage.completion_tokens,
+            "total_tokens": response.usage.total_tokens,
+        }
+        _usage_tracker["prompt_tokens"] += response.usage.prompt_tokens
+        _usage_tracker["completion_tokens"] += response.usage.completion_tokens
+        _usage_tracker["total_tokens"] += response.usage.total_tokens
+        _usage_tracker["call_count"] += 1
+
+    message = response.choices[0].message
+    finish_reason = response.choices[0].finish_reason or "stop"
+
+    # Parse tool calls if present
+    tool_calls = []
+    if message.tool_calls:
+        tool_calls = [ToolCall.from_openai(tc) for tc in message.tool_calls]
+
+    return ChatWithToolsResponse(
+        content=message.content,
+        tool_calls=tool_calls,
+        finish_reason=finish_reason,
+        usage=usage,
+        raw_message=message,
+    )
+
+
+def create_tool_result_message(tool_call_id: str, result: str) -> dict:
+    """Create a tool result message to add to conversation history."""
+    return {
+        "role": "tool",
+        "tool_call_id": tool_call_id,
+        "content": result,
+    }
 
 
 @dataclass

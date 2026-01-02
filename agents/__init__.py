@@ -27,6 +27,25 @@ from .media_optimizer import (
     MediaOptimizationResult,
     MediaAnalysis,
 )
+from .agent_optimizer import (
+    AgentOptimizer,
+    AgentAnalyzer,
+    AgentScorer,
+    AgentConfig,
+    AgentOptimizationResult,
+    ScoringResult,
+    FrameworkDetection,
+    detect_framework,
+    parse_crewai_config,
+    parse_autogen_config,
+    parse_langgraph_config,
+    score_role_specificity,
+    score_goal_clarity,
+    score_termination_criteria,
+    score_boundaries,
+    score_tool_guidance,
+    score_handoff_clarity,
+)
 
 __all__ = [
     "Planner",
@@ -50,4 +69,22 @@ __all__ = [
     "MediaOptimizerError",
     "MediaOptimizationResult",
     "MediaAnalysis",
+    # Agent optimization
+    "AgentOptimizer",
+    "AgentAnalyzer",
+    "AgentScorer",
+    "AgentConfig",
+    "AgentOptimizationResult",
+    "ScoringResult",
+    "FrameworkDetection",
+    "detect_framework",
+    "parse_crewai_config",
+    "parse_autogen_config",
+    "parse_langgraph_config",
+    "score_role_specificity",
+    "score_goal_clarity",
+    "score_termination_criteria",
+    "score_boundaries",
+    "score_tool_guidance",
+    "score_handoff_clarity",
 ]

@@ -307,6 +307,32 @@ export interface OptimizationResult {
   file_context: FileProcessingResult[] | null
 }
 
+// Agent-based optimization types (WebSocket)
+export interface AgentSessionResponse {
+  session_id: string
+  status: "running" | "awaiting_input" | "completed" | "failed"
+  message: string | null
+}
+
+export interface PendingQuestion {
+  question_id: string
+  question: string
+  reason: string
+}
+
+export interface ToolCallInfo {
+  tool: string
+  args: Record<string, unknown>
+  result_summary: string
+}
+
+export type AgentWebSocketMessage =
+  | { type: "progress"; step: string; message: string }
+  | { type: "tool_called"; tool: string; args: Record<string, unknown>; result_summary: string }
+  | { type: "question"; question_id: string; question: string; reason: string }
+  | { type: "completed"; result: OptimizationResult }
+  | { type: "error"; error: string }
+
 export interface SavedOptimization {
   id: string
   original_prompt: string
@@ -722,7 +748,33 @@ export const sessionApi = {
     return res.json()
   },
 
-async listApiKeys(orgId: string): Promise<ApiKey[]> {
+  // Agent-based optimization (WebSocket)
+  async startAgentOptimization(
+    promptTemplate: string,
+    taskDescription: string,
+    sampleInputs?: string[]
+  ): Promise<AgentSessionResponse> {
+    const res = await fetch(`${API_BASE}/agents/optimize/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        prompt_template: promptTemplate,
+        task_description: taskDescription,
+        sample_inputs: sampleInputs || [],
+      }),
+    })
+    if (!res.ok) {
+      if (res.status === 429) {
+        const data = await res.json()
+        throw new Error(data.detail || "Optimization limit exceeded")
+      }
+      throw new Error("Failed to start agent optimization")
+    }
+    return res.json()
+  },
+
+  async listApiKeys(orgId: string): Promise<ApiKey[]> {
     const res = await fetch(`${API_BASE}/admin/organizations/${orgId}/api-keys`, {
       credentials: "include",
     })
@@ -933,4 +985,69 @@ export const agentApi = {
     return res.json()
   },
 
+}
+
+
+// WebSocket helper for agent-based optimization
+const WS_BASE = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace(/^http/, "ws")
+  : "ws://localhost:8000"
+
+export function connectAgentOptimizeWebSocket(
+  sessionId: string,
+  handlers: {
+    onProgress?: (step: string, message: string) => void
+    onToolCalled?: (tool: string, args: Record<string, unknown>, resultSummary: string) => void
+    onQuestion?: (questionId: string, question: string, reason: string) => void
+    onCompleted?: (result: OptimizationResult) => void
+    onError?: (error: string) => void
+    onClose?: () => void
+  }
+): {
+  sendAnswer: (questionId: string, answer: string) => void
+  close: () => void
+} {
+  const ws = new WebSocket(`${WS_BASE}/ws/optimize/${sessionId}`)
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data) as AgentWebSocketMessage
+      switch (data.type) {
+        case "progress":
+          handlers.onProgress?.(data.step, data.message)
+          break
+        case "tool_called":
+          handlers.onToolCalled?.(data.tool, data.args, data.result_summary)
+          break
+        case "question":
+          handlers.onQuestion?.(data.question_id, data.question, data.reason)
+          break
+        case "completed":
+          handlers.onCompleted?.(data.result)
+          break
+        case "error":
+          handlers.onError?.(data.error)
+          break
+      }
+    } catch (e) {
+      console.error("Failed to parse WebSocket message:", e)
+    }
+  }
+
+  ws.onerror = () => {
+    handlers.onError?.("WebSocket connection error")
+  }
+
+  ws.onclose = () => {
+    handlers.onClose?.()
+  }
+
+  return {
+    sendAnswer: (questionId: string, answer: string) => {
+      ws.send(JSON.stringify({ type: "answer", question_id: questionId, answer }))
+    },
+    close: () => {
+      ws.close()
+    },
+  }
 }

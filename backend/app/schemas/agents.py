@@ -328,3 +328,54 @@ class MediaOptimizeResponse(BaseModel):
     media_type: str
     # File upload results
     file_context: list[FileProcessingResult] | None = None
+
+
+# Agent-based Optimization (WebSocket) schemas
+
+class AgentOptimizeStartRequest(BaseModel):
+    """Request to start an agent-based optimization session."""
+    prompt_template: str
+    task_description: str
+    sample_inputs: list[str] = []
+
+
+class AgentSessionResponse(BaseModel):
+    """Response when starting an agent session."""
+    session_id: str
+    status: Literal["running", "awaiting_input", "completed", "failed"]
+    message: str | None = None
+
+
+class PendingQuestion(BaseModel):
+    """A question the agent is asking the user."""
+    question_id: str
+    question: str
+    reason: str
+
+
+class ToolCallInfo(BaseModel):
+    """Information about a tool call made by the agent."""
+    tool: str
+    args: dict = {}
+    result_summary: str = ""
+
+
+class AgentStatusResponse(BaseModel):
+    """Current status of an agent session."""
+    session_id: str
+    status: Literal["running", "awaiting_input", "completed", "failed"]
+    pending_questions: list[PendingQuestion] = []
+    tool_calls_made: list[ToolCallInfo] = []
+    result: OptimizeResponse | None = None
+    error_message: str | None = None
+
+
+class AnswerInput(BaseModel):
+    """User's answer to a pending question."""
+    question_id: str
+    answer: str
+
+
+class ContinueOptimizationRequest(BaseModel):
+    """Request to continue optimization after answering questions."""
+    answers: list[AnswerInput]

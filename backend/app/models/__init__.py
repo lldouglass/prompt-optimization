@@ -10,6 +10,7 @@ from .user import User
 from .membership import OrganizationMember
 from .session import UserSession
 from .referral import Referral
+from .agent_session import AgentSession
 
 __all__ = [
     "Organization",
@@ -28,4 +29,5 @@ __all__ = [
     "OrganizationMember",
     "UserSession",
     "Referral",
+    "AgentSession",
 ]
