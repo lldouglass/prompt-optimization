@@ -387,3 +387,39 @@ class AnswerInput(BaseModel):
 class ContinueOptimizationRequest(BaseModel):
     """Request to continue optimization after answering questions."""
     answers: list[AnswerInput]
+
+
+# =============================================================================
+# Agent-based Media Optimization (WebSocket) schemas
+# =============================================================================
+
+class MediaAgentStartRequest(BaseModel):
+    """Request to start an agent-based media prompt optimization session."""
+    prompt: str = ""  # Existing prompt to optimize (optional)
+    task_description: str  # What they want to create
+    media_type: Literal["photo", "video"] = "photo"
+    target_model: Literal[
+        "midjourney", "stable_diffusion", "dalle", "flux",  # Photo models
+        "runway", "luma", "kling", "veo",  # Video models
+        "generic"
+    ] = "generic"
+    aspect_ratio: str | None = None  # e.g., "16:9", "1:1", "9:16"
+    uploaded_files: list[UploadedFile] = []
+
+
+class MediaAgentResponse(BaseModel):
+    """Response containing optimized media prompt from agent."""
+    original_prompt: str
+    optimized_prompt: str
+    negative_prompt: str | None = None  # For Stable Diffusion
+    parameters: str | None = None  # For Midjourney (--ar, --v, etc.)
+    improvements: list[str]
+    reasoning: str
+    original_score: float
+    optimized_score: float
+    tips: list[str] = []
+    web_sources: list[WebSourceResponse] = []
+    media_type: str
+    target_model: str
+    # Analysis results
+    analysis: dict | None = None
