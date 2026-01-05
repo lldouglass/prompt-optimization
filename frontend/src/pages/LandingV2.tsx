@@ -2,7 +2,7 @@ import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { AnimatedDemo } from "@/components/AnimatedDemo"
+import { VideoComparisonDemo } from "@/components/VideoComparisonDemo"
 import {
 
   BarChart3,
@@ -204,21 +204,30 @@ export function LandingPageV2() {
         <div className="max-w-5xl mx-auto text-center">
           {/* Main headline - Problem/Solution in one */}
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-            Stop Guessing.
+            Creative Prompts
             <br />
-            <span className="text-primary">Start Optimizing.</span>
+            <span className="text-primary">That Actually Work.</span>
           </h1>
 
           {/* Value prop - Specific, measurable benefit */}
-          <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
-            Most prompts score under 40/100. Clarynt's AI optimizer uses research from OpenAI, Anthropic, and Google to help you write prompts that score 85+.
+          <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8">
+            Stop wasting generations on bad prompts. Our AI optimizer creates perfect prompts for Midjourney, Stable Diffusion, DALL-E, Runway, and more.
           </p>
+
+          {/* Model logos */}
+          <div className="flex flex-wrap justify-center gap-4 mb-10 text-sm text-muted-foreground">
+            <span className="px-3 py-1 bg-muted rounded-full">Midjourney</span>
+            <span className="px-3 py-1 bg-muted rounded-full">Stable Diffusion</span>
+            <span className="px-3 py-1 bg-muted rounded-full">DALL-E 3</span>
+            <span className="px-3 py-1 bg-muted rounded-full">Runway</span>
+            <span className="px-3 py-1 bg-muted rounded-full">Flux</span>
+          </div>
 
           {/* Single primary CTA */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Link to="/login">
               <Button size="lg" className="text-lg px-8 py-6 h-auto">
-                Optimize Your First Prompt Free
+                Create Your First Prompt
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
@@ -250,8 +259,8 @@ export function LandingPageV2() {
             </p>
           </div>
 
-          {/* Animated Before/After Demo */}
-          <AnimatedDemo />
+          {/* Video Comparison Demo */}
+          <VideoComparisonDemo />
 
           {/* CTA after demo */}
           <div className="text-center mt-12">

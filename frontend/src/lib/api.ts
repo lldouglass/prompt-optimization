@@ -318,6 +318,7 @@ export interface PendingQuestion {
   question_id: string
   question: string
   reason: string
+  options?: string[]
 }
 
 export interface ToolCallInfo {
@@ -329,8 +330,16 @@ export interface ToolCallInfo {
 export type AgentWebSocketMessage =
   | { type: "progress"; step: string; message: string }
   | { type: "tool_called"; tool: string; args: Record<string, unknown>; result_summary: string }
-  | { type: "question"; question_id: string; question: string; reason: string }
+  | { type: "question"; question_id: string; question: string; reason: string; options?: string[] }
   | { type: "completed"; result: OptimizationResult }
+  | { type: "error"; error: string }
+
+// WebSocket message type for media agent (returns MediaAgentResult)
+export type MediaAgentWebSocketMessage =
+  | { type: "progress"; step: string; message: string }
+  | { type: "tool_called"; tool: string; args: Record<string, unknown>; result_summary: string }
+  | { type: "question"; question_id: string; question: string; reason: string; options?: string[] }
+  | { type: "completed"; result: MediaAgentResult }
   | { type: "error"; error: string }
 
 export interface SavedOptimization {
@@ -413,6 +422,35 @@ export interface MediaOptimizationResult {
   tips: string[]
   media_type: MediaType
   file_context: FileProcessingResult[] | null
+}
+
+// Web source for research-based optimizations
+export interface WebSourceResponse {
+  url: string
+  title: string
+  content: string
+}
+
+// Media Agent types (for WebSocket-based optimization)
+export type TargetModel =
+  | "midjourney" | "stable_diffusion" | "dalle" | "flux"  // Photo models
+  | "runway" | "luma" | "kling" | "veo"  // Video models
+  | "generic"
+
+export interface MediaAgentResult {
+  original_prompt: string
+  optimized_prompt: string
+  negative_prompt: string | null  // For Stable Diffusion
+  parameters: string | null  // For Midjourney (--ar, --v, etc.)
+  improvements: string[]
+  reasoning: string
+  original_score: number
+  optimized_score: number
+  tips: string[]
+  web_sources: WebSourceResponse[]
+  media_type: MediaType
+  target_model: string
+  analysis: Record<string, unknown> | null
 }
 
 // Billing types
@@ -778,6 +816,36 @@ export const sessionApi = {
     return res.json()
   },
 
+  // Media Agent-based optimization (WebSocket)
+  async startMediaAgentOptimization(
+    prompt: string,
+    taskDescription: string,
+    mediaType: "photo" | "video",
+    targetModel: string,
+    aspectRatio?: string
+  ): Promise<AgentSessionResponse> {
+    const res = await fetch(`${API_BASE}/agents/media-optimize/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        prompt: prompt,
+        task_description: taskDescription,
+        media_type: mediaType,
+        target_model: targetModel,
+        aspect_ratio: aspectRatio || null,
+      }),
+    })
+    if (!res.ok) {
+      if (res.status === 429) {
+        const data = await res.json()
+        throw new Error(data.detail || "Optimization limit exceeded")
+      }
+      throw new Error("Failed to start media agent optimization")
+    }
+    return res.json()
+  },
+
   async listApiKeys(orgId: string): Promise<ApiKey[]> {
     const res = await fetch(`${API_BASE}/admin/organizations/${orgId}/api-keys`, {
       credentials: "include",
@@ -1014,7 +1082,7 @@ export function connectAgentOptimizeWebSocket(
   handlers: {
     onProgress?: (step: string, message: string) => void
     onToolCalled?: (tool: string, args: Record<string, unknown>, resultSummary: string) => void
-    onQuestion?: (questionId: string, question: string, reason: string) => void
+    onQuestion?: (questionId: string, question: string, reason: string, options?: string[]) => void
     onCompleted?: (result: OptimizationResult) => void
     onError?: (error: string) => void
     onClose?: () => void
@@ -1036,7 +1104,68 @@ export function connectAgentOptimizeWebSocket(
           handlers.onToolCalled?.(data.tool, data.args, data.result_summary)
           break
         case "question":
-          handlers.onQuestion?.(data.question_id, data.question, data.reason)
+          handlers.onQuestion?.(data.question_id, data.question, data.reason, data.options)
+          break
+        case "completed":
+          handlers.onCompleted?.(data.result)
+          break
+        case "error":
+          handlers.onError?.(data.error)
+          break
+      }
+    } catch (e) {
+      console.error("Failed to parse WebSocket message:", e)
+    }
+  }
+
+  ws.onerror = () => {
+    handlers.onError?.("WebSocket connection error")
+  }
+
+  ws.onclose = () => {
+    handlers.onClose?.()
+  }
+
+  return {
+    sendAnswer: (questionId: string, answer: string) => {
+      ws.send(JSON.stringify({ type: "answer", question_id: questionId, answer }))
+    },
+    close: () => {
+      ws.close()
+    },
+  }
+}
+
+
+// WebSocket helper for media agent-based optimization
+export function connectMediaAgentWebSocket(
+  sessionId: string,
+  handlers: {
+    onProgress?: (step: string, message: string) => void
+    onToolCalled?: (tool: string, args: Record<string, unknown>, resultSummary: string) => void
+    onQuestion?: (questionId: string, question: string, reason: string, options?: string[]) => void
+    onCompleted?: (result: MediaAgentResult) => void
+    onError?: (error: string) => void
+    onClose?: () => void
+  }
+): {
+  sendAnswer: (questionId: string, answer: string) => void
+  close: () => void
+} {
+  const ws = new WebSocket(`${WS_BASE}/ws/media-optimize/${sessionId}`)
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data) as MediaAgentWebSocketMessage
+      switch (data.type) {
+        case "progress":
+          handlers.onProgress?.(data.step, data.message)
+          break
+        case "tool_called":
+          handlers.onToolCalled?.(data.tool, data.args, data.result_summary)
+          break
+        case "question":
+          handlers.onQuestion?.(data.question_id, data.question, data.reason, data.options)
           break
         case "completed":
           handlers.onCompleted?.(data.result)

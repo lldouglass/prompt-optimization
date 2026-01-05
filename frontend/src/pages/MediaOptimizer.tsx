@@ -1,0 +1,531 @@
+import { useState, useRef, useEffect } from "react"
+import { Camera, Video, Sparkles, Copy, Check, Loader2, ArrowRight, AlertCircle, MessageSquare, Wrench } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { sessionApi, connectMediaAgentWebSocket, type MediaAgentResult, type TargetModel, type ToolCallInfo, type PendingQuestion } from "@/lib/api"
+import { track } from "@/lib/analytics"
+
+// Photo and video models
+const PHOTO_MODELS: { value: TargetModel; label: string; description: string }[] = [
+  { value: "midjourney", label: "Midjourney", description: "Best for artistic, stylized images" },
+  { value: "stable_diffusion", label: "Stable Diffusion", description: "Open-source, highly customizable" },
+  { value: "dalle", label: "DALL-E 3", description: "Natural language, conversational style" },
+  { value: "flux", label: "Flux", description: "Fast, high-quality generations" },
+]
+
+const VIDEO_MODELS: { value: TargetModel; label: string; description: string }[] = [
+  { value: "runway", label: "Runway Gen-4", description: "Professional video generation" },
+  { value: "luma", label: "Luma Dream Machine", description: "Fast iteration, natural language" },
+  { value: "kling", label: "Kling", description: "Motion flow and transitions" },
+  { value: "veo", label: "Veo", description: "Detailed scene descriptions" },
+]
+
+const ASPECT_RATIOS = [
+  { value: "1:1", label: "1:1 Square" },
+  { value: "16:9", label: "16:9 Landscape" },
+  { value: "9:16", label: "9:16 Portrait" },
+  { value: "4:3", label: "4:3 Standard" },
+  { value: "21:9", label: "21:9 Ultrawide" },
+]
+
+export function MediaOptimizerPage() {
+  // Media type and model selection
+  const [mediaType, setMediaType] = useState<"photo" | "video">("photo")
+  const [targetModel, setTargetModel] = useState<TargetModel>("midjourney")
+
+  // Input fields
+  const [taskDescription, setTaskDescription] = useState("")
+  const [existingPrompt, setExistingPrompt] = useState("")
+  const [aspectRatio, setAspectRatio] = useState<string>("")
+
+  // Agent state
+  const [isOptimizing, setIsOptimizing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [progressMessage, setProgressMessage] = useState("")
+  const [toolCalls, setToolCalls] = useState<ToolCallInfo[]>([])
+  const [agentQuestion, setAgentQuestion] = useState<PendingQuestion | null>(null)
+  const [agentAnswer, setAgentAnswer] = useState("")
+
+  // Result state
+  const [result, setResult] = useState<MediaAgentResult | null>(null)
+  const [copied, setCopied] = useState<"prompt" | "negative" | "params" | null>(null)
+
+  // WebSocket ref
+  const wsRef = useRef<{ sendAnswer: (id: string, answer: string) => void; close: () => void } | null>(null)
+  const resultRef = useRef<HTMLDivElement>(null)
+
+  // Update target model when media type changes
+  useEffect(() => {
+    if (mediaType === "photo") {
+      setTargetModel("midjourney")
+    } else {
+      setTargetModel("runway")
+    }
+  }, [mediaType])
+
+  const models = mediaType === "photo" ? PHOTO_MODELS : VIDEO_MODELS
+
+  const handleOptimize = async () => {
+    if (!taskDescription.trim()) return
+
+    setIsOptimizing(true)
+    setError(null)
+    setResult(null)
+    setProgressMessage("Starting optimization...")
+    setToolCalls([])
+    setAgentQuestion(null)
+
+    try {
+      // Start the agent session
+      const session = await sessionApi.startMediaAgentOptimization(
+        existingPrompt,
+        taskDescription,
+        mediaType,
+        targetModel,
+        aspectRatio || undefined
+      )
+
+      // Connect WebSocket
+      const ws = connectMediaAgentWebSocket(session.session_id, {
+        onProgress: (_step, message) => {
+          setProgressMessage(message)
+        },
+        onToolCalled: (tool, args, resultSummary) => {
+          setToolCalls(prev => [...prev, { tool, args, result_summary: resultSummary }])
+        },
+        onQuestion: (questionId, question, reason, options) => {
+          setAgentQuestion({ question_id: questionId, question, reason, options })
+          setProgressMessage("Waiting for your answer...")
+        },
+        onCompleted: (completedResult) => {
+          setResult(completedResult)
+          setIsOptimizing(false)
+          setProgressMessage("")
+          wsRef.current = null
+
+          // Scroll to result
+          setTimeout(() => {
+            resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+          }, 100)
+
+          track("media_agent_optimization_completed", {
+            media_type: mediaType,
+            target_model: targetModel,
+            had_existing_prompt: !!existingPrompt,
+          })
+        },
+        onError: (errorMsg) => {
+          setError(errorMsg)
+          setIsOptimizing(false)
+          setProgressMessage("")
+          wsRef.current = null
+        },
+        onClose: () => {
+          if (isOptimizing && !result) {
+            setError("Connection closed unexpectedly")
+            setIsOptimizing(false)
+          }
+          wsRef.current = null
+        },
+      })
+
+      wsRef.current = ws
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start optimization")
+      setIsOptimizing(false)
+    }
+  }
+
+  const handleSubmitAnswer = () => {
+    if (!agentQuestion || !agentAnswer.trim() || !wsRef.current) return
+
+    wsRef.current.sendAnswer(agentQuestion.question_id, agentAnswer)
+    setAgentQuestion(null)
+    setAgentAnswer("")
+    setProgressMessage("Processing your answer...")
+  }
+
+  // Cleanup WebSocket on unmount
+  useEffect(() => {
+    return () => {
+      wsRef.current?.close()
+    }
+  }, [])
+
+  const copyToClipboard = (text: string, type: "prompt" | "negative" | "params") => {
+    navigator.clipboard.writeText(text)
+    setCopied(type)
+    setTimeout(() => setCopied(null), 2000)
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        {mediaType === "photo" ? (
+          <Camera className="h-8 w-8 text-primary" />
+        ) : (
+          <Video className="h-8 w-8 text-primary" />
+        )}
+        <div>
+          <h1 className="text-2xl font-bold">Media Prompt Optimizer</h1>
+          <p className="text-muted-foreground">
+            Create optimized prompts for AI image and video generation
+          </p>
+        </div>
+      </div>
+
+      {/* Input Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5" />
+            Smart Optimization
+          </CardTitle>
+          <CardDescription>
+            Our AI agent will analyze your request and ask clarifying questions to create the best prompt for your chosen model.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Media Type Toggle */}
+          <div className="flex gap-2">
+            <Button
+              variant={mediaType === "photo" ? "default" : "outline"}
+              onClick={() => setMediaType("photo")}
+              className="flex-1"
+            >
+              <Camera className="h-4 w-4 mr-2" />
+              Photo
+            </Button>
+            <Button
+              variant={mediaType === "video" ? "default" : "outline"}
+              onClick={() => setMediaType("video")}
+              className="flex-1"
+            >
+              <Video className="h-4 w-4 mr-2" />
+              Video
+            </Button>
+          </div>
+
+          {/* Model Selection */}
+          <div className="space-y-2">
+            <Label>Target Model</Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {models.map((model) => (
+                <Button
+                  key={model.value}
+                  variant={targetModel === model.value ? "default" : "outline"}
+                  onClick={() => setTargetModel(model.value)}
+                  className="h-auto py-3 flex flex-col items-start text-left"
+                >
+                  <span className="font-medium">{model.label}</span>
+                  <span className="text-xs opacity-70 font-normal">{model.description}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Task Description */}
+          <div className="space-y-2">
+            <Label htmlFor="task">What do you want to create? *</Label>
+            <Textarea
+              id="task"
+              placeholder={mediaType === "photo"
+                ? "e.g., A portrait of a woman in soft golden hour lighting, cinematic style"
+                : "e.g., A slow dolly-in shot of a chef plating food in a steamy kitchen"
+              }
+              value={taskDescription}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setTaskDescription(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          {/* Existing Prompt (Optional) */}
+          <div className="space-y-2">
+            <Label htmlFor="existing">Existing prompt to improve (optional)</Label>
+            <Textarea
+              id="existing"
+              placeholder="Paste an existing prompt to optimize it..."
+              value={existingPrompt}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setExistingPrompt(e.target.value)}
+              rows={2}
+            />
+          </div>
+
+          {/* Aspect Ratio */}
+          <div className="space-y-2">
+            <Label>Aspect Ratio (optional)</Label>
+            <div className="flex flex-wrap gap-2">
+              {ASPECT_RATIOS.map((ar) => (
+                <Button
+                  key={ar.value}
+                  variant={aspectRatio === ar.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setAspectRatio(aspectRatio === ar.value ? "" : ar.value)}
+                >
+                  {ar.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Optimize Button */}
+          <Button
+            onClick={handleOptimize}
+            disabled={isOptimizing || !taskDescription.trim()}
+            className="w-full"
+            size="lg"
+          >
+            {isOptimizing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Optimizing...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Optimize for {models.find(m => m.value === targetModel)?.label}
+              </>
+            )}
+          </Button>
+
+          {/* Error Display */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Progress/Agent Interaction */}
+      {isOptimizing && (
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            {/* Progress Message */}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {progressMessage}
+            </div>
+
+            {/* Tool Calls */}
+            {toolCalls.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Agent Actions
+                </div>
+                {toolCalls.map((tc, i) => (
+                  <div key={i} className="flex items-start gap-2 text-sm p-2 bg-muted/50 rounded">
+                    <Wrench className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                    <div>
+                      <span className="font-medium">{tc.tool}</span>
+                      {tc.result_summary && (
+                        <span className="text-muted-foreground"> - {tc.result_summary}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Question from Agent */}
+            {agentQuestion && (
+              <div className="space-y-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <MessageSquare className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <div className="font-medium">{agentQuestion.question}</div>
+                    <div className="text-sm text-muted-foreground mt-1">{agentQuestion.reason}</div>
+                  </div>
+                </div>
+
+                {/* Multiple choice options */}
+                {agentQuestion.options && agentQuestion.options.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {agentQuestion.options.map((option, index) => (
+                      <Button
+                        key={index}
+                        variant={agentAnswer === option ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setAgentAnswer(option)}
+                        className="transition-all"
+                      >
+                        {option}
+                      </Button>
+                    ))}
+                    <Button
+                      variant={agentAnswer && !agentQuestion.options.includes(agentAnswer) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setAgentAnswer("")}
+                      className="transition-all"
+                    >
+                      Other...
+                    </Button>
+                  </div>
+                )}
+
+                {/* Text input for "Other" or when no options */}
+                {(!agentQuestion.options || agentQuestion.options.length === 0 || (agentAnswer === "" || !agentQuestion.options.includes(agentAnswer))) && (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Type your answer..."
+                      value={agentQuestion.options?.includes(agentAnswer) ? "" : agentAnswer}
+                      onChange={(e) => setAgentAnswer(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSubmitAnswer()}
+                      autoFocus={agentQuestion.options && agentQuestion.options.length > 0}
+                    />
+                  </div>
+                )}
+
+                {/* Submit button */}
+                <div className="flex justify-end">
+                  <Button onClick={handleSubmitAnswer} disabled={!agentAnswer.trim()}>
+                    Submit Answer
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Results */}
+      {result && (
+        <div ref={resultRef} className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Optimization Results</span>
+                <div className="flex items-center gap-2 text-sm font-normal">
+                  <span className="text-muted-foreground">Score:</span>
+                  <span className={result.optimized_score >= 7 ? "text-green-600" : result.optimized_score >= 5 ? "text-yellow-600" : "text-red-600"}>
+                    {result.original_score.toFixed(1)} → {result.optimized_score.toFixed(1)}
+                  </span>
+                  {result.optimized_score > result.original_score && (
+                    <span className="text-green-600">
+                      (+{(result.optimized_score - result.original_score).toFixed(1)})
+                    </span>
+                  )}
+                </div>
+              </CardTitle>
+              <CardDescription>
+                Optimized for {models.find(m => m.value === result.target_model)?.label || result.target_model}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Optimized Prompt */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Optimized Prompt</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(result.optimized_prompt, "prompt")}
+                  >
+                    {copied === "prompt" ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <div className="p-4 bg-muted rounded-lg font-mono text-sm whitespace-pre-wrap">
+                  {result.optimized_prompt}
+                </div>
+              </div>
+
+              {/* Negative Prompt (Stable Diffusion only) */}
+              {result.negative_prompt && result.target_model === "stable_diffusion" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Negative Prompt (paste separately)</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(result.negative_prompt!, "negative")}
+                    >
+                      {copied === "negative" ? (
+                        <Check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-lg font-mono text-sm whitespace-pre-wrap">
+                    {result.negative_prompt}
+                  </div>
+                </div>
+              )}
+
+              {/* Parameters (Midjourney only) */}
+              {result.parameters && result.target_model === "midjourney" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Midjourney Parameters</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(result.parameters!, "params")}
+                    >
+                      {copied === "params" ? (
+                        <Check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg font-mono text-sm">
+                    {result.parameters}
+                  </div>
+                </div>
+              )}
+
+              {/* Improvements */}
+              {result.improvements.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Improvements Made</Label>
+                  <ul className="space-y-1">
+                    {result.improvements.map((imp, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        {imp}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Reasoning */}
+              {result.reasoning && (
+                <div className="space-y-2">
+                  <Label>Why These Changes</Label>
+                  <p className="text-sm text-muted-foreground">{result.reasoning}</p>
+                </div>
+              )}
+
+              {/* Tips */}
+              {result.tips && result.tips.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Tips for {models.find(m => m.value === result.target_model)?.label}</Label>
+                  <ul className="space-y-1">
+                    {result.tips.map((tip, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <Sparkles className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                        {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  )
+}

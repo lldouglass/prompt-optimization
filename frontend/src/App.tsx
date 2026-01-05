@@ -6,6 +6,7 @@ import { LoginPage } from "@/pages/Login"
 import { DashboardPage } from "@/pages/Dashboard"
 import { SettingsPage } from "@/pages/Settings"
 import { AgentsPage } from "@/pages/Agents"
+import { MediaOptimizerPage } from "@/pages/MediaOptimizer"
 import { PromptLibraryPage } from "@/pages/PromptLibrary"
 import { VerifyEmailPage } from "@/pages/VerifyEmail"
 import { VerifyEmailPendingPage } from "@/pages/VerifyEmailPending"
@@ -42,7 +43,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/agents" replace />
+    return <Navigate to="/media" replace />
   }
   return <>{children}</>
 }
@@ -76,8 +77,9 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/media" element={<MediaOptimizerPage />} />
         <Route path="/agents" element={<AgentsPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/library" element={<PromptLibraryPage />} />
       </Route>

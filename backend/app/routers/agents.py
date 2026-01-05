@@ -67,6 +67,8 @@ from ..schemas.agents import (
     FileProcessingResult,
     AgentOptimizeStartRequest,
     AgentSessionResponse,
+    MediaAgentStartRequest,
+    MediaAgentResponse,
 )
 from ..services.file_processor import process_file, FileProcessingError
 
@@ -281,6 +283,64 @@ async def start_agent_optimization(
         session_id=str(session.id),
         status="running",
         message="Session created. Connect via WebSocket to /ws/optimize/{session_id}"
+    )
+
+
+@router.post("/media-optimize/start", response_model=AgentSessionResponse)
+async def start_media_agent_optimization(
+    request: MediaAgentStartRequest,
+    org: Organization = Depends(get_current_org_dual),
+    db: AsyncSession = Depends(get_db),
+) -> AgentSessionResponse:
+    """
+    Start an agent-based media prompt optimization session.
+
+    Returns a session_id that the client uses to connect via WebSocket at:
+    ws://host/ws/media-optimize/{session_id}
+
+    The agent will analyze the prompt and decide whether to:
+    - Search the web for model-specific examples
+    - Ask the user clarification questions about subject, style, or model
+    - Generate the optimized prompt with correct syntax for the target model
+    """
+    import uuid
+    from datetime import datetime, timedelta
+
+    # Check usage limit
+    await check_usage_limit(str(org.id), db, "optimizations")
+
+    # Create the session
+    session = AgentSession(
+        id=uuid.uuid4(),
+        org_id=org.id,
+        status="running",
+        agent_type="media_optimizer",
+        initial_request={
+            "prompt": request.prompt,
+            "task_description": request.task_description,
+            "media_type": request.media_type,
+            "target_model": request.target_model,
+            "aspect_ratio": request.aspect_ratio,
+        },
+        conversation_history=[],
+        tool_calls_made=[],
+        pending_questions=[],
+        user_answers=[],
+        questions_asked_count=0,
+        web_sources=[],
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+        expires_at=datetime.utcnow() + timedelta(hours=1),
+    )
+
+    db.add(session)
+    await db.commit()
+    await db.refresh(session)
+
+    return AgentSessionResponse(
+        session_id=str(session.id),
+        status="running",
+        message="Session created. Connect via WebSocket to /ws/media-optimize/{session_id}"
     )
 
 
