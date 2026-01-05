@@ -1,6 +1,6 @@
 const API_BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api/v1`
-  : "http://localhost:8000/api/v1"
+  : "/api/v1"  // Use relative URL to go through Vite proxy in dev
 
 // Timeout constants (in milliseconds)
 const TIMEOUTS = {
@@ -599,7 +599,8 @@ export const sessionApi = {
     taskDescription: string,
     sampleInputs?: string[],
     skillName?: string,
-    uploadedFiles?: UploadedFile[]
+    uploadedFiles?: UploadedFile[],
+    outputFormat?: string
   ): Promise<OptimizationResult> {
     const res = await fetchWithTimeout(`${API_BASE}/agents/optimize`, {
       method: "POST",
@@ -611,6 +612,7 @@ export const sessionApi = {
         sample_inputs: sampleInputs || [],
         skill_name: skillName,
         uploaded_files: uploadedFiles || [],
+        output_format: outputFormat || "auto",
       }),
     }, TIMEOUTS.OPTIMIZE)
     if (!res.ok) {
@@ -752,7 +754,8 @@ export const sessionApi = {
   async startAgentOptimization(
     promptTemplate: string,
     taskDescription: string,
-    sampleInputs?: string[]
+    sampleInputs?: string[],
+    outputFormat?: string
   ): Promise<AgentSessionResponse> {
     const res = await fetch(`${API_BASE}/agents/optimize/start`, {
       method: "POST",
@@ -762,6 +765,7 @@ export const sessionApi = {
         prompt_template: promptTemplate,
         task_description: taskDescription,
         sample_inputs: sampleInputs || [],
+        output_format: outputFormat || "auto",
       }),
     })
     if (!res.ok) {
@@ -851,6 +855,18 @@ export const authApi = {
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
       throw new Error(data.detail || "Invalid email or password")
+    }
+    return res.json()
+  },
+
+  async devLogin(): Promise<AuthResponse> {
+    const res = await fetch(`${API_BASE}/auth/dev-login`, {
+      method: "POST",
+      credentials: "include",
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.detail || "Dev login failed")
     }
     return res.json()
   },

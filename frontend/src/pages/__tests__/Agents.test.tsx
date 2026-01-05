@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { AgentsPage } from '../Agents'
-import { agentApi } from '@/lib/api'
+import { sessionApi } from '@/lib/api'
 import type { OptimizationResult } from '@/lib/api'
 
 // Mock the API
@@ -12,6 +12,12 @@ vi.mock('@/lib/api', () => ({
     optimize: vi.fn(),
     evaluate: vi.fn(),
     compare: vi.fn(),
+  },
+  sessionApi: {
+    getBillingInfo: vi.fn().mockResolvedValue({
+      subscription: { plan: 'free' },
+    }),
+    optimize: vi.fn(),
   },
 }))
 
@@ -71,7 +77,7 @@ describe('Agents Page - Optimize Prompt Button', () => {
     renderAgentsPage()
 
     // Fill only the prompt template
-    const promptInput = screen.getByPlaceholderText(/enter your prompt template/i)
+    const promptInput = screen.getByPlaceholderText(/paste the prompt you want to improve/i)
     await user.type(promptInput, 'You are a helpful assistant.')
 
     const button = screen.getByRole('button', { name: /optimize prompt/i })
@@ -83,8 +89,8 @@ describe('Agents Page - Optimize Prompt Button', () => {
     renderAgentsPage()
 
     // Fill both required fields
-    const promptInput = screen.getByPlaceholderText(/enter your prompt template/i)
-    const taskInput = screen.getByPlaceholderText(/what should this prompt accomplish/i)
+    const promptInput = screen.getByPlaceholderText(/paste the prompt you want to improve/i)
+    const taskInput = screen.getByPlaceholderText(/summarize articles/i)
 
     await user.type(promptInput, 'You are a helpful assistant.')
     await user.type(taskInput, 'Answer user questions about Python')
@@ -97,15 +103,15 @@ describe('Agents Page - Optimize Prompt Button', () => {
     const user = userEvent.setup()
 
     // Make the API call hang
-    vi.mocked(agentApi.optimize).mockImplementation(
+    vi.mocked(sessionApi.optimize).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     )
 
     renderAgentsPage()
 
     // Fill required fields
-    const promptInput = screen.getByPlaceholderText(/enter your prompt template/i)
-    const taskInput = screen.getByPlaceholderText(/what should this prompt accomplish/i)
+    const promptInput = screen.getByPlaceholderText(/paste the prompt you want to improve/i)
+    const taskInput = screen.getByPlaceholderText(/summarize articles/i)
 
     await user.type(promptInput, 'You are a helpful assistant.')
     await user.type(taskInput, 'Answer user questions')
@@ -122,13 +128,13 @@ describe('Agents Page - Optimize Prompt Button', () => {
   it('displays optimization results after successful API call', async () => {
     const user = userEvent.setup()
 
-    vi.mocked(agentApi.optimize).mockResolvedValue(mockOptimizationResult)
+    vi.mocked(sessionApi.optimize).mockResolvedValue(mockOptimizationResult)
 
     renderAgentsPage()
 
     // Fill required fields
-    const promptInput = screen.getByPlaceholderText(/enter your prompt template/i)
-    const taskInput = screen.getByPlaceholderText(/what should this prompt accomplish/i)
+    const promptInput = screen.getByPlaceholderText(/paste the prompt you want to improve/i)
+    const taskInput = screen.getByPlaceholderText(/summarize articles/i)
 
     await user.type(promptInput, 'You are a helpful assistant.')
     await user.type(taskInput, 'Answer user questions')
@@ -156,14 +162,14 @@ describe('Agents Page - Optimize Prompt Button', () => {
   it('calls agentApi.optimize with correct parameters', async () => {
     const user = userEvent.setup()
 
-    vi.mocked(agentApi.optimize).mockResolvedValue(mockOptimizationResult)
+    vi.mocked(sessionApi.optimize).mockResolvedValue(mockOptimizationResult)
 
     renderAgentsPage()
 
     // Fill all fields including optional samples
-    const promptInput = screen.getByPlaceholderText(/enter your prompt template/i)
-    const taskInput = screen.getByPlaceholderText(/what should this prompt accomplish/i)
-    const samplesInput = screen.getByPlaceholderText(/how do i read a file/i)
+    const promptInput = screen.getByPlaceholderText(/paste the prompt you want to improve/i)
+    const taskInput = screen.getByPlaceholderText(/summarize articles/i)
+    const samplesInput = screen.getByPlaceholderText(/add a few examples/i)
 
     await user.type(promptInput, 'You are a helpful assistant.')
     await user.type(taskInput, 'Answer Python questions')
@@ -174,10 +180,12 @@ describe('Agents Page - Optimize Prompt Button', () => {
     await user.click(button)
 
     await waitFor(() => {
-      expect(agentApi.optimize).toHaveBeenCalledWith(
+      expect(sessionApi.optimize).toHaveBeenCalledWith(
         'You are a helpful assistant.',
         'Answer Python questions',
-        ['How do I read a file?', 'What is a decorator?']
+        ['How do I read a file?', 'What is a decorator?'],
+        undefined,
+        undefined
       )
     })
   })
@@ -186,13 +194,13 @@ describe('Agents Page - Optimize Prompt Button', () => {
     const user = userEvent.setup()
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    vi.mocked(agentApi.optimize).mockRejectedValue(new Error('API Error'))
+    vi.mocked(sessionApi.optimize).mockRejectedValue(new Error('API Error'))
 
     renderAgentsPage()
 
     // Fill required fields
-    const promptInput = screen.getByPlaceholderText(/enter your prompt template/i)
-    const taskInput = screen.getByPlaceholderText(/what should this prompt accomplish/i)
+    const promptInput = screen.getByPlaceholderText(/paste the prompt you want to improve/i)
+    const taskInput = screen.getByPlaceholderText(/summarize articles/i)
 
     await user.type(promptInput, 'Test prompt')
     await user.type(taskInput, 'Test task')

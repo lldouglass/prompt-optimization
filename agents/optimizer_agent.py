@@ -81,13 +81,13 @@ OPTIMIZER_TOOLS = [
         "type": "function",
         "function": {
             "name": "generate_optimized_prompt",
-            "description": "Generate the final optimized version of the prompt. Call this when you have enough information to create an improved version.",
+            "description": "Generate the final optimized prompt. Focus on CLARITY and STRUCTURE over length. Include: (1) Clear role, (2) XML sections as needed, (3) 2-3 quality examples, (4) Essential constraints. Remove fluff - every word must earn its place.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "optimized_prompt": {
                         "type": "string",
-                        "description": "The full optimized prompt text"
+                        "description": "The optimized prompt text. Well-structured with XML tags, 2-3 examples, clear format spec. Concise but complete - no redundancy."
                     },
                     "improvements": {
                         "type": "array",
@@ -114,43 +114,83 @@ OPTIMIZER_TOOLS = [
 ]
 
 
-AGENT_SYSTEM_PROMPT = """You are a prompt optimization agent. Your job is to analyze prompts and improve them based on 2025 best practices from OpenAI, Anthropic, and Google DeepMind.
+AGENT_SYSTEM_PROMPT = """You are an expert prompt optimization agent applying 2025 best practices from OpenAI, Anthropic, and Google DeepMind.
+
+## Research-Backed Core Principles
+
+1. **Conciseness wins**: LLMs degrade at ~3,000 tokens. Focused prompts outperform verbose ones.
+2. **Structure beats length**: XML tags and formatting matter more than word count.
+3. **Information density**: Every sentence must earn its place. No fluff.
+4. **Quality > quantity**: 2-3 excellent examples beat 6 mediocre ones.
 
 ## Available Tools
 
-1. **analyze_prompt**: Score the prompt (0-10) and identify issues. ALWAYS call this first.
+1. **analyze_prompt**: Score 0-10, identify issues. ALWAYS call first.
+2. **search_web**: Find examples for complex/domain-specific tasks.
+3. **ask_user_question**: ONE question for CRITICAL ambiguities only (max 3/session).
+4. **generate_optimized_prompt**: Output the final prompt.
 
-2. **search_web**: Search for real-world few-shot examples. Only use if:
-   - The prompt involves complex formatting or domain-specific output
-   - Examples would significantly improve the prompt
-   - The task is non-trivial and would benefit from demonstration
+## Optimization Techniques (Apply What's Needed)
 
-3. **ask_user_question**: Ask ONE clarifying question. Only use for CRITICAL ambiguities:
-   - The target audience is unclear and affects tone/complexity
-   - The output format could be multiple valid options
-   - Key constraints are missing that would change the approach
-   - DO NOT ask about obvious things or minor details
-   - You have a maximum of 3 questions per session
+### 1. Role Definition (Anthropic)
+- Specific persona: "You are a [title] specializing in [domain]"
+- Add behavioral traits only if they affect output quality
 
-4. **generate_optimized_prompt**: Output the final optimized prompt. Call when ready.
+### 2. Structured Sections (Google)
+- Use XML tags: <role>, <context>, <task>, <format>, <examples>, <constraints>
+- Include only sections the task requires - don't force unnecessary structure
+- Consistent delimiters throughout (don't mix XML and markdown headers)
 
-## Optimization Guidelines
+### 3. Direct Instructions (OpenAI)
+- Precise action verbs, explicit success criteria
+- AVOID vague words: "good", "appropriate", "relevant", "proper", "suitable"
+- Place critical instructions at the start, not buried in the middle
 
-Apply these best practices:
-- **Clear Role**: Start with specific expertise ("You are a senior [role] specializing in [domain]")
-- **Structured Sections**: Use XML tags (<context>, <task>, <format>) OR consistent markdown
-- **Direct Instructions**: Be precise, avoid vague words like "good" or "appropriate"
-- **Output Format**: Explicitly specify format, length, and verbosity
-- **Constraints**: Include "DO NOT" instructions and escape hatches
-- **Few-Shot Examples**: Include 2-4 examples when beneficial (from search or generated)
+### 4. Output Format Specification (OpenAI)
+- Explicit format: JSON schema, markdown structure, bullet template
+- Length/verbosity guidance when relevant
+- Show one structural example if format is complex
+
+### 5. Few-Shot Examples (Google)
+- 2-3 high-quality, diverse examples (typical + edge case)
+- Format: <example><input>...</input><output>...</output></example>
+- Add <thinking> tags only for complex reasoning tasks
+- Examples should demonstrate exact expected format
+
+### 6. Constraints & Boundaries (OpenAI)
+- 3-5 essential "DO NOT" rules for likely failure modes
+- Scope limits: what's in/out of bounds
+- One escape hatch: "If uncertain about X, [action]"
+
+### 7. Reasoning Guidance (Anthropic)
+- For complex tasks: "Think step by step before answering"
+- For multi-step: numbered process with clear handoffs
+- Only add if task genuinely requires deliberate reasoning
+
+## Target Lengths
+
+- Simple tasks: 100-200 words
+- Moderate tasks: 200-400 words
+- Complex tasks: 400-600 words
+- Beyond 600: likely too verbose - cut ruthlessly
 
 ## Process
 
-1. ALWAYS call analyze_prompt first
-2. Decide if web search or user questions are needed (usually not - only for complex cases)
-3. Generate the optimized prompt with all improvements
+1. Analyze: What's missing? What's excess?
+2. Apply only the techniques the prompt actually needs
+3. Test each element: "Does removing this hurt output?" If no, remove it.
 
-Be efficient - most prompts can be optimized with just analyze + generate. Only use search_web or ask_user_question when truly necessary."""
+## Quality Checklist
+
+✓ Clear role with relevant expertise
+✓ Structured with appropriate XML sections
+✓ Direct, precise instructions (no vague words)
+✓ Explicit output format
+✓ 2-3 quality examples
+✓ Essential constraints only
+✓ Immediately usable without edits
+
+**Principle: Maximum clarity, minimum words. Structure over length.**"""
 
 
 # =============================================================================
@@ -241,6 +281,7 @@ class ToolExecutor:
     def __init__(self, model: str = "gpt-4o-mini"):
         self.model = model
         self.web_researcher = WebResearcher(model=model)
+        self.original_prompt = ""  # Store for use in generate_optimized
 
     async def execute(
         self,
@@ -262,7 +303,7 @@ class ToolExecutor:
         elif tool_name == "ask_user_question":
             return self._ask_user_question(args, state)
         elif tool_name == "generate_optimized_prompt":
-            return self._generate_optimized(args, state)
+            return self._generate_optimized(args, state, self.original_prompt)
         else:
             return f"Unknown tool: {tool_name}", None
 
@@ -284,6 +325,8 @@ Return a JSON object with:
     {{"category": "clarity|structure|role|format|examples|constraints", "description": "...", "severity": "high|medium|low"}}
   ],
   "strengths": ["..."],
+  "overall_quality": "good|fair|poor",
+  "priority_improvements": ["list of top improvements"],
   "needs_examples": <true if few-shot examples would significantly help>,
   "ambiguities": ["list any critical ambiguities that need user clarification"]
 }}"""
@@ -294,7 +337,14 @@ Return a JSON object with:
             {"role": "user", "content": analysis_prompt}
         ])
 
-        state.analysis_result = result
+        # Parse the JSON result for structured storage
+        try:
+            parsed = json.loads(result)
+            state.analysis_result = parsed
+        except json.JSONDecodeError:
+            # If parsing fails, store as dict with raw content
+            state.analysis_result = {"raw": result, "issues": [], "strengths": [], "overall_quality": "unknown", "priority_improvements": []}
+
         return result, None
 
     async def _search_web(self, args: dict, state: AgentState) -> tuple[str, None]:
@@ -341,16 +391,32 @@ Return a JSON object with:
         # Return special action to pause
         return "Waiting for user response...", {"pause": state.pending_question}
 
-    def _generate_optimized(self, args: dict, state: AgentState) -> tuple[str, dict]:
+    def _generate_optimized(self, args: dict, state: AgentState, original_prompt: str = "") -> tuple[str, dict]:
         """Generate the final optimized prompt - completes the agent."""
+        # Ensure analysis has the expected structure for the frontend
+        analysis = state.analysis_result
+        if analysis and isinstance(analysis, dict):
+            # Ensure all expected fields exist
+            if "issues" not in analysis:
+                analysis["issues"] = []
+            if "strengths" not in analysis:
+                analysis["strengths"] = []
+            if "overall_quality" not in analysis:
+                analysis["overall_quality"] = "unknown"
+            if "priority_improvements" not in analysis:
+                analysis["priority_improvements"] = []
+
         result = {
+            "original_prompt": original_prompt,  # Include original prompt
             "optimized_prompt": args.get("optimized_prompt", ""),
             "improvements": args.get("improvements", []),
             "reasoning": args.get("reasoning", ""),
             "original_score": args.get("original_score", 5.0),
             "optimized_score": args.get("optimized_score", 7.0),
             "web_sources": state.web_sources,
-            "analysis": state.analysis_result,
+            "analysis": analysis,
+            "few_shot_research": None,  # Agent mode doesn't use this
+            "file_context": None,  # Agent mode doesn't use this
         }
 
         state.final_result = result
@@ -387,6 +453,7 @@ class OptimizerAgent:
         on_message: Callable[[dict], Any],
         initial_state: Optional[AgentState] = None,
         user_answer: Optional[str] = None,
+        output_format: Optional[str] = None,
     ) -> AgentState:
         """
         Run the optimizer agent.
@@ -397,10 +464,14 @@ class OptimizerAgent:
             on_message: Callback for WebSocket messages (async or sync)
             initial_state: Optional state to resume from
             user_answer: Optional answer to pending question (for resume)
+            output_format: Desired output format (markdown, json, etc.)
 
         Returns:
             Final AgentState with result or pending question
         """
+        # Store original prompt for use in result
+        self.tool_executor.original_prompt = prompt_template
+
         # Initialize or resume state
         if initial_state:
             state = initial_state
@@ -416,6 +487,27 @@ class OptimizerAgent:
                 state.status = "running"
         else:
             state = AgentState()
+            # Build output format guidance if specified
+            output_format_guidance = ""
+            if output_format and output_format != "auto":
+                format_descriptions = {
+                    "markdown": "Markdown with proper headers, lists, code blocks, and formatting",
+                    "json": "Valid JSON structure with clear schema",
+                    "plain_text": "Simple unformatted plain text without special formatting",
+                    "bullet_points": "Organized bullet point lists with clear hierarchy",
+                    "step_by_step": "Numbered step-by-step instructions or procedures",
+                    "table": "Tabular format using markdown tables or structured columns",
+                    "code": "Programming code with proper syntax and comments",
+                    "xml": "Well-formed XML with appropriate tags",
+                    "conversation": "Dialogue or chat-style conversational format"
+                }
+                format_desc = format_descriptions.get(output_format, output_format)
+                output_format_guidance = f"""
+
+IMPORTANT - Required Output Format: {output_format.upper()}
+The optimized prompt MUST explicitly instruct the model to respond in {format_desc}.
+Include clear format specifications and ensure any examples demonstrate the {output_format} format."""
+
             # Build initial messages
             state.messages = [
                 {"role": "system", "content": AGENT_SYSTEM_PROMPT},
@@ -427,6 +519,7 @@ Prompt to Optimize:
 ---
 {prompt_template}
 ---
+{output_format_guidance}
 
 Start by analyzing the prompt, then decide if you need web examples or user clarification, and finally generate the optimized version."""}
             ]

@@ -11,8 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
-from ..models import AgentSession, Organization
-from ..dependencies import get_current_org_from_cookie
+from ..models import AgentSession
 
 # Import the agent - use try/except for graceful handling if not available
 try:
@@ -103,18 +102,41 @@ async def optimize_websocket(
         initial_request = session.initial_request or {}
         prompt_template = initial_request.get("prompt_template", "")
         task_description = initial_request.get("task_description", "")
+        output_format = initial_request.get("output_format")
 
         if not prompt_template:
             await websocket.send_json({"type": "error", "error": "No prompt template in session"})
             await websocket.close()
             return
 
-        # Create message sender
+        # Create message sender that enriches completed messages
         async def send_message(msg: dict):
             try:
+                # Enrich completed message with missing fields the frontend expects
+                if msg.get("type") == "completed" and msg.get("result"):
+                    result = msg["result"]
+                    # Add original_prompt if missing
+                    if "original_prompt" not in result:
+                        result["original_prompt"] = prompt_template
+                    # Normalize field names - convert web_sources to few_shot_research format
+                    if "few_shot_research" not in result:
+                        result["few_shot_research"] = None
+                    # Add file_context if missing
+                    if "file_context" not in result:
+                        result["file_context"] = None
+                    # Ensure analysis has expected structure
+                    if "analysis" in result and result["analysis"]:
+                        analysis = result["analysis"]
+                        if isinstance(analysis, dict):
+                            analysis.setdefault("issues", [])
+                            analysis.setdefault("strengths", [])
+                            analysis.setdefault("overall_quality", "unknown")
+                            analysis.setdefault("priority_improvements", [])
                 await websocket.send_json(msg)
-            except Exception:
-                pass  # Connection may be closed
+            except Exception as e:
+                # Log the error but don't crash - connection may be closed
+                import logging
+                logging.warning(f"Failed to send WebSocket message: {e}")
 
         # Initialize agent
         agent = OptimizerAgent(model="gpt-4o-mini")
@@ -145,6 +167,7 @@ async def optimize_websocket(
                 on_message=send_message,
                 initial_state=initial_state,
                 user_answer=user_answer,
+                output_format=output_format,
             )
 
             # Save state to session

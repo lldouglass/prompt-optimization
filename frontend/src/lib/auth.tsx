@@ -1,6 +1,9 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react"
 import { authApi, type User, type OrganizationBasic, type Membership } from "./api"
 import { track, identify, resetAnalytics } from "./analytics"
+
+const IS_LOCALHOST = typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
 
 interface AuthState {
   user: User | null
@@ -30,6 +33,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading: true,
   })
 
+  const autoLoginAttempted = useRef(false)
+
   const refreshAuth = useCallback(async () => {
     try {
       const response = await authApi.getMe()
@@ -40,6 +45,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading: false,
       })
     } catch {
+      // On localhost, auto-login with dev account
+      if (IS_LOCALHOST && !autoLoginAttempted.current) {
+        autoLoginAttempted.current = true
+        try {
+          const response = await authApi.devLogin()
+          setState({
+            user: response.user,
+            organization: response.current_organization,
+            memberships: response.memberships,
+            isLoading: false,
+          })
+          console.log('[Dev] Auto-logged in as dev@test.local')
+          return
+        } catch (devErr) {
+          console.warn('[Dev] Auto-login failed:', devErr)
+        }
+      }
       setState({
         user: null,
         organization: null,

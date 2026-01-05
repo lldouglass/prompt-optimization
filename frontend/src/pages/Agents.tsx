@@ -70,10 +70,26 @@ export function AgentsPage() {
     { value: "other", label: "Other" },
   ]
 
+  // Output format options
+  const outputFormatOptions = [
+    { value: "auto", label: "Auto-detect", description: "Let the optimizer choose the best format" },
+    { value: "markdown", label: "Markdown", description: "Rich text with headers, lists, and formatting" },
+    { value: "json", label: "JSON", description: "Structured data for APIs and programmatic use" },
+    { value: "plain_text", label: "Plain Text", description: "Simple unformatted text output" },
+    { value: "bullet_points", label: "Bullet Points", description: "Organized list format" },
+    { value: "step_by_step", label: "Step-by-Step", description: "Numbered instructions or procedures" },
+    { value: "table", label: "Table", description: "Tabular/grid format for comparisons" },
+    { value: "code", label: "Code", description: "Programming code with syntax" },
+    { value: "xml", label: "XML", description: "Structured markup format" },
+    { value: "conversation", label: "Conversation", description: "Dialogue or chat-style responses" },
+  ]
+
   // Optimize state
   const [optimizePrompt, setOptimizePrompt] = useState("")
   const [optimizeTask, setOptimizeTask] = useState("")
   const [optimizeSamples, setOptimizeSamples] = useState("")
+  const [outputFormat, setOutputFormat] = useState("auto")
+  const [showFormatDropdown, setShowFormatDropdown] = useState(false)
   const [optimizeResult, setOptimizeResult] = useState<OptimizationResult | null>(null)
   const [optimizeLoading, setOptimizeLoading] = useState(false)
   const [optimizeError, setOptimizeError] = useState<string | null>(null)
@@ -88,6 +104,7 @@ export function AgentsPage() {
   const [agentAnswer, setAgentAnswer] = useState("")
   const [agentProgress, setAgentProgress] = useState<string>("")
   const wsRef = useRef<{ sendAnswer: (id: string, answer: string) => void; close: () => void } | null>(null)
+  const agentCompletedRef = useRef(false)  // Track if agent completed to avoid stale closure in onClose
 
   const toggleExample = (index: number) => {
     setExpandedExamples(prev => {
@@ -366,7 +383,8 @@ const runEvaluate = async (request?: string, response?: string) => {
         optimizeTask,
         sampleInputs.length > 0 ? sampleInputs : undefined,
         undefined,  // skillName
-        uploadedFiles.length > 0 ? uploadedFiles : undefined
+        uploadedFiles.length > 0 ? uploadedFiles : undefined,
+        outputFormat !== "auto" ? outputFormat : undefined
       )
       setOptimizeResult(result)
 
@@ -438,6 +456,7 @@ const runEvaluate = async (request?: string, response?: string) => {
     setAgentQuestion(null)
     setAgentAnswer("")
     setAgentProgress("Starting agent...")
+    agentCompletedRef.current = false  // Reset completion flag
 
     track('agent_optimization_started', {
       prompt_length: optimizePrompt.length,
@@ -455,12 +474,13 @@ const runEvaluate = async (request?: string, response?: string) => {
       const session = await sessionApi.startAgentOptimization(
         optimizePrompt,
         optimizeTask,
-        sampleInputs.length > 0 ? sampleInputs : undefined
+        sampleInputs.length > 0 ? sampleInputs : undefined,
+        outputFormat !== "auto" ? outputFormat : undefined
       )
 
       // Connect WebSocket
       const ws = connectAgentOptimizeWebSocket(session.session_id, {
-        onProgress: (step, message) => {
+        onProgress: (_step, message) => {
           setAgentProgress(message)
         },
         onToolCalled: (tool, args, resultSummary) => {
@@ -472,6 +492,7 @@ const runEvaluate = async (request?: string, response?: string) => {
           setAgentProgress("Waiting for your answer...")
         },
         onCompleted: (result) => {
+          agentCompletedRef.current = true  // Mark as completed before state updates
           setOptimizeResult(result)
           setAgentProgress("")
           setOptimizeLoading(false)
@@ -489,6 +510,7 @@ const runEvaluate = async (request?: string, response?: string) => {
           })
         },
         onError: (error) => {
+          agentCompletedRef.current = true  // Also mark completed on error to prevent double error
           setOptimizeError(error)
           setAgentProgress("")
           setOptimizeLoading(false)
@@ -497,7 +519,8 @@ const runEvaluate = async (request?: string, response?: string) => {
           track('agent_optimization_failed', { error })
         },
         onClose: () => {
-          if (optimizeLoading && !optimizeResult) {
+          // Use ref to check if completed - avoids stale closure issue with state
+          if (!agentCompletedRef.current) {
             setOptimizeError("Connection closed unexpectedly")
             setOptimizeLoading(false)
           }
@@ -1157,6 +1180,56 @@ const runEvaluate = async (request?: string, response?: string) => {
                 />
               </div>
 
+              {/* Output Format Selector */}
+              <div>
+                <label className="text-sm font-medium">Output Format</label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Choose the format for the optimized prompt's output
+                </p>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowFormatDropdown(!showFormatDropdown)}
+                    className="w-full flex items-center justify-between p-3 border rounded-lg bg-background hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        {outputFormatOptions.find(f => f.value === outputFormat)?.label}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        - {outputFormatOptions.find(f => f.value === outputFormat)?.description}
+                      </span>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showFormatDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showFormatDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-background border rounded-lg shadow-lg max-h-64 overflow-auto">
+                      {outputFormatOptions.map((format) => (
+                        <button
+                          key={format.value}
+                          type="button"
+                          onClick={() => {
+                            setOutputFormat(format.value)
+                            setShowFormatDropdown(false)
+                          }}
+                          className={`w-full flex flex-col items-start p-3 hover:bg-muted/50 transition-colors text-left border-b last:border-b-0 ${
+                            outputFormat === format.value ? 'bg-primary/5' : ''
+                          }`}
+                        >
+                          <span className={`font-medium ${outputFormat === format.value ? 'text-primary' : ''}`}>
+                            {format.label}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {format.description}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className="text-sm font-medium">Reference files (optional)</label>
                 <p className="text-xs text-muted-foreground mb-2">
@@ -1436,16 +1509,16 @@ const runEvaluate = async (request?: string, response?: string) => {
               </div>
 
               {/* Analysis details */}
-              {optimizeResult.analysis && (
+              {optimizeResult.analysis && typeof optimizeResult.analysis === 'object' && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Analysis Details</CardTitle>
                     <CardDescription>
-                      Overall Quality: {optimizeResult.analysis.overall_quality}
+                      Overall Quality: {optimizeResult.analysis.overall_quality || 'N/A'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {optimizeResult.analysis.issues.length > 0 && (
+                    {optimizeResult.analysis.issues && optimizeResult.analysis.issues.length > 0 && (
                       <div>
                         <div className="text-sm font-medium text-red-600 mb-2">Issues Found</div>
                         <div className="space-y-2">
@@ -1475,7 +1548,7 @@ const runEvaluate = async (request?: string, response?: string) => {
                       </div>
                     )}
 
-                    {optimizeResult.analysis.strengths.length > 0 && (
+                    {optimizeResult.analysis.strengths && optimizeResult.analysis.strengths.length > 0 && (
                       <div>
                         <div className="text-sm font-medium text-green-600 mb-2">Strengths</div>
                         <ul className="list-disc list-inside text-sm space-y-1">

@@ -227,6 +227,63 @@ async def analyze_prompt(request: AnalyzeRequest) -> AnalysisResponse:
         strengths=analysis.strengths, overall_quality=analysis.overall_quality, priority_improvements=analysis.priority_improvements)
 
 
+@router.post("/optimize/start", response_model=AgentSessionResponse)
+async def start_agent_optimization(
+    request: AgentOptimizeStartRequest,
+    org: Organization = Depends(get_current_org_dual),
+    db: AsyncSession = Depends(get_db),
+) -> AgentSessionResponse:
+    """
+    Start an agent-based optimization session.
+
+    Returns a session_id that the client uses to connect via WebSocket at:
+    ws://host/ws/optimize/{session_id}
+
+    The agent will analyze the prompt and decide whether to:
+    - Search the web for examples
+    - Ask the user clarification questions
+    - Generate the optimized prompt
+    """
+    import uuid
+    from datetime import datetime, timedelta
+
+    # Check usage limit
+    await check_usage_limit(str(org.id), db, "optimizations")
+
+    # Create the session
+    session = AgentSession(
+        id=uuid.uuid4(),
+        org_id=org.id,
+        status="running",
+        agent_type="optimizer",
+        initial_request={
+            "prompt_template": request.prompt_template,
+            "task_description": request.task_description,
+            "sample_inputs": request.sample_inputs,
+            "output_format": request.output_format,
+        },
+        conversation_history=[],
+        tool_calls_made=[],
+        pending_questions=[],
+        user_answers=[],
+        questions_asked_count=0,
+        web_sources=[],
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+        expires_at=datetime.utcnow() + timedelta(hours=1),
+    )
+
+    db.add(session)
+    await db.commit()
+    await db.refresh(session)
+
+    return AgentSessionResponse(
+        session_id=str(session.id),
+        status="running",
+        message="Session created. Connect via WebSocket to /ws/optimize/{session_id}"
+    )
+
+
 @router.post("/optimize", response_model=OptimizeResponse)
 async def optimize_prompt(
     request: OptimizeRequest,
@@ -321,13 +378,15 @@ Use this reference material to inform your optimization suggestions."""
         result = await optimizer.optimize_enhanced(
             prompt_template=prompt_template,
             task_description=enhanced_task,
-            sample_inputs=request.sample_inputs if request.sample_inputs else None
+            sample_inputs=request.sample_inputs if request.sample_inputs else None,
+            output_format=request.output_format
         )
     else:
         result = optimizer.optimize(
             prompt_template=prompt_template,
             task_description=enhanced_task,
-            sample_inputs=request.sample_inputs if request.sample_inputs else None
+            sample_inputs=request.sample_inputs if request.sample_inputs else None,
+            output_format=request.output_format
         )
 
     # Track token usage for this optimization
@@ -509,61 +568,6 @@ async def optimize_media_prompt(
         tips=result.tips,
         media_type=result.media_type,
         file_context=file_context_results if file_context_results else None
-    )
-
-@router.post("/optimize/start", response_model=AgentSessionResponse)
-async def start_agent_optimization(
-    request: AgentOptimizeStartRequest,
-    org: Organization = Depends(get_current_org_dual),
-    db: AsyncSession = Depends(get_db),
-) -> AgentSessionResponse:
-    """
-    Start an agent-based optimization session.
-
-    Returns a session_id that the client uses to connect via WebSocket at:
-    ws://host/ws/optimize/{session_id}
-
-    The agent will analyze the prompt and decide whether to:
-    - Search the web for examples
-    - Ask the user clarification questions
-    - Generate the optimized prompt
-    """
-    import uuid
-    from datetime import datetime, timedelta
-
-    # Check usage limit
-    await check_usage_limit(str(org.id), db, "optimizations")
-
-    # Create the session
-    session = AgentSession(
-        id=uuid.uuid4(),
-        org_id=org.id,
-        status="running",
-        agent_type="optimizer",
-        initial_request={
-            "prompt_template": request.prompt_template,
-            "task_description": request.task_description,
-            "sample_inputs": request.sample_inputs,
-        },
-        conversation_history=[],
-        tool_calls_made=[],
-        pending_questions=[],
-        user_answers=[],
-        questions_asked_count=0,
-        web_sources=[],
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
-        expires_at=datetime.utcnow() + timedelta(hours=1),
-    )
-
-    db.add(session)
-    await db.commit()
-    await db.refresh(session)
-
-    return AgentSessionResponse(
-        session_id=str(session.id),
-        status="running",
-        message="Session created. Connect via WebSocket to /ws/optimize/{session_id}"
     )
 
 

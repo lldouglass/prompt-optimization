@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
+import { authApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Mail, Lock, User, Building2, Gift } from "lucide-react"
+import { Mail, Lock, User, Building2, Gift, Zap } from "lucide-react"
 
 export function LoginPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { login, register } = useAuth()
+  const { login, register, refreshAuth } = useAuth()
   const referralCode = searchParams.get("ref")
   const [mode, setMode] = useState<"login" | "register">(referralCode ? "register" : "login")
   const [email, setEmail] = useState("")
@@ -19,6 +20,22 @@ export function LoginPage() {
   const [orgName, setOrgName] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+
+  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+
+  const handleDevLogin = async () => {
+    setError("")
+    setLoading(true)
+    try {
+      await authApi.devLogin()
+      await refreshAuth()
+      navigate("/agents")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Dev login failed")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Auto-switch to register mode if referral code is present
   useEffect(() => {
@@ -107,6 +124,18 @@ export function LoginPage() {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Signing in..." : "Sign in"}
               </Button>
+              {isLocalhost && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={handleDevLogin}
+                  disabled={loading}
+                >
+                  <Zap className="mr-2 h-4 w-4" />
+                  Dev Login (localhost only)
+                </Button>
+              )}
             </form>
           ) : (
             <form onSubmit={handleRegister} className="space-y-4">

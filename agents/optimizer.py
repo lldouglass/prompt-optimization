@@ -519,7 +519,8 @@ Analyze this prompt for optimization opportunities."""
         self,
         prompt_template: str,
         task_description: str,
-        sample_inputs: Optional[List[str]] = None
+        sample_inputs: Optional[List[str]] = None,
+        output_format: Optional[str] = None
     ) -> OptimizationResult:
         """
         Optimize a prompt template using analysis and best practices.
@@ -528,6 +529,7 @@ Analyze this prompt for optimization opportunities."""
             prompt_template: The prompt to optimize
             task_description: What the prompt is supposed to accomplish
             sample_inputs: Optional sample inputs to test the prompt
+            output_format: Desired output format (markdown, json, plain_text, etc.)
 
         Returns:
             OptimizationResult with original and optimized prompts, scores, and improvements
@@ -555,7 +557,8 @@ Analyze this prompt for optimization opportunities."""
             prompt_template,
             task_description,
             analysis,
-            few_shot_research
+            few_shot_research,
+            output_format
         )
 
         # Step 5: Score the optimized prompt
@@ -746,7 +749,8 @@ Evaluate this prompt against modern prompt engineering best practices."""
         prompt_template: str,
         task_description: str,
         analysis: PromptAnalysis,
-        few_shot_research: Optional[FewShotResearch] = None
+        few_shot_research: Optional[FewShotResearch] = None,
+        output_format: Optional[str] = None
     ) -> tuple[str, List[str], str]:
         """Generate an optimized version of the prompt."""
         # Build the few-shot examples section if research was done
@@ -771,6 +775,28 @@ Research Notes: {few_shot_research.research_notes}
 IMPORTANT: Incorporate these few-shot examples into the optimized prompt in a clear "Examples" section.
 The examples should demonstrate the expected input/output format and quality."""
 
+        # Build output format guidance section
+        output_format_section = ""
+        if output_format and output_format != "auto":
+            format_descriptions = {
+                "markdown": "Markdown with proper headers, lists, code blocks, and formatting",
+                "json": "Valid JSON structure with clear schema",
+                "plain_text": "Simple unformatted plain text without special formatting",
+                "bullet_points": "Organized bullet point lists with clear hierarchy",
+                "step_by_step": "Numbered step-by-step instructions or procedures",
+                "table": "Tabular format using markdown tables or structured columns",
+                "code": "Programming code with proper syntax and comments",
+                "xml": "Well-formed XML with appropriate tags",
+                "conversation": "Dialogue or chat-style conversational format"
+            }
+            format_desc = format_descriptions.get(output_format, output_format)
+            output_format_section = f"""
+
+REQUIRED OUTPUT FORMAT: {output_format.upper()}
+The optimized prompt MUST explicitly instruct the model to respond in {format_desc}.
+Include clear format specifications in the <format> section of the optimized prompt.
+Ensure examples (if included) demonstrate the {output_format} format."""
+
         user_content = f"""Task Description: {task_description}
 
 Original Prompt:
@@ -781,6 +807,7 @@ Original Prompt:
 Analysis of Issues:
 {json.dumps(analysis.to_dict(), indent=2)}
 {few_shot_section}
+{output_format_section}
 
 Generate an optimized version of this prompt that addresses the identified issues."""
 
@@ -836,7 +863,8 @@ Generate an optimized version of this prompt that addresses the identified issue
         self,
         prompt_template: str,
         task_description: str,
-        sample_inputs: Optional[List[str]] = None
+        sample_inputs: Optional[List[str]] = None,
+        output_format: Optional[str] = None
     ) -> EnhancedOptimizationResult:
         """
         Enhanced optimization with web-researched examples and Judge evaluation.
@@ -850,6 +878,7 @@ Generate an optimized version of this prompt that addresses the identified issue
             prompt_template: The prompt to optimize
             task_description: What the prompt should accomplish
             sample_inputs: Optional sample inputs for testing
+            output_format: Desired output format (markdown, json, plain_text, etc.)
 
         Returns:
             EnhancedOptimizationResult with web sources and judge evaluation
@@ -909,7 +938,8 @@ Generate an optimized version of this prompt that addresses the identified issue
             prompt_template,
             task_description,
             analysis,
-            few_shot_research
+            few_shot_research,
+            output_format
         )
 
         # Step 5: Score the optimized prompt
@@ -955,7 +985,8 @@ Please create a new optimization that:
                 prompt_template,
                 task_description,
                 analysis_with_feedback,
-                few_shot_research
+                few_shot_research,
+                output_format
             )
 
             # Re-score

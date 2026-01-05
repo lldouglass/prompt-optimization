@@ -65,17 +65,22 @@ async def create_session(
     db.add(session)
     await db.commit()
 
+    # Detect localhost for dev-friendly cookie settings
+    host = request.headers.get("host", "")
+    is_localhost = host.startswith("localhost") or host.startswith("127.0.0.1")
+
     # Set HTTP-only cookie
-    # Using shared cookie domain (.clarynt.net) for app/api subdomains
+    # Using shared cookie domain (.clarynt.net) for app/api subdomains in production
+    # For localhost, don't set domain and disable secure flag
     response.set_cookie(
         key=settings.session_cookie_name,
         value=token,
         httponly=True,
-        secure=True,
-        samesite="lax",  # Can use lax since same parent domain
+        secure=not is_localhost,  # Disable secure for localhost (HTTP)
+        samesite="lax",
         max_age=settings.session_expire_days * 24 * 60 * 60,
         path="/",
-        domain=settings.cookie_domain,  # .clarynt.net - shared across subdomains
+        domain=None if is_localhost else settings.cookie_domain,  # No domain for localhost
     )
 
 
@@ -273,11 +278,15 @@ async def logout(
             await db.delete(session)
             await db.commit()
 
+    # Detect localhost for proper cookie deletion
+    host = request.headers.get("host", "")
+    is_localhost = host.startswith("localhost") or host.startswith("127.0.0.1")
+
     # Clear cookie
     response.delete_cookie(
         key=settings.session_cookie_name,
         path="/",
-        domain=settings.cookie_domain,
+        domain=None if is_localhost else settings.cookie_domain,
     )
 
     return MessageResponse(message="Logged out successfully")
@@ -390,3 +399,84 @@ async def resend_verification(
     await send_verification_email(request_data.email, verification_token, user.name)
 
     return MessageResponse(message="If an account exists with this email, a verification email has been sent.")
+
+
+@router.post("/dev-login", response_model=AuthResponse)
+async def dev_login(
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+) -> AuthResponse:
+    """
+    Development-only login endpoint.
+    Creates a test user and logs them in without password.
+    Only works when running locally (localhost).
+    """
+    # Only allow on localhost
+    host = request.headers.get("host", "")
+    if not host.startswith("localhost") and not host.startswith("127.0.0.1"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Dev login only available on localhost",
+        )
+
+    test_email = "dev@test.local"
+
+    # Check if test user exists
+    result = await db.execute(select(User).where(User.email == test_email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        # Create test user
+        user = User(
+            email=test_email,
+            name="Dev User",
+            email_verified=True,
+            password_hash=hash_password("devpassword123"),
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+        # Create organization for the user
+        org = Organization(name="Dev Organization")
+        db.add(org)
+        await db.commit()
+        await db.refresh(org)
+
+        # Create membership
+        membership = OrganizationMember(
+            user_id=user.id,
+            org_id=org.id,
+            role="owner",
+        )
+        db.add(membership)
+        await db.commit()
+
+    # Create session token
+    token = generate_session_token()
+    token_hash = hash_session_token(token)
+    expires_at = datetime.utcnow() + timedelta(days=settings.session_expire_days)
+
+    session = UserSession(
+        user_id=user.id,
+        session_token_hash=token_hash,
+        expires_at=expires_at,
+        user_agent=request.headers.get("user-agent"),
+        ip_address=request.client.host if request.client else None,
+    )
+    db.add(session)
+    await db.commit()
+
+    # Set cookie WITHOUT secure flag for localhost
+    response.set_cookie(
+        key=settings.session_cookie_name,
+        value=token,
+        httponly=True,
+        secure=False,  # Allow HTTP for localhost
+        samesite="lax",
+        max_age=settings.session_expire_days * 24 * 60 * 60,
+        path="/",
+    )
+
+    return await get_user_auth_response(user, db)

@@ -155,9 +155,9 @@ class TestEvaluateEndpoint:
             "reasoning": "Good response overall"
         }''')
 
-        from agents import Judge
+        from agents import LegacyJudge
 
-        judge = Judge(mock_llm_client)
+        judge = LegacyJudge(mock_llm_client)
         judgment = judge.evaluate(
             "What is Python?",
             "Python is a programming language."
@@ -177,10 +177,10 @@ class TestEvaluateEndpoint:
             "reasoning": "Excellent technical response"
         }''')
 
-        from agents import Judge
+        from agents import LegacyJudge
 
         custom_rubric = "- Technical Accuracy: Is the answer technically correct?"
-        judge = Judge(mock_llm_client, rubric=custom_rubric)
+        judge = LegacyJudge(mock_llm_client, rubric=custom_rubric)
 
         judgment = judge.evaluate("Explain recursion", "Recursion is...")
 
@@ -199,9 +199,9 @@ class TestEvaluateEndpoint:
             "reasoning": "Poor response"
         }''')
 
-        from agents import Judge
+        from agents import LegacyJudge
 
-        judge = Judge(mock_llm_client)
+        judge = LegacyJudge(mock_llm_client)
         judgment = judge.evaluate("What is 2+2?", "The answer is 5")
 
         assert judgment.overall_score == 2
@@ -223,9 +223,9 @@ class TestCompareEndpoint:
             "reasoning": "B is more comprehensive"
         }''')
 
-        from agents import Judge
+        from agents import LegacyJudge
 
-        judge = Judge(mock_llm_client)
+        judge = LegacyJudge(mock_llm_client)
         result = judge.compare(
             "What is Python?",
             "A language.",
@@ -244,9 +244,9 @@ class TestCompareEndpoint:
             "reasoning": "Both responses are equally good"
         }''')
 
-        from agents import Judge
+        from agents import LegacyJudge
 
-        judge = Judge(mock_llm_client)
+        judge = LegacyJudge(mock_llm_client)
         result = judge.compare("Test", "Response 1", "Response 2")
 
         assert result.winner == "tie"

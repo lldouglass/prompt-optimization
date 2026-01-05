@@ -172,6 +172,10 @@ class OptimizeRequest(BaseModel):
     skill_name: str | None = None  # If loading from registry
     mode: Literal["standard", "enhanced"] | None = None  # None = auto-detect from tier
     uploaded_files: list[UploadedFile] = []  # Premium/Pro only - files for context
+    output_format: Literal[
+        "auto", "markdown", "json", "plain_text", "bullet_points",
+        "step_by_step", "table", "code", "xml", "conversation"
+    ] | None = None  # Desired output format for the optimized prompt
 
 
 class WebSourceResponse(BaseModel):
@@ -337,6 +341,10 @@ class AgentOptimizeStartRequest(BaseModel):
     prompt_template: str
     task_description: str
     sample_inputs: list[str] = []
+    output_format: Literal[
+        "auto", "markdown", "json", "plain_text", "bullet_points",
+        "step_by_step", "table", "code", "xml", "conversation"
+    ] | None = None  # Desired output format for the optimized prompt
 
 
 class AgentSessionResponse(BaseModel):
