@@ -54,6 +54,7 @@ async def process_file(
     file_data: str,  # base64 encoded
     file_name: str,
     mime_type: str | None = None,
+    analysis_type: str = "general",  # "general" or "brand" for logo analysis
 ) -> FileContent:
     """
     Process an uploaded file and extract its content.
@@ -111,7 +112,7 @@ async def process_file(
     elif mime_type in SUPPORTED_TEXT_TYPES:
         return _extract_text(raw_bytes, file_name, mime_type)
     elif mime_type in SUPPORTED_IMAGE_TYPES:
-        return await _analyze_image(raw_bytes, file_name, mime_type, file_data)
+        return await _analyze_image(raw_bytes, file_name, mime_type, file_data, analysis_type)
     else:
         raise FileProcessingError(f"Unsupported file type: {mime_type}")
 
@@ -205,7 +206,8 @@ async def _analyze_image(
     data: bytes,
     file_name: str,
     mime_type: str,
-    base64_data: str
+    base64_data: str,
+    analysis_type: str = "general"
 ) -> FileContent:
     """Analyze image using GPT-4o-mini Vision API."""
     # Validate it's actually an image
@@ -222,16 +224,27 @@ async def _analyze_image(
 
     client = openai.OpenAI(api_key=api_key)
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": """Analyze this image and provide a detailed description that could be used as context for prompt optimization.
+    # Use specialized prompt for brand/logo analysis
+    if analysis_type == "brand":
+        prompt_text = """Analyze this brand/logo image and extract precise brand style information.
+
+CRITICAL: Be extremely accurate with colors. Look at the ACTUAL colors in the image.
+
+Provide:
+1. **Primary Colors** - List each distinct color with its hex code. Look carefully at the actual pixels.
+   Format: "Primary: #XXXXXX (color name), Secondary: #XXXXXX (color name)"
+
+2. **Logo Description** - What does the logo depict? (icon, wordmark, abstract shape, etc.)
+
+3. **Typography** - If text is visible, describe the font style (serif, sans-serif, bold, light, etc.)
+
+4. **Visual Style** - Overall aesthetic (modern, classic, playful, corporate, minimalist, etc.)
+
+5. **Recommended Usage** - How should this brand be represented in generated images?
+
+Be precise and factual. Only report colors you can actually see in the image. Do NOT guess or make up colors."""
+    else:
+        prompt_text = """Analyze this image and provide a detailed description that could be used as context for prompt optimization.
 
 Include:
 1. Main subject and composition
@@ -241,6 +254,17 @@ Include:
 5. Context that would help someone create a similar image or understand its purpose
 
 Be specific and detailed but concise (200-400 words)."""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt_text
                         },
                         {
                             "type": "image_url",

@@ -123,9 +123,10 @@ async def media_optimize_websocket(
             for uploaded in uploaded_files:
                 try:
                     file_content = await process_file(
-                        uploaded.get("file_name", "image.png"),
-                        uploaded.get("file_data", ""),
-                        uploaded.get("mime_type")
+                        file_data=uploaded.get("file_data", ""),
+                        file_name=uploaded.get("file_name", "image.png"),
+                        mime_type=uploaded.get("mime_type"),
+                        analysis_type="brand"  # Use specialized brand analysis prompt
                     )
                     if file_content and file_content.extraction_method == "vision":
                         logo_context += f"\n\nBRAND ANALYSIS:\n{file_content.text}"
