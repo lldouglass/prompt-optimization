@@ -476,53 +476,88 @@ https://res.cloudinary.com/xxx/logo.png a professional LinkedIn advertisement fe
 
 6. **tips**: 2-3 actionable tips specific to this model.
 
-## Marketing Image Best Practices
+## Marketing Image Best Practices (Research-Backed)
 
-When optimizing prompts for marketing/advertising images, apply these proven principles:
+When optimizing prompts for marketing/advertising images, apply these proven principles based on marketing research:
 
-### Visual Hierarchy & Composition
-- **Single focal point**: Every effective ad has ONE clear visual anchor
-- **Rule of thirds**: Position key elements at intersection points
-- **Leading lines**: Guide viewer's eye toward the CTA or product
-- **Negative space**: Use whitespace to prevent visual clutter and increase readability
-- **Z-pattern or F-pattern**: For ads with text, follow natural reading patterns
+### Visual Hierarchy & Composition (Critical for Conversions)
+Research shows humans process visuals 60,000x faster than text - visual hierarchy determines what viewers see first.
 
-### Color Psychology for Marketing
-- **Blue**: Trust, professionalism, security (finance, tech, healthcare)
-- **Orange/Red**: Urgency, energy, appetite (retail, food, entertainment)
-- **Green**: Growth, health, sustainability (eco, wellness, finance)
-- **Purple**: Luxury, creativity, wisdom (premium products, creative services)
-- **Yellow**: Optimism, clarity, warmth (youth brands, happiness)
-- **Black/White**: Elegance, simplicity, premium (luxury, minimalist brands)
+- **Single focal point**: Every effective ad has ONE clear visual anchor - the bigger an element, the more attention it gets
+- **Z-pattern reading**: People read ads top-left → top-right → bottom-left → bottom-right. Place headline top, CTA bottom-right
+- **Rule of thirds**: Position key elements at intersection points for natural visual flow
+- **Whitespace is essential**: Creates contrast and draws attention to featured elements. Cluttered designs overwhelm; structured layouts make info digestible
+- **Size = Importance**: Larger elements are perceived as more important. Make the key message/product the largest element
+
+**Remember**: "Be brief, be bold, be gone." Say what matters as succinctly as possible with clarity and conviction.
+
+### Color Psychology for Marketing (90% of snap judgments are based on color alone)
+Color increases brand recognition by up to 80% and affects purchase intent. Choose colors that fit the brand context:
+
+- **Blue**: Trust, clarity, professionalism - preferred by 54% of consumers for trust. Use for fintech, healthcare, SaaS, B2B
+- **Red**: Boldness, urgency, passion - boosts CTA engagement by 21%. Use for retail, food, entertainment, DTC brands
+- **Green**: Growth, health, tranquility, hope - evokes calmness and nature. Use for eco, wellness, finance, sustainability
+- **Orange**: Energy, enthusiasm, action - strong attention-grabber for CTAs
+- **Purple**: Luxury, creativity, wisdom - use for premium products, creative services
+- **Black/White**: Elegance, simplicity, premium - use for luxury, minimalist, high-end brands
+
+**Key insight**: Color appropriateness matters more than the color itself. Does the color fit what's being sold?
 
 ### Effective Marketing Visuals Must Include
-1. **Clear value proposition**: What benefit does the viewer get?
-2. **Emotional trigger**: What feeling should this evoke? (aspiration, FOMO, trust, excitement)
-3. **Social proof elements**: When appropriate (testimonials, ratings, user counts)
-4. **Brand consistency**: Colors, style, and tone matching brand guidelines
-5. **Mobile-first design**: Key message readable at small sizes
+1. **Clear value proposition**: What benefit does the viewer get? Show it visually
+2. **Emotional trigger**: Color-driven emotional responses increase purchase intent by 39%
+3. **Visual hierarchy**: Guide attention: brand → message → CTA in that order
+4. **Brand consistency**: Consistent colors, fonts, logos build recognition
+5. **Mobile-first design**: 60%+ of ad impressions are on mobile. Ensure text is readable and buttons are thumb-tap friendly
 
-### Call-to-Action (CTA) Placement
-- Position in lower-right quadrant (end of Z-pattern)
-- High contrast against background
-- Surrounded by whitespace
-- Action-oriented text space consideration
+### Call-to-Action (CTA) Design (Specific CTAs increase conversions by 161%)
+- **Button format converts best**: Human brain expects action when button is pressed
+- **High contrast colors**: CTA should visually pop against the background (red buttons often perform well)
+- **Action verbs + urgency**: "Get Started Now," "Shop Today," "Claim Your Spot"
+- **Keep it short**: 4 words or fewer for CTA text
+- **Position at end of Z-pattern**: Lower-right quadrant after viewer has absorbed the message
+- **Whitespace around CTA**: Give it room to breathe and stand out
+- **Single CTA focus**: Multiple CTAs dilute effectiveness. One clear action per ad
 
 ### Common Marketing Image Mistakes to AVOID
-- Too many competing focal points
-- Text that's too small or low contrast
-- Generic stock photo feel
-- Cluttered composition
-- Missing brand colors
-- No clear hierarchy
-- Forgetting mobile viewers
+- Too many competing focal points (if everything is important, nothing is)
+- Text that's too small or low contrast (won't work on mobile)
+- Generic stock photo feel (lacks authenticity)
+- Cluttered composition (overwhelms viewers)
+- Missing or inconsistent brand colors
+- No clear visual hierarchy
+- Vague CTAs like "Click Here" or "Submit"
+- Text exceeding 20% of image (reduces Facebook/Instagram performance)
 
-### Platform-Specific Considerations
-- **LinkedIn**: Professional, clean, blue tones work well, 1:1 or 1.91:1 aspect
-- **Instagram**: High visual impact, lifestyle focus, 1:1 or 4:5 aspect
-- **Facebook**: Emotional storytelling, clear text overlay areas, 1.91:1 aspect
-- **Twitter/X**: Bold, attention-grabbing, works at small preview sizes
-- **Display Ads**: Strong CTA, brand colors prominent, various aspect ratios
+### Platform-Specific Design Requirements
+
+**LinkedIn** (B2B focus):
+- Professional, clean aesthetic. Blue tones work well for trust
+- Landscape: 1200×628px, Square: 1200×1200px
+- Keep text concise, optimize for sound-off if video
+- Headlines under 70 characters to avoid truncation
+
+**Instagram** (Visual-first):
+- High visual impact, lifestyle focus
+- Leave 14% top, 35% bottom, 6% sides free from key elements
+- Square (1:1) or vertical (4:5) for feed, 9:16 for Stories
+- Image is protagonist - use concise, eye-catching text
+
+**Facebook** (Storytelling):
+- Body under 14 words, headline ~5 words, link description under 18 words
+- Feed: 1440×1440 (1:1) or 1440×1800 (4:5)
+- Keep text under 20% of image for better performance
+- Can include more info than Instagram but maintain hierarchy
+
+**Twitter/X** (Quick impact):
+- Bold, attention-grabbing, works at small preview sizes
+- Strong contrast, minimal text
+- Must communicate value in split seconds
+
+**Display Ads** (All sizes):
+- Strong CTA prominence
+- Brand colors and logo visible but not overwhelming
+- Test multiple variations (3-5 different designs)
 
 ## Important Notes
 
