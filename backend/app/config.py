@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     # Tavily API for web search (enhanced optimization)
     tavily_api_key: str | None = None
 
+    # Cloudinary for image hosting (logo uploads)
+    cloudinary_url: str | None = None  # Format: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+
     # Stripe settings
     stripe_secret_key: str | None = None
     stripe_webhook_secret: str | None = None

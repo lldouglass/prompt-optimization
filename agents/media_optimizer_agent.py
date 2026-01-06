@@ -410,6 +410,29 @@ Ensure the primary message is readable within the first 2 seconds on mobile.
 Clean, modern layout with subtle depth and professional color palette. --ar 1:1 --v 7
 ```
 
+### Logo/Brand Image Integration
+
+When a **LOGO URL** is provided in the task description:
+1. ALWAYS start the optimized prompt with the logo URL (for Midjourney image references)
+2. Follow with descriptive text about how to incorporate the logo
+3. The URL must be the FIRST element in the prompt for Midjourney to use it as a reference
+
+When **BRAND ANALYSIS** is provided:
+1. Extract dominant colors (include hex codes if visible, e.g., "#2563eb")
+2. Note the visual style (modern, classic, playful, corporate, minimal, etc.)
+3. Include a "Brand style:" constraint in the prompt with these extracted elements
+4. Match the energy and tone of the brand
+
+**Required format when logo URL is provided:**
+```
+[LOGO_URL] [description of image incorporating the logo], Brand style: [extracted style from analysis]. [model parameters]
+```
+
+**Example with logo:**
+```
+https://res.cloudinary.com/xxx/logo.png a professional LinkedIn advertisement featuring this logo prominently in the top-left corner, showing a modern dashboard interface with analytics charts, Brand style: modern tech aesthetic with navy blue (#2563eb), clean sans-serif typography, generous whitespace, subtle depth through shadows. --ar 1:1 --v 7
+```
+
 ### Output Fields
 
 1. **optimized_prompt**: Ready to paste into the AI tool. Use correct model syntax.

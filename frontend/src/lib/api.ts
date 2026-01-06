@@ -822,7 +822,9 @@ export const sessionApi = {
     taskDescription: string,
     mediaType: "photo" | "video",
     targetModel: string,
-    aspectRatio?: string
+    aspectRatio?: string,
+    logoUrl?: string,
+    uploadedFiles?: UploadedFile[]
   ): Promise<AgentSessionResponse> {
     const res = await fetch(`${API_BASE}/agents/media-optimize/start`, {
       method: "POST",
@@ -834,6 +836,8 @@ export const sessionApi = {
         media_type: mediaType,
         target_model: targetModel,
         aspect_ratio: aspectRatio || null,
+        logo_url: logoUrl || null,
+        uploaded_files: uploadedFiles || [],
       }),
     })
     if (!res.ok) {

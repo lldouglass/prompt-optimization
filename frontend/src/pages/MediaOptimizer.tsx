@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react"
-import { Camera, Video, Sparkles, Copy, Check, Loader2, ArrowRight, AlertCircle, MessageSquare, Wrench } from "lucide-react"
+import { Camera, Video, Sparkles, Copy, Check, Loader2, ArrowRight, AlertCircle, MessageSquare, Wrench, Upload, X, Image } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { sessionApi, connectMediaAgentWebSocket, type MediaAgentResult, type TargetModel, type ToolCallInfo, type PendingQuestion } from "@/lib/api"
+import { sessionApi, connectMediaAgentWebSocket, type MediaAgentResult, type TargetModel, type ToolCallInfo, type PendingQuestion, type UploadedFile } from "@/lib/api"
 import { track } from "@/lib/analytics"
+
+const API_BASE = import.meta.env.VITE_API_URL || ""
 
 // Photo and video models
 const PHOTO_MODELS: { value: TargetModel; label: string; description: string }[] = [
@@ -41,6 +43,13 @@ export function MediaOptimizerPage() {
   const [existingPrompt, setExistingPrompt] = useState("")
   const [aspectRatio, setAspectRatio] = useState<string>("")
 
+  // Logo upload
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [logoError, setLogoError] = useState<string | null>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+
   // Agent state
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -68,6 +77,66 @@ export function MediaOptimizerPage() {
 
   const models = mediaType === "photo" ? PHOTO_MODELS : VIDEO_MODELS
 
+  // Handle logo file upload to Cloudinary
+  const handleLogoUpload = async (file: File) => {
+    setLogoUploading(true)
+    setLogoError(null)
+    setLogoFile(file)
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const res = await fetch(`${API_BASE}/uploads/image`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.detail || "Failed to upload image")
+      }
+
+      const { url } = await res.json()
+      setLogoUrl(url)
+    } catch (err) {
+      setLogoError(err instanceof Error ? err.message : "Upload failed")
+      setLogoFile(null)
+    } finally {
+      setLogoUploading(false)
+    }
+  }
+
+  const handleLogoRemove = () => {
+    setLogoUrl(null)
+    setLogoFile(null)
+    setLogoError(null)
+    if (logoInputRef.current) {
+      logoInputRef.current.value = ""
+    }
+  }
+
+  // Convert logo file to base64 for vision analysis
+  const getLogoAsUploadedFile = async (): Promise<UploadedFile | null> => {
+    if (!logoFile) return null
+
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        const result = reader.result as string
+        const base64 = result.split(",")[1]
+        resolve({
+          file_name: logoFile.name,
+          file_data: base64,
+          mime_type: logoFile.type || null,
+        })
+      }
+      reader.onerror = () => resolve(null)
+      reader.readAsDataURL(logoFile)
+    })
+  }
+
   const handleOptimize = async () => {
     if (!taskDescription.trim()) return
 
@@ -79,13 +148,19 @@ export function MediaOptimizerPage() {
     setAgentQuestion(null)
 
     try {
+      // Get logo file as base64 for vision analysis
+      const logoUploadedFile = await getLogoAsUploadedFile()
+      const uploadedFiles = logoUploadedFile ? [logoUploadedFile] : undefined
+
       // Start the agent session
       const session = await sessionApi.startMediaAgentOptimization(
         existingPrompt,
         taskDescription,
         mediaType,
         targetModel,
-        aspectRatio || undefined
+        aspectRatio || undefined,
+        logoUrl || undefined,
+        uploadedFiles
       )
 
       // Connect WebSocket
@@ -271,6 +346,69 @@ export function MediaOptimizerPage() {
               ))}
             </div>
           </div>
+
+          {/* Logo Upload (Photo only, Midjourney recommended) */}
+          {mediaType === "photo" && (
+            <div className="space-y-2">
+              <Label>Logo / Brand Image (optional)</Label>
+              <p className="text-sm text-muted-foreground">
+                Upload your logo to include it in the prompt. Works best with Midjourney.
+              </p>
+
+              {!logoUrl && !logoUploading && (
+                <div
+                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={() => logoInputRef.current?.click()}
+                >
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleLogoUpload(file)
+                    }}
+                  />
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Click to upload logo (PNG, JPG, WebP)
+                  </p>
+                </div>
+              )}
+
+              {logoUploading && (
+                <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Uploading...</span>
+                </div>
+              )}
+
+              {logoUrl && logoFile && (
+                <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                  <Image className="h-5 w-5 text-primary" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{logoFile.name}</p>
+                    <p className="text-xs text-green-600 truncate">
+                      Uploaded to Cloudinary
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogoRemove}
+                    className="flex-shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              {logoError && (
+                <p className="text-sm text-destructive">{logoError}</p>
+              )}
+            </div>
+          )}
 
           {/* Optimize Button */}
           <Button

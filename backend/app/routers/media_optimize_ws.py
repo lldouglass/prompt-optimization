@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from ..models import AgentSession
+from ..services.file_processor import process_file
 
 # Import the media agent - use try/except for graceful handling if not available
 try:
@@ -103,11 +104,38 @@ async def media_optimize_websocket(
         media_type = initial_request.get("media_type", "photo")
         target_model = initial_request.get("target_model", "generic")
         aspect_ratio = initial_request.get("aspect_ratio")
+        logo_url = initial_request.get("logo_url")
+        uploaded_files = initial_request.get("uploaded_files", [])
 
         if not prompt and not task_description:
             await websocket.send_json({"type": "error", "error": "No prompt or description in session"})
             await websocket.close()
             return
+
+        # Process logo/brand image if provided
+        logo_context = ""
+        if logo_url:
+            logo_context += f"\n\nLOGO URL: {logo_url}"
+            logo_context += "\nInclude this URL at the start of the optimized prompt for Midjourney image references."
+
+        # Analyze uploaded files for brand style (via vision API)
+        if uploaded_files:
+            for uploaded in uploaded_files:
+                try:
+                    file_content = await process_file(
+                        uploaded.get("file_name", "image.png"),
+                        uploaded.get("file_data", ""),
+                        uploaded.get("mime_type")
+                    )
+                    if file_content and file_content.extraction_method == "vision":
+                        logo_context += f"\n\nBRAND ANALYSIS:\n{file_content.text}"
+                except Exception as e:
+                    import logging
+                    logging.warning(f"Failed to process uploaded file: {e}")
+
+        # Append logo context to task description
+        if logo_context:
+            task_description = task_description + logo_context
 
         # Create message sender that enriches completed messages
         async def send_message(msg: dict):

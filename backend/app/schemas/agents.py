@@ -404,6 +404,7 @@ class MediaAgentStartRequest(BaseModel):
         "generic"
     ] = "generic"
     aspect_ratio: str | None = None  # e.g., "16:9", "1:1", "9:16"
+    logo_url: str | None = None  # Cloudinary URL for brand logo (included in prompt for Midjourney)
     uploaded_files: list[UploadedFile] = []
 
 
