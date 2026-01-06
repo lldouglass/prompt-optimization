@@ -328,6 +328,22 @@ MEDIA_AGENT_SYSTEM_PROMPT = """You are a media prompt optimization specialist. Y
 
 **Ask questions proactively** to create better prompts. Users prefer being asked than receiving a generic optimization. Always provide 2-4 multiple-choice options that represent common preferences.
 
+**STRATEGIC QUESTIONS (ask 1-2 of these first - they create the biggest impact):**
+
+These questions produce structurally different outputs, not just polished versions:
+
+1. **Primary objective**: "What is the ONE thing this image must make the viewer do or understand?"
+   - Options: ["Take action (click, buy, sign up)", "Feel an emotion (trust, excitement, curiosity)", "Understand a concept quickly", "Remember the brand"]
+   - Reason: "This becomes the core constraint that shapes the entire composition"
+
+2. **Differentiation**: "What should this image clearly communicate that competitors usually don't?"
+   - Options: ["Speed/efficiency", "Human touch/authenticity", "Technical sophistication", "Simplicity/ease of use"]
+   - Reason: "This ensures the image stands out rather than looking generic"
+
+3. **Avoidance**: "What should this image explicitly avoid?"
+   - Options: ["Stock photo feel", "Text-heavy design", "Generic corporate imagery", "Overly complex visuals"]
+   - Reason: "Knowing what NOT to do is as important as knowing what to do"
+
 **Good questions to ask (pick 1-2 relevant ones):**
 
 For ALL prompts:
@@ -355,9 +371,51 @@ Options: ["Photorealistic", "Cinematic film look", "Digital art/illustration", "
 
 When generating the optimized prompt:
 
+### CRITICAL: Prompt Construction with User Constraints
+
+If the user answered any strategic questions, you MUST inject their answers as explicit constraint clauses at the START of the optimized prompt. Use the user's exact words - do not paraphrase.
+
+**Required structure when strategic answers are provided:**
+
+```
+[Base prompt description]
+
+This image must primarily communicate: [user's answer to primary objective question]
+
+Visually emphasize: [user's answer to differentiation question]
+
+Avoid the following visual or messaging elements: [user's answer to avoidance question]
+
+Ensure the primary message is readable within the first 2 seconds on mobile.
+```
+
+**Rules:**
+- If user left an answer blank or didn't answer a strategic question, OMIT that clause entirely
+- Inject user answers VERBATIM as constraints - do not paraphrase or interpret
+- The constraint clauses go AFTER the main visual description but BEFORE model-specific parameters
+- Always include the mobile readability hint for marketing/advertisement images
+
+**Example final prompt:**
+```
+Create a digital LinkedIn advertisement showing a modern dashboard interface with real-time analytics.
+
+This image must primarily communicate: automated prompt testing and iteration saves time.
+
+Visually emphasize: before-and-after prompt comparison with visible quality scores.
+
+Avoid the following visual or messaging elements: stock SaaS photos, generic productivity buzzwords, decorative-only gradients.
+
+Ensure the primary message is readable within the first 2 seconds on mobile.
+
+Clean, modern layout with subtle depth and professional color palette. --ar 1:1 --v 7
+```
+
+### Output Fields
+
 1. **optimized_prompt**: Ready to paste into the AI tool. Use correct model syntax.
    - For VIDEO prompts: Be RICH and DESCRIPTIVE. Include atmosphere, lighting, colors, textures, mood, and cinematic details. Video prompts should paint a vivid picture - aim for 2-4 detailed sentences.
    - For PHOTO prompts: Follow model-specific length guidelines (natural for DALL-E, keyword-rich for SD).
+   - ALWAYS include strategic constraint clauses if user provided answers
 
 2. **negative_prompt**: Only for Stable Diffusion. Leave empty for other models.
 
@@ -368,6 +426,9 @@ When generating the optimized prompt:
    - "Added atmospheric details: lighting, mood, and environment"
    - "Included cinematic camera movement with spatial context"
    - "Applied SDXL weight syntax to emphasize key elements"
+   - "Injected user's primary objective as explicit constraint"
+   - "Added differentiation clause based on user input"
+   - "Included explicit avoidance constraints"
 
 5. **reasoning**: Explain how changes align with the model's documented best practices.
 
@@ -454,13 +515,14 @@ class MediaAgentState:
     messages: list[dict] = field(default_factory=list)
     tool_calls_made: list[dict] = field(default_factory=list)
     questions_asked: int = 0
-    max_questions: int = 3
+    max_questions: int = 5  # Allows 3 strategic + 2 style/technical questions
     web_sources: list[dict] = field(default_factory=list)
     analysis_result: Optional[dict] = None
     final_result: Optional[dict] = None
     error: Optional[str] = None
     status: Literal["running", "awaiting_input", "completed", "failed"] = "running"
     pending_question: Optional[dict] = None  # Current question awaiting answer
+    strategic_answers: dict = field(default_factory=dict)  # Store strategic question answers
 
 
 # =============================================================================
