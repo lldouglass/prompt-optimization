@@ -321,6 +321,8 @@ async def start_media_agent_optimization(
             "media_type": request.media_type,
             "target_model": request.target_model,
             "aspect_ratio": request.aspect_ratio,
+            "logo_url": request.logo_url,
+            "uploaded_files": [f.model_dump() for f in request.uploaded_files] if request.uploaded_files else [],
         },
         conversation_history=[],
         tool_calls_made=[],
