@@ -55,9 +55,6 @@ function AppRoutes() {
       <Route path="/" element={<LandingPageV2 />} />
       {/* Landing page also at /home for logged-in users */}
       <Route path="/home" element={<LandingPageV2 />} />
-      {/* Public documentation and education pages */}
-      <Route path="/docs" element={<DocumentationPage />} />
-      <Route path="/education" element={<EducationPage />} />
       <Route
         path="/login"
         element={
@@ -69,6 +66,11 @@ function AppRoutes() {
       {/* Email verification routes */}
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/verify-email-pending" element={<VerifyEmailPendingPage />} />
+      {/* Public pages with navigation layout */}
+      <Route element={<Layout />}>
+        <Route path="/education" element={<EducationPage />} />
+        <Route path="/docs" element={<DocumentationPage />} />
+      </Route>
       {/* Protected app routes (require authentication AND email verification) */}
       <Route
         element={

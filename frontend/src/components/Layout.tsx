@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { Link, Outlet, useLocation } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Settings, LogOut, Bot, Library, GraduationCap, BookOpen, PanelLeft, PanelLeftClose, Menu, X, Camera } from "lucide-react"
+import { LayoutDashboard, Settings, LogOut, LogIn, Bot, Library, GraduationCap, BookOpen, PanelLeft, PanelLeftClose, Menu, X, Camera } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -125,53 +125,71 @@ export function Layout() {
         ))}
       </nav>
 
-      {/* User Profile */}
+      {/* User Profile / Login */}
       <div className={cn(
         "border-t",
         sidebarCollapsed && !isMobile ? "p-2" : "p-4"
       )}>
-        <div className={cn(
-          "flex items-center mb-3",
-          sidebarCollapsed && !isMobile ? "justify-center" : "gap-3"
-        )}>
-          {user?.avatar_url ? (
-            <img
-              src={user.avatar_url}
-              alt={user.name || user.email}
-              className="h-8 w-8 rounded-full shrink-0"
-              title={sidebarCollapsed && !isMobile ? user.name || user.email : undefined}
-            />
-          ) : (
-            <div
-              className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary shrink-0"
-              title={sidebarCollapsed && !isMobile ? user?.name || user?.email : undefined}
+        {user ? (
+          <>
+            <div className={cn(
+              "flex items-center mb-3",
+              sidebarCollapsed && !isMobile ? "justify-center" : "gap-3"
+            )}>
+              {user.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.name || user.email}
+                  className="h-8 w-8 rounded-full shrink-0"
+                  title={sidebarCollapsed && !isMobile ? user.name || user.email : undefined}
+                />
+              ) : (
+                <div
+                  className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary shrink-0"
+                  title={sidebarCollapsed && !isMobile ? user.name || user.email : undefined}
+                >
+                  {(user.name || user.email || "?")[0].toUpperCase()}
+                </div>
+              )}
+              {(!sidebarCollapsed || isMobile) && (
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">
+                    {user.name || user.email}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {organization?.name}
+                  </div>
+                </div>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                sidebarCollapsed && !isMobile ? "w-full justify-center p-2" : "w-full justify-start"
+              )}
+              onClick={logout}
+              title={sidebarCollapsed && !isMobile ? "Sign out" : undefined}
             >
-              {(user?.name || user?.email || "?")[0].toUpperCase()}
-            </div>
-          )}
-          {(!sidebarCollapsed || isMobile) && (
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">
-                {user?.name || user?.email}
-              </div>
-              <div className="text-xs text-muted-foreground truncate">
-                {organization?.name}
-              </div>
-            </div>
-          )}
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            sidebarCollapsed && !isMobile ? "w-full justify-center p-2" : "w-full justify-start"
-          )}
-          onClick={logout}
-          title={sidebarCollapsed && !isMobile ? "Sign out" : undefined}
-        >
-          <LogOut className={cn("h-4 w-4", (!sidebarCollapsed || isMobile) && "mr-2")} />
-          {(!sidebarCollapsed || isMobile) && "Sign out"}
-        </Button>
+              <LogOut className={cn("h-4 w-4", (!sidebarCollapsed || isMobile) && "mr-2")} />
+              {(!sidebarCollapsed || isMobile) && "Sign out"}
+            </Button>
+          </>
+        ) : (
+          <Link to="/login">
+            <Button
+              variant="default"
+              size="sm"
+              className={cn(
+                sidebarCollapsed && !isMobile ? "w-full justify-center p-2" : "w-full justify-start"
+              )}
+              title={sidebarCollapsed && !isMobile ? "Sign in" : undefined}
+            >
+              <LogIn className={cn("h-4 w-4", (!sidebarCollapsed || isMobile) && "mr-2")} />
+              {(!sidebarCollapsed || isMobile) && "Sign in"}
+            </Button>
+          </Link>
+        )}
       </div>
     </>
   )

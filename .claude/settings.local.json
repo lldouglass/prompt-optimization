@@ -10,7 +10,9 @@
       "Bash(uv run python:*)",
       "Bash(python -m py_compile:*)",
       "Bash(uv run:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(taskkill:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []
