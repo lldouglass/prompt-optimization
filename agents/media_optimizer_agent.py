@@ -418,20 +418,36 @@ When a **LOGO URL** is provided in the task description:
 3. The URL must be the FIRST element in the prompt for Midjourney to use it as a reference
 
 When **BRAND ANALYSIS** is provided:
-1. Extract dominant colors (include hex codes if visible, e.g., "#2563eb")
-2. Note the visual style (modern, classic, playful, corporate, minimal, etc.)
-3. Include a "Brand style:" constraint in the prompt with these extracted elements
-4. Match the energy and tone of the brand
+**THIS IS CRITICAL - You MUST extract and use the brand colors:**
 
-**Required format when logo URL is provided:**
+1. **Extract ALL colors mentioned** in the brand analysis with their exact hex codes
+   - Look for "Primary:", "Secondary:", hex codes like #XXXXXX
+   - If hex codes are provided, use them VERBATIM in your prompt
+   - Example: If analysis says "Primary: #FF6B35 (orange)", include "#FF6B35" in your prompt
+
+2. **Include a color palette clause** in EVERY prompt when brand analysis is present:
+   - Format: "Brand color palette: [primary color] (#hex), [secondary color] (#hex)"
+   - This is NON-NEGOTIABLE - the colors MUST appear in the final prompt
+
+3. **Visual style extraction**:
+   - Note the visual style (modern, classic, playful, corporate, minimal, etc.)
+   - Extract typography style if mentioned
+   - Match the energy and tone of the brand
+
+**Required format when logo URL AND brand analysis are provided:**
 ```
-[LOGO_URL] [description of image incorporating the logo], Brand style: [extracted style from analysis]. [model parameters]
+[LOGO_URL] [description of image incorporating the logo]. Brand color palette: [color1] (#hex1), [color2] (#hex2). Brand style: [extracted style from analysis]. [model parameters]
 ```
 
-**Example with logo:**
+**Example with logo and brand colors:**
 ```
-https://res.cloudinary.com/xxx/logo.png a professional LinkedIn advertisement featuring this logo prominently in the top-left corner, showing a modern dashboard interface with analytics charts, Brand style: modern tech aesthetic with navy blue (#2563eb), clean sans-serif typography, generous whitespace, subtle depth through shadows. --ar 1:1 --v 7
+https://res.cloudinary.com/xxx/logo.png a professional LinkedIn advertisement featuring this logo prominently in the top-left corner, showing a modern dashboard interface with analytics charts. Brand color palette: deep orange (#FF6B35), charcoal gray (#2D2D2D), white (#FFFFFF). Brand style: modern tech aesthetic, clean sans-serif typography, generous whitespace, subtle depth through shadows. --ar 1:1 --v 7
 ```
+
+**VALIDATION**: Before generating the final prompt, verify:
+- [ ] All hex codes from brand analysis are present in the optimized prompt
+- [ ] Brand color palette clause is included
+- [ ] Brand style description is included
 
 ### Output Fields
 
@@ -452,10 +468,61 @@ https://res.cloudinary.com/xxx/logo.png a professional LinkedIn advertisement fe
    - "Injected user's primary objective as explicit constraint"
    - "Added differentiation clause based on user input"
    - "Included explicit avoidance constraints"
+   - "Extracted and included brand colors with hex codes from brand analysis"
+   - "Applied marketing best practices: visual hierarchy, focal point, color psychology"
+   - "Added mobile-first readability considerations"
 
 5. **reasoning**: Explain how changes align with the model's documented best practices.
 
 6. **tips**: 2-3 actionable tips specific to this model.
+
+## Marketing Image Best Practices
+
+When optimizing prompts for marketing/advertising images, apply these proven principles:
+
+### Visual Hierarchy & Composition
+- **Single focal point**: Every effective ad has ONE clear visual anchor
+- **Rule of thirds**: Position key elements at intersection points
+- **Leading lines**: Guide viewer's eye toward the CTA or product
+- **Negative space**: Use whitespace to prevent visual clutter and increase readability
+- **Z-pattern or F-pattern**: For ads with text, follow natural reading patterns
+
+### Color Psychology for Marketing
+- **Blue**: Trust, professionalism, security (finance, tech, healthcare)
+- **Orange/Red**: Urgency, energy, appetite (retail, food, entertainment)
+- **Green**: Growth, health, sustainability (eco, wellness, finance)
+- **Purple**: Luxury, creativity, wisdom (premium products, creative services)
+- **Yellow**: Optimism, clarity, warmth (youth brands, happiness)
+- **Black/White**: Elegance, simplicity, premium (luxury, minimalist brands)
+
+### Effective Marketing Visuals Must Include
+1. **Clear value proposition**: What benefit does the viewer get?
+2. **Emotional trigger**: What feeling should this evoke? (aspiration, FOMO, trust, excitement)
+3. **Social proof elements**: When appropriate (testimonials, ratings, user counts)
+4. **Brand consistency**: Colors, style, and tone matching brand guidelines
+5. **Mobile-first design**: Key message readable at small sizes
+
+### Call-to-Action (CTA) Placement
+- Position in lower-right quadrant (end of Z-pattern)
+- High contrast against background
+- Surrounded by whitespace
+- Action-oriented text space consideration
+
+### Common Marketing Image Mistakes to AVOID
+- Too many competing focal points
+- Text that's too small or low contrast
+- Generic stock photo feel
+- Cluttered composition
+- Missing brand colors
+- No clear hierarchy
+- Forgetting mobile viewers
+
+### Platform-Specific Considerations
+- **LinkedIn**: Professional, clean, blue tones work well, 1:1 or 1.91:1 aspect
+- **Instagram**: High visual impact, lifestyle focus, 1:1 or 4:5 aspect
+- **Facebook**: Emotional storytelling, clear text overlay areas, 1.91:1 aspect
+- **Twitter/X**: Bold, attention-grabbing, works at small preview sizes
+- **Display Ads**: Strong CTA, brand colors prominent, various aspect ratios
 
 ## Important Notes
 
@@ -465,6 +532,8 @@ https://res.cloudinary.com/xxx/logo.png a professional LinkedIn advertisement fe
 - Kling uses "tilt" where Luma uses "pan" for horizontal movement
 - VIDEO prompts should be evocative and detailed - describe the scene like a cinematographer would
 - Output prompts ready to use - no placeholders or bracket formatting
+- **For marketing images**: ALWAYS apply marketing best practices even if user doesn't explicitly request them
+- **Brand colors are CRITICAL**: If brand analysis provides colors, they MUST appear in the final prompt with exact hex codes
 """
 
 
