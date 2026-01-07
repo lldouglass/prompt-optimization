@@ -476,13 +476,20 @@ class OptimizerAgent:
         if initial_state:
             state = initial_state
             if user_answer and state.pending_question:
-                # Add the user's answer to conversation
+                # User answered a question - update the tool result with their answer
                 answer_msg = f"User answered: {user_answer}"
-                # Find the tool call ID for the pending question
-                # and add the answer as a tool result
-                if state.messages and state.messages[-1].get("tool_calls"):
-                    tool_call_id = state.messages[-1]["tool_calls"][-1]["id"]
-                    state.messages.append(create_tool_result_message(tool_call_id, answer_msg))
+                # The last message should be the tool result for ask_user_question
+                # (added before we paused). Update it with the user's actual answer.
+                if state.messages and state.messages[-1].get("role") == "tool":
+                    # Replace the placeholder "Waiting for user response..." with actual answer
+                    state.messages[-1]["content"] = answer_msg
+                else:
+                    # Fallback: find the assistant message with tool_calls and add result
+                    for i in range(len(state.messages) - 1, -1, -1):
+                        if state.messages[i].get("tool_calls"):
+                            tool_call_id = state.messages[i]["tool_calls"][-1]["id"]
+                            state.messages.append(create_tool_result_message(tool_call_id, answer_msg))
+                            break
                 state.pending_question = None
                 state.status = "running"
         else:
@@ -574,6 +581,11 @@ Start by analyzing the prompt, then decide if you need web examples or user clar
                         if action:
                             if "pause" in action:
                                 # Agent is asking a question
+                                # Add tool result BEFORE returning so the conversation is valid
+                                state.messages.append(create_tool_result_message(
+                                    tool_call.id,
+                                    result  # "Waiting for user response..."
+                                ))
                                 question_data = action["pause"]
                                 await self._send(on_message, msg_question(
                                     tool_call.id,
