@@ -226,6 +226,24 @@ class SaveOptimizationRequest(BaseModel):
     reasoning: str = ""
     analysis: AnalysisResponse | None = None
     skill_name: str | None = None
+    # Prompt Library fields
+    name: str | None = None  # User-friendly name (defaults to task_description)
+    folder: str | None = None  # Folder/category
+    # Media-specific fields
+    media_type: Literal["photo", "video"] | None = None
+    target_model: str | None = None
+    negative_prompt: str | None = None
+    parameters: str | None = None
+    tips: list[str] | None = None
+    web_sources: list[WebSourceResponse] | None = None
+    aspect_ratio: str | None = None
+
+
+class UpdateOptimizationRequest(BaseModel):
+    """Request to update an optimization (basic editing)."""
+    name: str | None = None
+    optimized_prompt: str | None = None
+    folder: str | None = None
 
 
 class SavedOptimizationResponse(BaseModel):
@@ -242,6 +260,28 @@ class SavedOptimizationResponse(BaseModel):
     skill_name: str | None = None
     model_used: str
     created_at: str
+    # Prompt Library fields
+    name: str | None = None
+    folder: str | None = None
+    # Media-specific fields
+    media_type: str | None = None
+    target_model: str | None = None
+    negative_prompt: str | None = None
+    parameters: str | None = None
+    tips: list[str] | None = None
+    web_sources: list[WebSourceResponse] | None = None
+    aspect_ratio: str | None = None
+
+
+class FolderResponse(BaseModel):
+    """A folder in the prompt library."""
+    name: str
+    count: int
+
+
+class FolderListResponse(BaseModel):
+    """List of folders."""
+    folders: list[FolderResponse]
 
 
 class OptimizationListResponse(BaseModel):

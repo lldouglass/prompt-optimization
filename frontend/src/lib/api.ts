@@ -355,6 +355,28 @@ export interface SavedOptimization {
   skill_name: string | null
   model_used: string
   created_at: string
+  // Prompt Library fields
+  name: string | null
+  folder: string | null
+  // Media-specific fields
+  media_type: "photo" | "video" | null
+  target_model: string | null
+  negative_prompt: string | null
+  parameters: string | null
+  tips: string[] | null
+  web_sources: WebSourceResponse[] | null
+  aspect_ratio: string | null
+}
+
+export interface Folder {
+  name: string
+  count: number
+}
+
+export interface UpdateOptimizationRequest {
+  name?: string
+  optimized_prompt?: string
+  folder?: string
 }
 
 export interface SavedEvaluation {
@@ -692,12 +714,93 @@ export const sessionApi = {
     return res.json()
   },
 
-  async listOptimizations(limit = 20, offset = 0): Promise<{ optimizations: SavedOptimization[]; total: number }> {
-    const res = await fetch(`${API_BASE}/agents/optimizations?limit=${limit}&offset=${offset}`, {
+  async listOptimizations(
+    limit = 20,
+    offset = 0,
+    filters?: {
+      folder?: string
+      media_type?: "photo" | "video" | "text"
+      target_model?: string
+      search?: string
+    }
+  ): Promise<{ optimizations: SavedOptimization[]; total: number }> {
+    const params = new URLSearchParams()
+    params.set("limit", String(limit))
+    params.set("offset", String(offset))
+    if (filters?.folder !== undefined) params.set("folder", filters.folder)
+    if (filters?.media_type) params.set("media_type", filters.media_type)
+    if (filters?.target_model) params.set("target_model", filters.target_model)
+    if (filters?.search) params.set("search", filters.search)
+
+    const res = await fetch(`${API_BASE}/agents/optimizations?${params}`, {
       credentials: "include",
     })
     if (!res.ok) throw new Error("Failed to list optimizations")
     return res.json()
+  },
+
+  async listFolders(): Promise<{ folders: Folder[] }> {
+    const res = await fetch(`${API_BASE}/agents/optimizations/folders`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list folders")
+    return res.json()
+  },
+
+  async saveMediaOptimization(
+    result: MediaAgentResult,
+    taskDescription: string,
+    name?: string,
+    folder?: string,
+    aspectRatio?: string
+  ): Promise<SavedOptimization> {
+    const res = await fetch(`${API_BASE}/agents/optimizations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        original_prompt: result.original_prompt,
+        optimized_prompt: result.optimized_prompt,
+        task_description: taskDescription,
+        original_score: result.original_score,
+        optimized_score: result.optimized_score,
+        improvements: result.improvements,
+        reasoning: result.reasoning,
+        name: name || taskDescription.slice(0, 100),
+        folder: folder || null,
+        media_type: result.media_type,
+        target_model: result.target_model,
+        negative_prompt: result.negative_prompt,
+        parameters: result.parameters,
+        tips: result.tips,
+        web_sources: result.web_sources,
+        aspect_ratio: aspectRatio,
+      }),
+    })
+    if (!res.ok) throw new Error("Failed to save optimization")
+    return res.json()
+  },
+
+  async updateOptimization(
+    id: string,
+    updates: UpdateOptimizationRequest
+  ): Promise<SavedOptimization> {
+    const res = await fetch(`${API_BASE}/agents/optimizations/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(updates),
+    })
+    if (!res.ok) throw new Error("Failed to update optimization")
+    return res.json()
+  },
+
+  async deleteOptimization(id: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/agents/optimizations/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to delete optimization")
   },
 
   async saveEvaluation(

@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react"
-import { Camera, Video, Sparkles, Copy, Check, Loader2, ArrowRight, AlertCircle, MessageSquare, Wrench, Upload, X, Image } from "lucide-react"
+import { Camera, Video, Sparkles, Copy, Check, Loader2, ArrowRight, AlertCircle, MessageSquare, Wrench, Upload, X, Image, Bookmark, FolderPlus } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { sessionApi, connectMediaAgentWebSocket, type MediaAgentResult, type TargetModel, type ToolCallInfo, type PendingQuestion, type UploadedFile } from "@/lib/api"
+import { sessionApi, connectMediaAgentWebSocket, type MediaAgentResult, type TargetModel, type ToolCallInfo, type PendingQuestion, type UploadedFile, type Folder } from "@/lib/api"
 import { track } from "@/lib/analytics"
 
 const API_BASE = import.meta.env.VITE_API_URL || ""
@@ -61,6 +61,15 @@ export function MediaOptimizerPage() {
   // Result state
   const [result, setResult] = useState<MediaAgentResult | null>(null)
   const [copied, setCopied] = useState<"prompt" | "negative" | "params" | null>(null)
+
+  // Save to Library state
+  const [showSaveForm, setShowSaveForm] = useState(false)
+  const [saveName, setSaveName] = useState("")
+  const [saveFolder, setSaveFolder] = useState("")
+  const [newFolderName, setNewFolderName] = useState("")
+  const [folders, setFolders] = useState<Folder[]>([])
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   // WebSocket ref
   const wsRef = useRef<{ sendAnswer: (id: string, answer: string) => void; close: () => void } | null>(null)
@@ -234,6 +243,45 @@ export function MediaOptimizerPage() {
     navigator.clipboard.writeText(text)
     setCopied(type)
     setTimeout(() => setCopied(null), 2000)
+  }
+
+  // Load folders when showing save form
+  const handleShowSaveForm = async () => {
+    setShowSaveForm(true)
+    setSaveName(taskDescription.slice(0, 100))
+    try {
+      const { folders } = await sessionApi.listFolders()
+      setFolders(folders)
+    } catch (err) {
+      console.error("Failed to load folders:", err)
+    }
+  }
+
+  // Save to library
+  const handleSaveToLibrary = async () => {
+    if (!result) return
+    setSaving(true)
+    try {
+      const folderToUse = newFolderName.trim() || saveFolder || undefined
+      await sessionApi.saveMediaOptimization(
+        result,
+        taskDescription,
+        saveName || undefined,
+        folderToUse,
+        aspectRatio || undefined
+      )
+      setSaved(true)
+      setShowSaveForm(false)
+      track("media_optimization_saved", {
+        media_type: mediaType,
+        target_model: targetModel,
+        has_folder: !!folderToUse,
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save")
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -551,10 +599,104 @@ export function MediaOptimizerPage() {
                   )}
                 </div>
               </CardTitle>
-              <CardDescription>
-                Optimized for {models.find(m => m.value === result.target_model)?.label || result.target_model}
+              <CardDescription className="flex items-center justify-between">
+                <span>Optimized for {models.find(m => m.value === result.target_model)?.label || result.target_model}</span>
+                <Button
+                  variant={saved ? "outline" : "default"}
+                  size="sm"
+                  onClick={handleShowSaveForm}
+                  disabled={saved || showSaveForm}
+                >
+                  {saved ? (
+                    <>
+                      <Check className="h-4 w-4 mr-2 text-green-600" />
+                      Saved
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="h-4 w-4 mr-2" />
+                      Save to Library
+                    </>
+                  )}
+                </Button>
               </CardDescription>
             </CardHeader>
+
+            {/* Save to Library Form */}
+            {showSaveForm && (
+              <div className="px-6 pb-4 border-b">
+                <div className="bg-muted/50 rounded-lg p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <Bookmark className="h-4 w-4" />
+                      Save to Library
+                    </h4>
+                    <Button variant="ghost" size="sm" onClick={() => setShowSaveForm(false)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="save-name">Name</Label>
+                      <Input
+                        id="save-name"
+                        placeholder="Enter a name for this prompt"
+                        value={saveName}
+                        onChange={(e) => setSaveName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="save-folder">Folder</Label>
+                      <div className="flex gap-2">
+                        <select
+                          id="save-folder"
+                          className="flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          value={saveFolder}
+                          onChange={(e) => {
+                            setSaveFolder(e.target.value)
+                            setNewFolderName("")
+                          }}
+                          disabled={!!newFolderName}
+                        >
+                          <option value="">No folder</option>
+                          {folders.map(f => (
+                            <option key={f.name} value={f.name}>{f.name} ({f.count})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FolderPlus className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Or create new folder..."
+                          value={newFolderName}
+                          onChange={(e) => {
+                            setNewFolderName(e.target.value)
+                            if (e.target.value) setSaveFolder("")
+                          }}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setShowSaveForm(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSaveToLibrary} disabled={saving}>
+                      {saving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        "Save"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <CardContent className="space-y-6">
               {/* Optimized Prompt */}
               <div className="space-y-2">

@@ -52,8 +52,11 @@ from ..schemas.agents import (
     FewShotExampleResponse,
     FewShotResearchResponse,
     SaveOptimizationRequest,
+    UpdateOptimizationRequest,
     SavedOptimizationResponse,
     OptimizationListResponse,
+    FolderResponse,
+    FolderListResponse,
     HallucinationReport,
     ClaimVerification,
     SaveEvaluationRequest,
@@ -633,6 +636,35 @@ async def optimize_media_prompt(
     )
 
 
+def _build_optimization_response(opt: PromptOptimization) -> SavedOptimizationResponse:
+    """Build a SavedOptimizationResponse from a PromptOptimization model."""
+    return SavedOptimizationResponse(
+        id=str(opt.id),
+        original_prompt=opt.original_prompt,
+        optimized_prompt=opt.optimized_prompt,
+        task_description=opt.task_description,
+        original_score=opt.original_score,
+        optimized_score=opt.optimized_score,
+        improvements=opt.improvements,
+        reasoning=opt.reasoning,
+        skill_name=opt.skill_name,
+        model_used=opt.model_used,
+        created_at=opt.created_at.isoformat(),
+        analysis=AnalysisResponse(**opt.analysis) if opt.analysis else None,
+        # Prompt Library fields
+        name=opt.name,
+        folder=opt.folder,
+        # Media-specific fields
+        media_type=opt.media_type,
+        target_model=opt.target_model,
+        negative_prompt=opt.negative_prompt,
+        parameters=opt.parameters,
+        tips=opt.tips,
+        web_sources=[WebSourceResponse(**ws) for ws in opt.web_sources] if opt.web_sources else None,
+        aspect_ratio=opt.aspect_ratio,
+    )
+
+
 @router.post("/optimizations", response_model=SavedOptimizationResponse)
 async def save_optimization(
     request: SaveOptimizationRequest,
@@ -652,24 +684,50 @@ async def save_optimization(
         reasoning=request.reasoning,
         skill_name=request.skill_name,
         analysis=request.analysis.model_dump() if request.analysis else None,
+        # Prompt Library fields
+        name=request.name or request.task_description[:255],  # Default to task description
+        folder=request.folder,
+        # Media-specific fields
+        media_type=request.media_type,
+        target_model=request.target_model,
+        negative_prompt=request.negative_prompt,
+        parameters=request.parameters,
+        tips=request.tips,
+        web_sources=[ws.model_dump() for ws in request.web_sources] if request.web_sources else None,
+        aspect_ratio=request.aspect_ratio,
     )
     db.add(optimization)
     await db.commit()
     await db.refresh(optimization)
-    return SavedOptimizationResponse(
-        id=str(optimization.id),
-        original_prompt=optimization.original_prompt,
-        optimized_prompt=optimization.optimized_prompt,
-        task_description=optimization.task_description,
-        original_score=optimization.original_score,
-        optimized_score=optimization.optimized_score,
-        improvements=optimization.improvements,
-        reasoning=optimization.reasoning,
-        skill_name=optimization.skill_name,
-        model_used=optimization.model_used,
-        created_at=optimization.created_at.isoformat(),
-        analysis=request.analysis,
+    return _build_optimization_response(optimization)
+
+
+@router.get("/optimizations/folders", response_model=FolderListResponse)
+async def list_folders(
+    org: Organization = Depends(get_current_org_dual),
+    db: AsyncSession = Depends(get_db)
+) -> FolderListResponse:
+    """List all folders with their prompt counts."""
+    from sqlalchemy import func
+
+    result = await db.execute(
+        select(
+            PromptOptimization.folder,
+            func.count(PromptOptimization.id).label("count")
+        )
+        .where(PromptOptimization.org_id == org.id)
+        .where(PromptOptimization.folder.isnot(None))
+        .where(PromptOptimization.folder != "")
+        .group_by(PromptOptimization.folder)
+        .order_by(PromptOptimization.folder)
     )
+
+    folders = [
+        FolderResponse(name=row.folder, count=row.count)
+        for row in result.all()
+    ]
+
+    return FolderListResponse(folders=folders)
 
 
 @router.get("/optimizations", response_model=OptimizationListResponse)
@@ -677,68 +735,133 @@ async def list_optimizations(
     fastapi_request: Request,
     limit: int = 20,
     offset: int = 0,
+    folder: str | None = None,
+    media_type: str | None = None,
+    target_model: str | None = None,
+    search: str | None = None,
     org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db)
 ) -> OptimizationListResponse:
-    """List saved optimizations with pagination, filtered by organization."""
-    # Count total for this organization
-    count_result = await db.execute(
-        select(PromptOptimization).where(PromptOptimization.org_id == org.id)
-    )
-    total = len(count_result.scalars().all())
+    """List saved optimizations with pagination and filtering."""
+    from sqlalchemy import func, or_
 
-    # Get paginated results for this organization
+    # Build base query
+    base_query = select(PromptOptimization).where(PromptOptimization.org_id == org.id)
+
+    # Apply filters
+    if folder is not None:
+        if folder == "":  # Empty string means "unfiled"
+            base_query = base_query.where(
+                or_(PromptOptimization.folder.is_(None), PromptOptimization.folder == "")
+            )
+        else:
+            base_query = base_query.where(PromptOptimization.folder == folder)
+
+    if media_type is not None:
+        if media_type == "text":
+            base_query = base_query.where(PromptOptimization.media_type.is_(None))
+        else:
+            base_query = base_query.where(PromptOptimization.media_type == media_type)
+
+    if target_model is not None:
+        base_query = base_query.where(PromptOptimization.target_model == target_model)
+
+    if search:
+        search_pattern = f"%{search}%"
+        base_query = base_query.where(
+            or_(
+                PromptOptimization.name.ilike(search_pattern),
+                PromptOptimization.task_description.ilike(search_pattern)
+            )
+        )
+
+    # Count total matching results
+    count_query = select(func.count()).select_from(base_query.subquery())
+    count_result = await db.execute(count_query)
+    total = count_result.scalar() or 0
+
+    # Get paginated results
     result = await db.execute(
-        select(PromptOptimization)
-        .where(PromptOptimization.org_id == org.id)
+        base_query
         .order_by(PromptOptimization.created_at.desc())
         .offset(offset)
         .limit(limit)
     )
     optimizations = result.scalars().all()
+
     return OptimizationListResponse(
-        optimizations=[
-            SavedOptimizationResponse(
-                id=str(opt.id),
-                original_prompt=opt.original_prompt,
-                optimized_prompt=opt.optimized_prompt,
-                task_description=opt.task_description,
-                original_score=opt.original_score,
-                optimized_score=opt.optimized_score,
-                improvements=opt.improvements,
-                reasoning=opt.reasoning,
-                skill_name=opt.skill_name,
-                model_used=opt.model_used,
-                created_at=opt.created_at.isoformat(),
-                analysis=AnalysisResponse(**opt.analysis) if opt.analysis else None,
-            )
-            for opt in optimizations
-        ],
+        optimizations=[_build_optimization_response(opt) for opt in optimizations],
         total=total,
     )
 
 
 @router.get("/optimizations/{optimization_id}", response_model=SavedOptimizationResponse)
-async def get_optimization(optimization_id: str, db: AsyncSession = Depends(get_db)) -> SavedOptimizationResponse:
+async def get_optimization(
+    optimization_id: str,
+    org: Organization = Depends(get_current_org_dual),
+    db: AsyncSession = Depends(get_db)
+) -> SavedOptimizationResponse:
     """Get a specific saved optimization by ID."""
-    result = await db.execute(select(PromptOptimization).where(PromptOptimization.id == optimization_id))
+    result = await db.execute(
+        select(PromptOptimization)
+        .where(PromptOptimization.id == optimization_id)
+        .where(PromptOptimization.org_id == org.id)
+    )
     optimization = result.scalar_one_or_none()
     if not optimization:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Optimization not found: {optimization_id}")
-    return SavedOptimizationResponse(
-        id=str(optimization.id),
-        original_prompt=optimization.original_prompt,
-        optimized_prompt=optimization.optimized_prompt,
-        task_description=optimization.task_description,
-        original_score=optimization.original_score,
-        optimized_score=optimization.optimized_score,
-        improvements=optimization.improvements,
-        reasoning=optimization.reasoning,
-        skill_name=optimization.skill_name,
-        model_used=optimization.model_used,
-        created_at=optimization.created_at.isoformat(),
-        analysis=AnalysisResponse(**optimization.analysis) if optimization.analysis else None,
+    return _build_optimization_response(optimization)
+
+
+@router.patch("/optimizations/{optimization_id}", response_model=SavedOptimizationResponse)
+async def update_optimization(
+    optimization_id: str,
+    request: UpdateOptimizationRequest,
+    org: Organization = Depends(get_current_org_dual),
+    db: AsyncSession = Depends(get_db)
+) -> SavedOptimizationResponse:
+    """Update a saved optimization (name, prompt text, or folder)."""
+    result = await db.execute(
+        select(PromptOptimization)
+        .where(PromptOptimization.id == optimization_id)
+        .where(PromptOptimization.org_id == org.id)
     )
+    optimization = result.scalar_one_or_none()
+    if not optimization:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Optimization not found: {optimization_id}")
+
+    # Update only provided fields
+    if request.name is not None:
+        optimization.name = request.name
+    if request.optimized_prompt is not None:
+        optimization.optimized_prompt = request.optimized_prompt
+    if request.folder is not None:
+        optimization.folder = request.folder if request.folder else None  # Empty string -> None
+
+    await db.commit()
+    await db.refresh(optimization)
+    return _build_optimization_response(optimization)
+
+
+@router.delete("/optimizations/{optimization_id}")
+async def delete_optimization(
+    optimization_id: str,
+    org: Organization = Depends(get_current_org_dual),
+    db: AsyncSession = Depends(get_db)
+) -> dict:
+    """Delete a saved optimization."""
+    result = await db.execute(
+        select(PromptOptimization)
+        .where(PromptOptimization.id == optimization_id)
+        .where(PromptOptimization.org_id == org.id)
+    )
+    optimization = result.scalar_one_or_none()
+    if not optimization:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Optimization not found: {optimization_id}")
+
+    await db.delete(optimization)
+    await db.commit()
+    return {"deleted": True}
 
 
 # Saved Evaluations endpoints
