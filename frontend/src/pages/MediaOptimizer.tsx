@@ -5,25 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { sessionApi, connectMediaAgentWebSocket, type MediaAgentResult, type TargetModel, type ToolCallInfo, type PendingQuestion, type UploadedFile, type Folder } from "@/lib/api"
+import { sessionApi, connectMediaAgentWebSocket, type MediaAgentResult, type ToolCallInfo, type PendingQuestion, type UploadedFile, type Folder } from "@/lib/api"
 import { track } from "@/lib/analytics"
 
 const API_BASE = import.meta.env.VITE_API_URL || ""
-
-// Photo and video models
-const PHOTO_MODELS: { value: TargetModel; label: string; description: string }[] = [
-  { value: "midjourney", label: "Midjourney", description: "Best for artistic, stylized images" },
-  { value: "stable_diffusion", label: "Stable Diffusion", description: "Open-source, highly customizable" },
-  { value: "dalle", label: "DALL-E 3", description: "Natural language, conversational style" },
-  { value: "flux", label: "Flux", description: "Fast, high-quality generations" },
-]
-
-const VIDEO_MODELS: { value: TargetModel; label: string; description: string }[] = [
-  { value: "runway", label: "Runway Gen-4", description: "Professional video generation" },
-  { value: "luma", label: "Luma Dream Machine", description: "Fast iteration, natural language" },
-  { value: "kling", label: "Kling", description: "Motion flow and transitions" },
-  { value: "veo", label: "Veo", description: "Detailed scene descriptions" },
-]
 
 const ASPECT_RATIOS = [
   { value: "1:1", label: "1:1 Square" },
@@ -34,9 +19,8 @@ const ASPECT_RATIOS = [
 ]
 
 export function MediaOptimizerPage() {
-  // Media type and model selection
+  // Media type selection
   const [mediaType, setMediaType] = useState<"photo" | "video">("photo")
-  const [targetModel, setTargetModel] = useState<TargetModel>("midjourney")
 
   // Input fields
   const [taskDescription, setTaskDescription] = useState("")
@@ -74,17 +58,6 @@ export function MediaOptimizerPage() {
   // WebSocket ref
   const wsRef = useRef<{ sendAnswer: (id: string, answer: string) => void; close: () => void } | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
-
-  // Update target model when media type changes
-  useEffect(() => {
-    if (mediaType === "photo") {
-      setTargetModel("midjourney")
-    } else {
-      setTargetModel("runway")
-    }
-  }, [mediaType])
-
-  const models = mediaType === "photo" ? PHOTO_MODELS : VIDEO_MODELS
 
   // Handle logo file upload to Cloudinary
   const handleLogoUpload = async (file: File) => {
@@ -161,12 +134,12 @@ export function MediaOptimizerPage() {
       const logoUploadedFile = await getLogoAsUploadedFile()
       const uploadedFiles = logoUploadedFile ? [logoUploadedFile] : undefined
 
-      // Start the agent session
+      // Start the agent session (using generic model since prompts are model-agnostic)
       const session = await sessionApi.startMediaAgentOptimization(
         existingPrompt,
         taskDescription,
         mediaType,
-        targetModel,
+        "generic",
         aspectRatio || undefined,
         logoUrl || undefined,
         uploadedFiles
@@ -197,7 +170,6 @@ export function MediaOptimizerPage() {
 
           track("media_agent_optimization_completed", {
             media_type: mediaType,
-            target_model: targetModel,
             had_existing_prompt: !!existingPrompt,
           })
         },
@@ -274,7 +246,6 @@ export function MediaOptimizerPage() {
       setShowSaveForm(false)
       track("media_optimization_saved", {
         media_type: mediaType,
-        target_model: targetModel,
         has_folder: !!folderToUse,
       })
     } catch (err) {
@@ -309,7 +280,7 @@ export function MediaOptimizerPage() {
             Smart Optimization
           </CardTitle>
           <CardDescription>
-            Our AI agent will analyze your request and ask clarifying questions to create the best prompt for your chosen model.
+            Our AI agent will analyze your request and ask clarifying questions to create the best prompt for AI image and video generation.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -331,24 +302,6 @@ export function MediaOptimizerPage() {
               <Video className="h-4 w-4 mr-2" />
               Video
             </Button>
-          </div>
-
-          {/* Model Selection */}
-          <div className="space-y-2">
-            <Label>Target Model</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {models.map((model) => (
-                <Button
-                  key={model.value}
-                  variant={targetModel === model.value ? "default" : "outline"}
-                  onClick={() => setTargetModel(model.value)}
-                  className="h-auto py-3 flex flex-col items-start text-left"
-                >
-                  <span className="font-medium">{model.label}</span>
-                  <span className="text-xs opacity-70 font-normal">{model.description}</span>
-                </Button>
-              ))}
-            </div>
           </div>
 
           {/* Task Description */}
@@ -473,7 +426,7 @@ export function MediaOptimizerPage() {
             ) : (
               <>
                 <Sparkles className="h-4 w-4 mr-2" />
-                Optimize for {models.find(m => m.value === targetModel)?.label}
+                Generate Optimized Prompt
               </>
             )}
           </Button>
@@ -600,7 +553,7 @@ export function MediaOptimizerPage() {
                 </div>
               </CardTitle>
               <CardDescription className="flex items-center justify-between">
-                <span>Optimized for {models.find(m => m.value === result.target_model)?.label || result.target_model}</span>
+                <span>Optimized {mediaType} prompt</span>
                 <Button
                   variant={saved ? "outline" : "default"}
                   size="sm"
@@ -719,8 +672,8 @@ export function MediaOptimizerPage() {
                 </div>
               </div>
 
-              {/* Negative Prompt (Stable Diffusion only) */}
-              {result.negative_prompt && result.target_model === "stable_diffusion" && (
+              {/* Negative Prompt */}
+              {result.negative_prompt && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>Negative Prompt (paste separately)</Label>
@@ -742,11 +695,11 @@ export function MediaOptimizerPage() {
                 </div>
               )}
 
-              {/* Parameters (Midjourney only) */}
-              {result.parameters && result.target_model === "midjourney" && (
+              {/* Parameters */}
+              {result.parameters && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label>Midjourney Parameters</Label>
+                    <Label>Parameters</Label>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -791,7 +744,7 @@ export function MediaOptimizerPage() {
               {/* Tips */}
               {result.tips && result.tips.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Tips for {models.find(m => m.value === result.target_model)?.label}</Label>
+                  <Label>Tips</Label>
                   <ul className="space-y-1">
                     {result.tips.map((tip, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
