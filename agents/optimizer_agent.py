@@ -478,17 +478,20 @@ class OptimizerAgent:
             if user_answer and state.pending_question:
                 # User answered a question - update the tool result with their answer
                 answer_msg = f"User answered: {user_answer}"
-                # The last message should be the tool result for ask_user_question
-                # (added before we paused). Update it with the user's actual answer.
-                if state.messages and state.messages[-1].get("role") == "tool":
-                    # Replace the placeholder "Waiting for user response..." with actual answer
-                    state.messages[-1]["content"] = answer_msg
-                else:
-                    # Fallback: find the assistant message with tool_calls and add result
+                # Find the tool result for ask_user_question and update it
+                # It should have content "Waiting for user response..."
+                updated = False
+                for i in range(len(state.messages) - 1, -1, -1):
+                    msg = state.messages[i]
+                    if msg.get("role") == "tool" and "Waiting for user response" in msg.get("content", ""):
+                        state.messages[i]["content"] = answer_msg
+                        updated = True
+                        break
+                if not updated:
+                    # Fallback: find the last tool result and update it
                     for i in range(len(state.messages) - 1, -1, -1):
-                        if state.messages[i].get("tool_calls"):
-                            tool_call_id = state.messages[i]["tool_calls"][-1]["id"]
-                            state.messages.append(create_tool_result_message(tool_call_id, answer_msg))
+                        if state.messages[i].get("role") == "tool":
+                            state.messages[i]["content"] = answer_msg
                             break
                 state.pending_question = None
                 state.status = "running"
@@ -550,6 +553,13 @@ Start by analyzing the prompt, then decide if you need web examples or user clar
 
                 if response.has_tool_calls:
                     # Process each tool call
+                    # First, collect all results before handling any special actions
+                    # This ensures all tool_calls get responses even if one pauses
+                    tool_results = []
+                    pause_action = None
+                    pause_tool_call_id = None
+                    complete_action = None
+
                     for tool_call in response.tool_calls:
                         await self._send(on_message, msg_progress(
                             "tool",
@@ -577,33 +587,37 @@ Start by analyzing the prompt, then decide if you need web examples or user clar
                             result[:200] if result else ""
                         ))
 
-                        # Handle special actions
+                        # Store tool result
+                        tool_results.append((tool_call.id, result))
+
+                        # Check for special actions (but don't act yet)
                         if action:
                             if "pause" in action:
-                                # Agent is asking a question
-                                # Add tool result BEFORE returning so the conversation is valid
-                                state.messages.append(create_tool_result_message(
-                                    tool_call.id,
-                                    result  # "Waiting for user response..."
-                                ))
-                                question_data = action["pause"]
-                                await self._send(on_message, msg_question(
-                                    tool_call.id,
-                                    question_data["question"],
-                                    question_data["reason"],
-                                ))
-                                return state  # Return to wait for answer
-
+                                pause_action = action
+                                pause_tool_call_id = tool_call.id
                             elif "complete" in action:
-                                # Agent finished
-                                await self._send(on_message, msg_completed(action["complete"]))
-                                return state
+                                complete_action = action
 
-                        # Add tool result to conversation
+                    # Add ALL tool results to conversation first
+                    for tool_call_id, result in tool_results:
                         state.messages.append(create_tool_result_message(
-                            tool_call.id,
+                            tool_call_id,
                             result
                         ))
+
+                    # Now handle special actions after all results are added
+                    if pause_action:
+                        question_data = pause_action["pause"]
+                        await self._send(on_message, msg_question(
+                            pause_tool_call_id,
+                            question_data["question"],
+                            question_data["reason"],
+                        ))
+                        return state  # Return to wait for answer
+
+                    if complete_action:
+                        await self._send(on_message, msg_completed(complete_action["complete"]))
+                        return state
 
                 elif response.finish_reason == "stop":
                     # Agent finished without calling generate_optimized
