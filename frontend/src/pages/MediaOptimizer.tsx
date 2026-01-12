@@ -672,29 +672,6 @@ export function MediaOptimizerPage() {
                 </div>
               </div>
 
-              {/* Negative Prompt */}
-              {result.negative_prompt && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Negative Prompt (paste separately)</Label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(result.negative_prompt!, "negative")}
-                    >
-                      {copied === "negative" ? (
-                        <Check className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-lg font-mono text-sm whitespace-pre-wrap">
-                    {result.negative_prompt}
-                  </div>
-                </div>
-              )}
-
               {/* Parameters */}
               {result.parameters && (
                 <div className="space-y-2">

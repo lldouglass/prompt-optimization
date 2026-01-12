@@ -108,10 +108,6 @@ MEDIA_OPTIMIZER_TOOLS = [
                         "type": "string",
                         "description": "SINGLE unified prompt ready to copy-paste into ANY model (Gemini, DALL-E, Midjourney, SD, Flux). Includes all details PLUS exclusions at the end like: 'No hands, no props, no text on label, no logos, no blur, no illustration style.' This is the ONLY prompt the user needs."
                     },
-                    "negative_prompt": {
-                        "type": "string",
-                        "description": "DEPRECATED: Always return empty string. All exclusions are now woven into optimized_prompt."
-                    },
                     "parameters": {
                         "type": "string",
                         "description": "Model-specific parameters (e.g., '--ar 16:9 --v 7 --s 200 --c 0' for Midjourney). Append to end of prompt."
@@ -1144,7 +1140,6 @@ GENERAL CRITERIA:
         result = {
             "original_prompt": self.original_prompt,
             "optimized_prompt": args.get("optimized_prompt", ""),
-            "negative_prompt": args.get("negative_prompt", ""),
             "parameters": args.get("parameters", ""),
             "assumptions_used": args.get("assumptions_used", []),
             "clarifying_questions": args.get("clarifying_questions", []),
@@ -1384,7 +1379,6 @@ Start by analyzing the prompt against {target_model} best practices, ask clarify
                         state.final_result = {
                             "original_prompt": self.tool_executor.original_prompt,
                             "optimized_prompt": response.content,
-                            "negative_prompt": "",
                             "parameters": "",
                             "improvements": ["Agent provided direct response"],
                             "reasoning": "No structured output provided",

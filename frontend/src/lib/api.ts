@@ -361,7 +361,6 @@ export interface SavedOptimization {
   // Media-specific fields
   media_type: "photo" | "video" | null
   target_model: string | null
-  negative_prompt: string | null
   parameters: string | null
   tips: string[] | null
   web_sources: WebSourceResponse[] | null
@@ -462,7 +461,6 @@ export type TargetModel =
 export interface MediaAgentResult {
   original_prompt: string
   optimized_prompt: string
-  negative_prompt: string | null  // For Stable Diffusion
   parameters: string | null  // For Midjourney (--ar, --v, etc.)
   improvements: string[]
   reasoning: string
@@ -770,7 +768,6 @@ export const sessionApi = {
         folder: folder || null,
         media_type: result.media_type,
         target_model: result.target_model,
-        negative_prompt: result.negative_prompt,
         parameters: result.parameters,
         tips: result.tips,
         web_sources: result.web_sources,

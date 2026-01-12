@@ -2,15 +2,17 @@
 // Update these values when swapping demo images
 
 export const beforeImages: string[] = [
-  // Add your "before" image filenames here (ideally 4)
-  // Example: "before-1.png", "before-2.png", etc.
-  // Images should be placed in public/demo/before/
+  "before1.jpg",
+  "before2.jpg",
+  "before3.jpg",
+  "before4.jpg",
 ]
 
 export const afterImages: string[] = [
-  // Add your "after" image filenames here (ideally 4)
-  // Example: "after-1.png", "after-2.png", etc.
-  // Images should be placed in public/demo/after/
+  "bottle1.jpg",
+  "bottle2.jpg",
+  "bottle3.jpg",
+  "bottle4.jpg",
 ]
 
 export const originalPrompt =
@@ -41,6 +43,15 @@ export const checklist: { label: string; met: boolean }[] = [
 ]
 
 export const matchScore = "9/10"
+
+// Inconsistency callouts for before images - what's wrong with each
+// These appear as red labels on the before images during animation
+export const inconsistencyCallouts: string[] = [
+  "Wrong bottle shape",
+  "Text on label",
+  "Wrong background",
+  "Missing pump",
+]
 
 // Product brief shown in the demo
 export const productBrief = {

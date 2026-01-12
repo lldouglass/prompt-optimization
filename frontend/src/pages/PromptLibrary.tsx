@@ -425,29 +425,6 @@ export function PromptLibraryPage() {
                         </div>
 
                         {/* Media-specific fields */}
-                        {opt.negative_prompt && (
-                          <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <Label className="text-muted-foreground">Negative Prompt</Label>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2"
-                                onClick={() => copyToClipboard(opt.negative_prompt!, `${opt.id}-negative`)}
-                              >
-                                {copiedField === `${opt.id}-negative` ? (
-                                  <Check className="h-3 w-3 text-green-600" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </div>
-                            <div className="bg-red-50 dark:bg-red-950/20 p-3 rounded-lg text-sm font-mono whitespace-pre-wrap border border-red-200 dark:border-red-800">
-                              {opt.negative_prompt}
-                            </div>
-                          </div>
-                        )}
-
                         {opt.parameters && (
                           <div>
                             <div className="flex items-center justify-between mb-2">

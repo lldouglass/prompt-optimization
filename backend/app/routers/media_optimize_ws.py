@@ -148,8 +148,6 @@ async def media_optimize_websocket(
                     if "original_prompt" not in result:
                         result["original_prompt"] = prompt
                     # Ensure media-specific fields exist
-                    if "negative_prompt" not in result:
-                        result["negative_prompt"] = ""
                     if "parameters" not in result:
                         result["parameters"] = ""
                     if "tips" not in result:

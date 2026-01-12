@@ -31,3 +31,8 @@ frontend/dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code temp files
+.claude/
+tmpclaude-*
+**/tmpclaude-*

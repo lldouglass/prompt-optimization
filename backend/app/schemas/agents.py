@@ -232,7 +232,6 @@ class SaveOptimizationRequest(BaseModel):
     # Media-specific fields
     media_type: Literal["photo", "video"] | None = None
     target_model: str | None = None
-    negative_prompt: str | None = None
     parameters: str | None = None
     tips: list[str] | None = None
     web_sources: list[WebSourceResponse] | None = None
@@ -266,7 +265,6 @@ class SavedOptimizationResponse(BaseModel):
     # Media-specific fields
     media_type: str | None = None
     target_model: str | None = None
-    negative_prompt: str | None = None
     parameters: str | None = None
     tips: list[str] | None = None
     web_sources: list[WebSourceResponse] | None = None
@@ -452,7 +450,6 @@ class MediaAgentResponse(BaseModel):
     """Response containing optimized media prompt from agent."""
     original_prompt: str
     optimized_prompt: str
-    negative_prompt: str | None = None  # For Stable Diffusion
     parameters: str | None = None  # For Midjourney (--ar, --v, etc.)
     improvements: list[str]
     reasoning: str

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check, X, Play, Pause, ChevronLeft, ChevronRight, HelpCircle } from "lucide-react"
+import { Check, X, Play, Pause, ChevronLeft, ChevronRight, HelpCircle, AlertTriangle } from "lucide-react"
 import {
   beforeImages,
   afterImages,
@@ -13,6 +13,7 @@ import {
   checklist,
   matchScore,
   productBrief,
+  inconsistencyCallouts,
 } from "@/config/demo"
 
 type Phase = "before" | "questions" | "after"
@@ -46,10 +47,14 @@ function ImageGrid({
   images,
   type,
   isVisible,
+  showCallouts = false,
+  visibleCallouts = 0,
 }: {
   images: string[]
   type: "before" | "after"
   isVisible: boolean
+  showCallouts?: boolean
+  visibleCallouts?: number
 }) {
   // Always render 4 slots
   const slots = [0, 1, 2, 3]
@@ -58,24 +63,49 @@ function ImageGrid({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: isVisible ? 1 : 0.3 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: 0.5 }}
       className="grid grid-cols-2 gap-3"
     >
       {slots.map((index) => {
         const imageSrc = images[index]
+        const callout = type === "before" ? inconsistencyCallouts[index] : null
+        const showThisCallout = showCallouts && index < visibleCallouts
+
         return (
           <motion.div
             key={index}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
+            transition={{ duration: 0.4, delay: index * 0.15 }}
+            className="relative"
           >
             {imageSrc ? (
-              <img
-                src={`/demo/${type}/${imageSrc}`}
-                alt={`${type} result ${index + 1}`}
-                className="aspect-square object-cover rounded-lg border shadow-sm"
-              />
+              <>
+                <img
+                  src={`/demo/${type}/${imageSrc}`}
+                  alt={`${type} result ${index + 1}`}
+                  className={`aspect-square object-cover rounded-lg border shadow-sm transition-all duration-300 ${
+                    type === "before" && showCallouts ? "border-red-400 border-2" : ""
+                  }`}
+                />
+                {/* Inconsistency callout overlay */}
+                <AnimatePresence>
+                  {showThisCallout && callout && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute bottom-2 left-2 right-2"
+                    >
+                      <div className="bg-red-500/90 text-white text-xs px-2 py-1.5 rounded-md flex items-center gap-1.5 shadow-lg">
+                        <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                        <span className="font-medium">{callout}</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
             ) : (
               <ImagePlaceholder index={index} type={type} />
             )}
@@ -128,6 +158,7 @@ export function AgencyDemo() {
   const [hasInteracted, setHasInteracted] = useState(false)
   const [visibleQuestions, setVisibleQuestions] = useState(0)
   const [visibleChecklist, setVisibleChecklist] = useState(0)
+  const [visibleCallouts, setVisibleCallouts] = useState(0)
   const [showScore, setShowScore] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -189,48 +220,57 @@ export function AgencyDemo() {
     clearTimers()
 
     if (phase === "before") {
-      // Show before for 3 seconds, then transition to questions
-      timerRef.current = setTimeout(() => {
-        setPhase("questions")
-        setVisibleQuestions(0)
-      }, 3000)
+      // First, animate the callouts appearing one by one
+      if (visibleCallouts < inconsistencyCallouts.length) {
+        timerRef.current = setTimeout(() => {
+          setVisibleCallouts((prev) => prev + 1)
+        }, 800) // 800ms between each callout
+      } else {
+        // All callouts shown, wait 2s then transition to questions
+        timerRef.current = setTimeout(() => {
+          setPhase("questions")
+          setVisibleQuestions(0)
+          setVisibleCallouts(0)
+        }, 2000)
+      }
     } else if (phase === "questions") {
-      // Animate questions appearing one by one
+      // Animate questions appearing one by one (slower)
       if (visibleQuestions < clarifyingQuestions.length) {
         timerRef.current = setTimeout(() => {
           setVisibleQuestions((prev) => prev + 1)
-        }, 400)
+        }, 700) // 700ms between each question
       } else {
         // All questions shown, wait then transition to after
         timerRef.current = setTimeout(() => {
           setPhase("after")
           setVisibleChecklist(0)
           setShowScore(false)
-        }, 1500)
+        }, 2000)
       }
     } else if (phase === "after") {
       // Animate checklist and score
       if (!showScore) {
         timerRef.current = setTimeout(() => {
           setShowScore(true)
-        }, 500)
+        }, 600)
       } else if (visibleChecklist < checklist.length) {
         timerRef.current = setTimeout(() => {
           setVisibleChecklist((prev) => prev + 1)
-        }, 200)
+        }, 250) // Slightly slower checklist reveal
       } else {
-        // Complete, wait then loop back
+        // Complete, wait longer then loop back
         timerRef.current = setTimeout(() => {
           setPhase("before")
           setVisibleQuestions(0)
           setVisibleChecklist(0)
+          setVisibleCallouts(0)
           setShowScore(false)
-        }, 4000)
+        }, 5000) // 5s to view final result
       }
     }
 
     return clearTimers
-  }, [isPlaying, viewMode, phase, visibleQuestions, visibleChecklist, showScore, clearTimers])
+  }, [isPlaying, viewMode, phase, visibleQuestions, visibleChecklist, visibleCallouts, showScore, clearTimers])
 
   // Handle user interaction
   const handleUserInteraction = () => {
@@ -587,12 +627,19 @@ export function AgencyDemo() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.5 }}
               >
-                <div className="text-sm text-muted-foreground mb-3 text-center">
-                  Results without Clayrnt
+                <div className="text-sm text-red-500 font-medium mb-3 text-center flex items-center justify-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Inconsistent results without Clayrnt
                 </div>
-                <ImageGrid images={beforeImages} type="before" isVisible={true} />
+                <ImageGrid
+                  images={beforeImages}
+                  type="before"
+                  isVisible={true}
+                  showCallouts={phase === "before" && viewMode === "animation"}
+                  visibleCallouts={visibleCallouts}
+                />
               </motion.div>
             )}
 
@@ -600,11 +647,11 @@ export function AgencyDemo() {
               <motion.div
                 key="questions-images"
                 initial={{ opacity: 1 }}
-                animate={{ opacity: 0.4 }}
-                transition={{ duration: 0.4 }}
+                animate={{ opacity: 0.3 }}
+                transition={{ duration: 0.5 }}
               >
                 <div className="text-sm text-muted-foreground mb-3 text-center">
-                  Results without Clayrnt
+                  Inconsistent results without Clayrnt
                 </div>
                 <ImageGrid images={beforeImages} type="before" isVisible={false} />
               </motion.div>
@@ -616,10 +663,11 @@ export function AgencyDemo() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.5 }}
               >
-                <div className="text-sm text-muted-foreground mb-3 text-center">
-                  Results with Clayrnt
+                <div className="text-sm text-green-600 font-medium mb-3 text-center flex items-center justify-center gap-2">
+                  <Check className="h-4 w-4" />
+                  Consistent results with Clayrnt
                 </div>
                 <ImageGrid images={afterImages} type="after" isVisible={true} />
               </motion.div>

@@ -632,7 +632,6 @@ def _build_optimization_response(opt: PromptOptimization) -> SavedOptimizationRe
         # Media-specific fields
         media_type=opt.media_type,
         target_model=opt.target_model,
-        negative_prompt=opt.negative_prompt,
         parameters=opt.parameters,
         tips=opt.tips,
         web_sources=[WebSourceResponse(**ws) for ws in opt.web_sources] if opt.web_sources else None,
@@ -665,7 +664,6 @@ async def save_optimization(
         # Media-specific fields
         media_type=request.media_type,
         target_model=request.target_model,
-        negative_prompt=request.negative_prompt,
         parameters=request.parameters,
         tips=request.tips,
         web_sources=[ws.model_dump() for ws in request.web_sources] if request.web_sources else None,
