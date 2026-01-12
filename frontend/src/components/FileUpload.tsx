@@ -1,5 +1,5 @@
 import { useState, useRef } from "react"
-import { Upload, X, FileText, Image, File, Loader2, Lock } from "lucide-react"
+import { Upload, X, FileText, Image, File, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { UploadedFile } from "@/lib/api"
 
@@ -13,8 +13,10 @@ export interface UploadedFileState {
 interface FileUploadProps {
   files: UploadedFileState[]
   onFilesChange: (files: UploadedFileState[]) => void
-  isPremium: boolean
   maxFiles?: number
+  /** @deprecated No longer used - file upload is available to all users */
+  isPremium?: boolean
+  /** @deprecated No longer used - file upload is available to all users */
   onUpgradeClick?: () => void
 }
 
@@ -60,9 +62,7 @@ function formatFileSize(bytes: number): string {
 export function FileUpload({
   files,
   onFilesChange,
-  isPremium,
   maxFiles = 5,
-  onUpgradeClick
 }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -129,7 +129,7 @@ export function FileUpload({
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    if (isPremium) setIsDragging(true)
+    setIsDragging(true)
   }
 
   const handleDragLeave = () => {
@@ -139,25 +139,7 @@ export function FileUpload({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-    if (isPremium) {
-      handleFileSelect(e.dataTransfer.files)
-    }
-  }
-
-  if (!isPremium) {
-    return (
-      <div className="p-4 border border-dashed border-muted-foreground/30 rounded-lg bg-muted/20 text-center">
-        <Lock className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground mb-2">
-          File upload is available for Premium and Pro users
-        </p>
-        {onUpgradeClick && (
-          <Button variant="link" size="sm" onClick={onUpgradeClick} className="text-purple-500">
-            Upgrade to unlock
-          </Button>
-        )}
-      </div>
-    )
+    handleFileSelect(e.dataTransfer.files)
   }
 
   return (

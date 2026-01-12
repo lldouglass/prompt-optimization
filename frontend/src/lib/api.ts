@@ -430,7 +430,7 @@ export interface MediaOptimizeRequest {
   camera_movement?: string
   shot_type?: string
   motion_endpoints?: string
-  // File upload (Premium/Pro only)
+  // File upload (available to all users)
   uploaded_files?: UploadedFile[]
 }
 
@@ -1243,6 +1243,385 @@ export function connectAgentOptimizeWebSocket(
   }
 }
 
+
+// ============================================================================
+// Video MVP Types
+// ============================================================================
+
+export interface VideoProject {
+  id: string
+  name: string
+  description: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  prompt_count: number
+}
+
+export interface VideoPrompt {
+  id: string
+  project_id: string
+  name: string
+  purpose: string | null
+  target_model: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  version_count: number
+  latest_version_number: number | null
+}
+
+export interface VideoPromptVersion {
+  id: string
+  prompt_id: string
+  version_number: number
+  type: "main" | "variant"
+  status: "active" | "draft"
+  source_version_id: string | null
+  created_by: string | null
+  created_at: string
+  scene_description: string | null
+  motion_timing: string | null
+  style_tone: string | null
+  camera_language: string | null
+  constraints: string | null
+  negative_instructions: string | null
+  full_prompt_text: string | null
+  output_count: number
+  good_count: number
+  bad_count: number
+  score: number
+}
+
+export interface VideoPromptOutput {
+  id: string
+  version_id: string
+  created_by: string | null
+  created_at: string
+  url: string
+  notes: string | null
+  rating: "good" | "bad" | null
+  reason_tags: string[] | null
+}
+
+export interface ShareToken {
+  id: string
+  prompt_id: string
+  token: string | null
+  created_by: string | null
+  created_at: string
+  expires_at: string
+  revoked_at: string | null
+  is_active: boolean
+}
+
+export interface VideoPromptDetail {
+  prompt: VideoPrompt
+  versions: VideoPromptVersion[]
+  best_version_id: string | null
+  share_url: string | null
+}
+
+export interface SharedVideoPrompt {
+  prompt: VideoPrompt
+  versions: VideoPromptVersion[]
+  outputs: VideoPromptOutput[]
+  best_version_id: string | null
+}
+
+export interface FeatureFlags {
+  video_mvp_enabled: boolean
+}
+
+// ============================================================================
+// Video MVP API
+// ============================================================================
+
+export const videoApi = {
+  // Feature Flags
+  async getFeatureFlags(): Promise<FeatureFlags> {
+    const res = await fetch(`${API_BASE}/video/config/features`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to get feature flags")
+    return res.json()
+  },
+
+  // Projects
+  async listProjects(): Promise<{ projects: VideoProject[]; total: number }> {
+    const res = await fetch(`${API_BASE}/video/projects`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list video projects")
+    return res.json()
+  },
+
+  async createProject(name: string, description?: string): Promise<VideoProject> {
+    const res = await fetch(`${API_BASE}/video/projects`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ name, description }),
+    })
+    if (!res.ok) throw new Error("Failed to create video project")
+    return res.json()
+  },
+
+  async getProject(id: string): Promise<VideoProject> {
+    const res = await fetch(`${API_BASE}/video/projects/${id}`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to get video project")
+    return res.json()
+  },
+
+  async updateProject(id: string, data: { name?: string; description?: string }): Promise<VideoProject> {
+    const res = await fetch(`${API_BASE}/video/projects/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error("Failed to update video project")
+    return res.json()
+  },
+
+  async deleteProject(id: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/video/projects/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to delete video project")
+  },
+
+  // Prompts
+  async listPrompts(projectId: string): Promise<{ prompts: VideoPrompt[]; total: number }> {
+    const res = await fetch(`${API_BASE}/video/projects/${projectId}/prompts`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list video prompts")
+    return res.json()
+  },
+
+  async createPrompt(
+    projectId: string,
+    data: {
+      name: string
+      purpose?: string
+      target_model?: string
+      scene_description?: string
+      motion_timing?: string
+      style_tone?: string
+      camera_language?: string
+      constraints?: string
+      negative_instructions?: string
+    }
+  ): Promise<VideoPrompt> {
+    const res = await fetch(`${API_BASE}/video/projects/${projectId}/prompts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error("Failed to create video prompt")
+    return res.json()
+  },
+
+  async getPrompt(id: string): Promise<VideoPromptDetail> {
+    const res = await fetch(`${API_BASE}/video/prompts/${id}`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to get video prompt")
+    return res.json()
+  },
+
+  async updatePrompt(
+    id: string,
+    data: { name?: string; purpose?: string; target_model?: string }
+  ): Promise<VideoPrompt> {
+    const res = await fetch(`${API_BASE}/video/prompts/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error("Failed to update video prompt")
+    return res.json()
+  },
+
+  async deletePrompt(id: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/video/prompts/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to delete video prompt")
+  },
+
+  // Versions
+  async createVersion(
+    promptId: string,
+    data: {
+      scene_description?: string
+      motion_timing?: string
+      style_tone?: string
+      camera_language?: string
+      constraints?: string
+      negative_instructions?: string
+    }
+  ): Promise<VideoPromptVersion> {
+    const res = await fetch(`${API_BASE}/video/prompts/${promptId}/versions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error("Failed to create version")
+    return res.json()
+  },
+
+  async rollbackVersion(promptId: string, versionId: string): Promise<VideoPromptVersion> {
+    const res = await fetch(`${API_BASE}/video/prompts/${promptId}/rollback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ version_id: versionId }),
+    })
+    if (!res.ok) throw new Error("Failed to rollback version")
+    return res.json()
+  },
+
+  async generateVariants(
+    promptId: string,
+    count: number = 5
+  ): Promise<{ versions: VideoPromptVersion[]; total: number }> {
+    const res = await fetchWithTimeout(
+      `${API_BASE}/video/prompts/${promptId}/generate-variants`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ count }),
+      },
+      TIMEOUTS.OPTIMIZE
+    )
+    if (!res.ok) throw new Error("Failed to generate variants")
+    return res.json()
+  },
+
+  async promoteVariant(versionId: string): Promise<VideoPromptVersion> {
+    const res = await fetch(`${API_BASE}/video/versions/${versionId}/promote`, {
+      method: "POST",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to promote variant")
+    return res.json()
+  },
+
+  async deleteVersion(versionId: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/video/versions/${versionId}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to delete version")
+  },
+
+  // Outputs
+  async attachOutput(
+    versionId: string,
+    url: string,
+    notes?: string
+  ): Promise<VideoPromptOutput> {
+    const res = await fetch(`${API_BASE}/video/versions/${versionId}/outputs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ url, notes }),
+    })
+    if (!res.ok) throw new Error("Failed to attach output")
+    return res.json()
+  },
+
+  async listOutputs(versionId: string): Promise<{ outputs: VideoPromptOutput[]; total: number }> {
+    const res = await fetch(`${API_BASE}/video/versions/${versionId}/outputs`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list outputs")
+    return res.json()
+  },
+
+  async scoreOutput(
+    outputId: string,
+    rating: "good" | "bad",
+    reasonTags?: string[]
+  ): Promise<VideoPromptOutput> {
+    const res = await fetch(`${API_BASE}/video/outputs/${outputId}/score`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ rating, reason_tags: reasonTags }),
+    })
+    if (!res.ok) throw new Error("Failed to score output")
+    return res.json()
+  },
+
+  async deleteOutput(outputId: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/video/outputs/${outputId}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to delete output")
+  },
+
+  // Best Version
+  async getBestVersion(promptId: string): Promise<VideoPromptVersion> {
+    const res = await fetch(`${API_BASE}/video/prompts/${promptId}/best`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to get best version")
+    return res.json()
+  },
+
+  // Share Tokens
+  async createShareToken(promptId: string, expiresInDays: number = 7): Promise<ShareToken> {
+    const res = await fetch(`${API_BASE}/video/prompts/${promptId}/share`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ expires_in_days: expiresInDays }),
+    })
+    if (!res.ok) throw new Error("Failed to create share token")
+    return res.json()
+  },
+
+  async listShareTokens(promptId: string): Promise<{ tokens: ShareToken[]; total: number }> {
+    const res = await fetch(`${API_BASE}/video/prompts/${promptId}/shares`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list share tokens")
+    return res.json()
+  },
+
+  async revokeShareToken(shareId: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/video/shares/${shareId}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to revoke share token")
+  },
+
+  // Public Share Access (no auth required)
+  async getSharedPrompt(token: string): Promise<SharedVideoPrompt> {
+    const res = await fetch(`${API_BASE}/video/share/${token}`)
+    if (!res.ok) {
+      if (res.status === 403) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.detail || "Share link expired or revoked")
+      }
+      throw new Error("Failed to access shared prompt")
+    }
+    return res.json()
+  },
+}
 
 // WebSocket helper for media agent-based optimization
 export function connectMediaAgentWebSocket(

@@ -362,21 +362,11 @@ async def optimize_prompt(
     # Reset token tracking before optimization
     reset_usage()
 
-    # Determine tier access
-    paid_tiers = ["pro", "team", "enterprise"]
-    is_paid_tier = org.subscription_plan in paid_tiers
-
-    # Process uploaded files (Premium/Pro only)
+    # Process uploaded files
     file_context_results: list[FileProcessingResult] = []
     file_context_text = ""
 
     if request.uploaded_files:
-        if not is_paid_tier:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="File upload requires a Premium or Pro subscription"
-            )
-
         for uploaded in request.uploaded_files:
             try:
                 content = await process_file(
@@ -423,20 +413,15 @@ async def optimize_prompt(
 
 Use this reference material to inform your optimization suggestions."""
 
-    # Use requested mode, or auto-detect based on tier
+    # Use requested mode, or auto-detect (enhanced for all users)
     use_enhanced = False
     if request.mode == "enhanced":
-        if not is_paid_tier:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Enhanced optimization mode requires a paid subscription (Premium or Pro)"
-            )
         use_enhanced = True
     elif request.mode == "standard":
         use_enhanced = False
     else:
-        # Auto-detect: use enhanced for paid tiers
-        use_enhanced = is_paid_tier
+        # Auto-detect: use enhanced for all users
+        use_enhanced = True
 
     # Run optimization
     if use_enhanced:
@@ -550,21 +535,11 @@ async def optimize_media_prompt(
     # Reset token tracking before optimization
     reset_usage()
 
-    # Determine tier access
-    paid_tiers = ["pro", "team", "enterprise"]
-    is_paid_tier = org.subscription_plan in paid_tiers
-
-    # Process uploaded files (Premium/Pro only) - reference images
+    # Process uploaded files - reference images
     file_context_results: list[FileProcessingResult] = []
     file_context_text = ""
 
     if request.uploaded_files:
-        if not is_paid_tier:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="File upload requires a Premium or Pro subscription"
-            )
-
         for uploaded in request.uploaded_files:
             try:
                 content = await process_file(

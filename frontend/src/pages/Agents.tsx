@@ -136,20 +136,9 @@ export function AgentsPage() {
 
   const mediaResultsRef = useRef<HTMLDivElement>(null)
 
-  // File upload state (Premium/Pro only)
+  // File upload state
   const [optimizeFiles, setOptimizeFiles] = useState<UploadedFileState[]>([])
   const [mediaFiles, setMediaFiles] = useState<UploadedFileState[]>([])
-  const [isPremium, setIsPremium] = useState(false)
-
-  // Check subscription tier on mount
-  useEffect(() => {
-    sessionApi.getBillingInfo().then(billing => {
-      const paidTiers = ["pro", "team", "enterprise"]
-      setIsPremium(paidTiers.includes(billing.subscription.plan))
-    }).catch(() => {
-      // Silently fail - assume free tier
-    })
-  }, [])
 
   const photoIssueOptions = [
     { value: "low_light", label: "Low light / Noise" },
@@ -1238,8 +1227,6 @@ const runEvaluate = async (request?: string, response?: string) => {
                 <FileUpload
                   files={optimizeFiles}
                   onFilesChange={setOptimizeFiles}
-                  isPremium={isPremium}
-                  onUpgradeClick={() => navigate("/settings")}
                 />
               </div>
 
@@ -1823,8 +1810,6 @@ const runEvaluate = async (request?: string, response?: string) => {
                 <FileUpload
                   files={mediaFiles}
                   onFilesChange={setMediaFiles}
-                  isPremium={isPremium}
-                  onUpgradeClick={() => navigate("/settings")}
                 />
               </div>
 
