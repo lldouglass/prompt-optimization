@@ -1,0 +1,24 @@
+# Clarynt robots.txt
+# https://app.clarynt.net/robots.txt
+
+User-agent: *
+Allow: /
+Allow: /prompt-optimization
+Allow: /marketing-agencies
+Allow: /creative-studios
+Allow: /docs
+Allow: /education
+
+# Disallow authenticated/private routes
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /library
+Disallow: /media
+Disallow: /agents
+Disallow: /login
+Disallow: /verify-email
+Disallow: /verify-email-pending
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://app.clarynt.net/sitemap.xml

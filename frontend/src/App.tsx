@@ -12,6 +12,16 @@ import { VerifyEmailPage } from "@/pages/VerifyEmail"
 import { VerifyEmailPendingPage } from "@/pages/VerifyEmailPending"
 import { EducationPage } from "@/pages/Education"
 import { DocumentationPage } from "@/pages/Documentation"
+import { PromptOptimizationPage } from "@/pages/PromptOptimization"
+import { MarketingAgenciesPage } from "@/pages/MarketingAgencies"
+import { CreativeStudiosPage } from "@/pages/CreativeStudios"
+import { useNoIndexSEO } from "@/hooks/useSEO"
+
+// Wrapper that adds noindex to protected routes
+function NoIndexWrapper({ children }: { children: React.ReactNode }) {
+  useNoIndexSEO()
+  return <>{children}</>
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
@@ -28,7 +38,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />
   }
 
-  return <>{children}</>
+  return (
+    <NoIndexWrapper>
+      {children}
+    </NoIndexWrapper>
+  )
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -55,6 +69,12 @@ function AppRoutes() {
       <Route path="/" element={<LandingPageV2 />} />
       {/* Landing page also at /home for logged-in users */}
       <Route path="/home" element={<LandingPageV2 />} />
+
+      {/* SEO landing pages - public, indexable */}
+      <Route path="/prompt-optimization" element={<PromptOptimizationPage />} />
+      <Route path="/marketing-agencies" element={<MarketingAgenciesPage />} />
+      <Route path="/creative-studios" element={<CreativeStudiosPage />} />
+
       <Route
         path="/login"
         element={
