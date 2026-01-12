@@ -100,21 +100,21 @@ MEDIA_OPTIMIZER_TOOLS = [
         "type": "function",
         "function": {
             "name": "generate_optimized_media_prompt",
-            "description": "Generate the final production-ready prompt. MUST include all 8 structured blocks (subject, composition, environment, lighting, style, output specs, constraints, negatives). Include comprehensive negative prompt, assumptions used, clarifying questions, consistency tips, and model notes.",
+            "description": "Generate the final production-ready prompt as a SINGLE unified block. Include all structured blocks (subject, composition, environment, lighting, style, output specs, constraints) with EXCLUSIONS woven in at the end using 'No X' phrasing. Do NOT use a separate negative prompt.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "optimized_prompt": {
                         "type": "string",
-                        "description": "The full production prompt with ALL details locked: subject/product specifics, composition (angle, framing, percentages), environment (background, surface), lighting (key/fill/rim), style, output specs, and constraints. Ready to paste into any image model. No placeholders or brackets."
+                        "description": "SINGLE unified prompt ready to copy-paste into ANY model (Gemini, DALL-E, Midjourney, SD, Flux). Includes all details PLUS exclusions at the end like: 'No hands, no props, no text on label, no logos, no blur, no illustration style.' This is the ONLY prompt the user needs."
                     },
                     "negative_prompt": {
                         "type": "string",
-                        "description": "Comprehensive negative prompt covering: text artifacts (text, words, logos, watermarks), object artifacts (extra products, hands, props), quality issues (blurry, noisy, low res), distortions (warped, melted), and style drift (illustration, cartoon, CGI). Always provide even for non-SD models."
+                        "description": "DEPRECATED: Always return empty string. All exclusions are now woven into optimized_prompt."
                     },
                     "parameters": {
                         "type": "string",
-                        "description": "Model-specific parameters (e.g., '--ar 16:9 --v 7 --s 200 --c 0' for Midjourney)"
+                        "description": "Model-specific parameters (e.g., '--ar 16:9 --v 7 --s 200 --c 0' for Midjourney). Append to end of prompt."
                     },
                     "assumptions_used": {
                         "type": "array",
@@ -142,7 +142,7 @@ MEDIA_OPTIMIZER_TOOLS = [
                     },
                     "model_notes": {
                         "type": "string",
-                        "description": "Brief tuning tips for different models: Midjourney params, SD CFG values, DALL-E considerations, Flux notes"
+                        "description": "Tips for different models. Gemini/DALL-E: copy-paste as-is. Midjourney: add params at end. SD: can split exclusions if preferred."
                     },
                     "original_score": {
                         "type": "number",
@@ -158,7 +158,7 @@ MEDIA_OPTIMIZER_TOOLS = [
                         "description": "Model-specific tips for getting better results"
                     }
                 },
-                "required": ["optimized_prompt", "negative_prompt", "improvements", "reasoning", "original_score", "optimized_score", "clarifying_questions", "consistency_tips"]
+                "required": ["optimized_prompt", "improvements", "reasoning", "original_score", "optimized_score", "clarifying_questions", "consistency_tips"]
             }
         }
     }
@@ -263,14 +263,18 @@ Every optimized prompt MUST explicitly specify:
 - MUST include (e.g., "single product only, visible through-glass lotion color")
 - MUST NOT include (e.g., "no hands, no props, no background elements, no secondary products")
 
-### 8. NEGATIVE PROMPT BLOCK (Critical for consistency)
-Build a comprehensive negative prompt including:
-- Text artifacts: "text, words, letters, labels with text, logos, watermarks, signatures"
-- Object artifacts: "multiple bottles, extra products, props, hands, human elements"
-- Quality issues: "blurry, out of focus, noisy, grainy, jpeg artifacts, low resolution"
-- Composition issues: "cropped product, cut off edges, cluttered, busy background"
-- Style drift: "illustration, cartoon, 3D render, CGI look, unrealistic"
-- Common failures: "distorted shape, warped bottle, melted glass, incorrect proportions"
+### 8. EXCLUSIONS BLOCK (Woven into main prompt - NOT separate)
+**IMPORTANT**: Do NOT output a separate negative prompt. Instead, end the main prompt with explicit "no X" exclusions. This works across ALL models (Gemini, DALL-E, Midjourney, Stable Diffusion, Flux).
+
+**Always end the prompt with exclusions like:**
+"...No hands, no props, no extra products, no text on label, no logos, no watermarks, no illustration style, no blur, no distorted shapes."
+
+Categories to exclude:
+- Objects: "no hands, no props, no extra bottles, no duplicate items"
+- Text: "no text, no logos, no watermarks, no readable labels"
+- Style: "no illustration, no cartoon, no CGI, no 3D render"
+- Quality: "no blur, no noise, no artifacts"
+- Distortions: "no warped shapes, no melted edges, no incorrect proportions"
 
 ---
 
@@ -577,18 +581,16 @@ When you call `generate_optimized_media_prompt`, your output MUST follow this ex
 
 ### Output Fields
 
-1. **optimized_prompt**: A single block, ready to paste into any image model. Must include:
-   - ALL 8 production prompt blocks (subject, composition, environment, lighting, style, output specs, constraints, implicit negatives woven in)
+1. **optimized_prompt**: A SINGLE unified block, ready to copy-paste into ANY image model (Gemini, DALL-E, Midjourney, SD, Flux). Must include:
+   - ALL production prompt blocks (subject, composition, environment, lighting, style, output specs, constraints)
    - Specific numeric values (percentages, degrees)
    - Natural language (no brackets, no placeholders)
-   - Model-specific parameters at the END only
+   - **EXCLUSIONS AT THE END** using "no X" phrasing (e.g., "No hands, no props, no text on label, no logos, no blur, no illustration style.")
+   - Model-specific parameters at the very END only (for Midjourney)
 
-2. **negative_prompt**: Comprehensive list including:
-   - Text artifacts: "text, words, letters, logos, watermarks, signatures, typography"
-   - Object artifacts: "multiple products, extra bottles, hands, props, clutter"
-   - Quality issues: "blurry, noisy, grainy, low resolution, jpeg artifacts"
-   - Distortions: "warped, melted, distorted shape, incorrect proportions"
-   - Style drift: "illustration, cartoon, 3D render, CGI, unrealistic"
+   **DO NOT output a separate negative_prompt field.** All exclusions go in the main prompt.
+
+2. **negative_prompt**: DEPRECATED - Leave empty string "". All exclusions are now woven into optimized_prompt.
 
 3. **assumptions_used**: Bullet list of defaults chosen when user didn't specify. ONLY include if you made assumptions. Format:
    - "Container: Assumed 250ml frosted glass pump bottle (not specified)"
@@ -617,15 +619,12 @@ When you call `generate_optimized_media_prompt`, your output MUST follow this ex
 
 Given input: "Create a clean, premium product photo of a vanilla oat body lotion on a simple background."
 
-**optimized_prompt**:
+**optimized_prompt** (single unified block - copy-paste ready for Gemini, DALL-E, Midjourney, etc.):
 ```
-Product photography of a 250ml tall cylindrical frosted glass bottle containing cream-colored vanilla oat body lotion visible through the semi-translucent glass. Rose-gold metal pump dispenser with matching collar. Clean blank cream-colored label with no text, no logos, no readable elements. Product positioned at 3/4 front view with 15-degree rotation to the right, centered horizontally and vertically, filling 75-80% of the frame height. Full product visible with subtle breathing room on all edges. Seamless pure white (#FFFFFF) studio backdrop with no gradients, no shadows on background. Product resting on white reflective acrylic surface showing soft mirror reflection underneath. Large softbox key light from upper-left at 45 degrees creating soft diffused illumination. Gentle fill light from right side opening shadows. Subtle rim light from behind for edge separation and glass definition. Soft specular highlights on glass surface, diffused metallic sheen on pump. Photorealistic commercial product photography style. Premium minimal spa-like clean luxury aesthetic. High resolution, sharp focus on product body with pump slightly soft. Single product only, no hands, no props, no secondary items, no background elements.
+Product photography of a 250ml tall cylindrical frosted glass bottle containing cream-colored vanilla oat body lotion visible through the semi-translucent glass. Rose-gold metal pump dispenser with matching collar. Clean blank cream-colored label. Product positioned at 3/4 front view with 15-degree rotation to the right, centered horizontally and vertically, filling 75-80% of the frame height. Full product visible with subtle breathing room on all edges. Seamless pure white (#FFFFFF) studio backdrop. Product resting on white reflective acrylic surface showing soft mirror reflection underneath. Large softbox key light from upper-left at 45 degrees creating soft diffused illumination. Gentle fill light from right side opening shadows. Subtle rim light from behind for edge separation and glass definition. Soft specular highlights on glass surface, diffused metallic sheen on pump. Photorealistic commercial product photography style. Premium minimal spa-like clean luxury aesthetic. High resolution, sharp focus on product body with pump slightly soft. Single product only. No hands, no props, no extra bottles, no text on label, no logos, no watermarks, no illustration style, no cartoon, no CGI, no blur, no distorted shapes, no warped bottle.
 ```
 
-**negative_prompt**:
-```
-text, words, letters, typography, logos, watermarks, signatures, labels with text, multiple bottles, extra products, duplicate items, hands, fingers, human elements, props, decorative objects, plants, flowers, fabric, cluttered background, busy composition, blurry, out of focus, soft focus, noisy, grainy, jpeg artifacts, compression artifacts, low resolution, cropped product, cut off edges, partial product, warped bottle, distorted glass, melted shape, incorrect proportions, bent pump, illustration, cartoon, 3D render, CGI look, unrealistic lighting, harsh shadows, overexposed, underexposed
-```
+**negative_prompt**: "" (empty - all exclusions are in the main prompt above)
 
 **assumptions_used**:
 - Container: Assumed 250ml tall frosted glass pump bottle (vanilla oat lotion typically uses this format)
@@ -657,10 +656,11 @@ text, words, letters, typography, logos, watermarks, signatures, labels with tex
 - Added comprehensive negatives to block common failure modes (extra bottles, hands, distortions)
 
 **model_notes**:
-- Midjourney V7: Append `--ar 1:1 --v 7 --s 200 --c 0` for square format with consistent stylization
-- Stable Diffusion/SDXL: Use negative prompt as-is; CFG 7-8 recommended
-- DALL-E 3: Negative prompt not supported; constraints already embedded in main prompt
-- Flux: Use prompt as-is; Flux handles natural language well
+- Gemini: Copy-paste the entire prompt as-is. Exclusions at the end work well.
+- DALL-E 3: Copy-paste as-is. Works great with natural language exclusions.
+- Midjourney V7: Append `--ar 1:1 --v 7 --s 200 --c 0` at the very end for parameters.
+- Stable Diffusion/SDXL: Can copy-paste as-is, or split exclusions into negative prompt field if preferred. CFG 7-8.
+- Flux: Copy-paste as-is. Handles natural language well.
 
 ---
 
@@ -1100,7 +1100,10 @@ GENERAL CRITERIA:
         if state.questions_asked >= state.max_questions:
             return f"Cannot ask more questions (max {state.max_questions} reached). Proceed with current information.", None
 
-        state.questions_asked += 1
+        # NOTE: We do NOT increment questions_asked here anymore.
+        # It's incremented when the user ANSWERS (in the run() method).
+        # This prevents the LLM from batching 5 questions in one call
+        # and having them all count as "asked" when user only sees one.
         state.status = "awaiting_input"
         state.pending_question = {
             "question": question,
@@ -1113,6 +1116,18 @@ GENERAL CRITERIA:
 
     def _generate_optimized(self, args: dict, state: MediaAgentState) -> tuple[str, dict]:
         """Generate the final optimized prompt - completes the agent."""
+        # Enforce minimum questions - agent MUST ask at least 3 questions before generating
+        MIN_QUESTIONS_REQUIRED = 3
+        if state.questions_asked < MIN_QUESTIONS_REQUIRED:
+            remaining = MIN_QUESTIONS_REQUIRED - state.questions_asked
+            return (
+                f"BLOCKED: You must ask at least {MIN_QUESTIONS_REQUIRED} clarifying questions before generating. "
+                f"You have only asked {state.questions_asked} question(s). Ask {remaining} more question(s) about: "
+                f"container type, material/finish, dispenser type, label treatment, background style, or camera angle. "
+                f"Do NOT generate until you have asked {MIN_QUESTIONS_REQUIRED}+ questions.",
+                None
+            )
+
         # Ensure analysis has the expected structure for the frontend
         analysis = state.analysis_result
         if analysis and isinstance(analysis, dict):
@@ -1234,6 +1249,9 @@ class MediaOptimizerAgent:
                     "role": "user",
                     "content": f"User's answer to your question: {user_answer}"
                 })
+                # INCREMENT questions_asked HERE when user actually answers
+                # (not when the question is asked - that allows LLM to batch questions)
+                state.questions_asked += 1
                 state.pending_question = None
                 state.status = "running"
         else:

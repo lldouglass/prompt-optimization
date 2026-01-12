@@ -2,32 +2,26 @@ import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { VideoComparisonDemo } from "@/components/VideoComparisonDemo"
+import { AgencyDemo } from "@/components/AgencyDemo"
 import {
-
-  BarChart3,
-  Sparkles,
-  GitCompare,
-  Shield,
   ArrowRight,
   Check,
   Code2,
-  Target,
-  Play,
   ChevronDown,
-  Building2,
-  Star
+  Star,
+  FileQuestion,
+  Sparkles,
+  Scale,
+  Zap,
+  Settings,
+  BarChart3,
 } from "lucide-react"
 import { useState } from "react"
 
 // ============================================================================
-// CONVERSION-OPTIMIZED LANDING PAGE V2
-// Design principles from Figma & Uber:
-// - Single clear CTA above the fold
-// - Problem-agitation-solution structure
-// - Strong social proof throughout
-// - Reduce cognitive load with focused messaging
-// - Trust signals and objection handling
+// AGENCY-FOCUSED LANDING PAGE
+// Repositioned messaging: "ad-ready images in fewer generations"
+// Clarifying Questions as the centerpiece
 // ============================================================================
 
 // Pricing tiers
@@ -43,10 +37,10 @@ const pricingTiers = [
       "10 prompt optimizations/month",
       "Standard optimization mode",
       "7-day data retention",
-      "Basic analytics"
+      "Basic analytics",
     ],
-    cta: "Start Free",
-    highlighted: false
+    cta: "Get Started Free",
+    highlighted: false,
   },
   {
     name: "Premium",
@@ -55,7 +49,7 @@ const pricingTiers = [
     period: "/month",
     yearlyTotal: "$144/year",
     savings: "Save $36/year",
-    description: "For individual developers",
+    description: "For individual creators",
     features: [
       "10,000 logged requests/month",
       "50 prompt optimizations/month",
@@ -63,10 +57,10 @@ const pricingTiers = [
       "Judge evaluation before return",
       "File upload for context",
       "30-day data retention",
-      "Email support"
+      "Email support",
     ],
     cta: "Start Free Trial",
-    highlighted: false
+    highlighted: false,
   },
   {
     name: "Pro",
@@ -75,7 +69,7 @@ const pricingTiers = [
     period: "/month",
     yearlyTotal: "$900/year",
     savings: "Save $180/year",
-    description: "For teams & power users",
+    description: "For agencies & studios",
     features: [
       "100,000 logged requests/month",
       "Unlimited optimizations",
@@ -84,10 +78,10 @@ const pricingTiers = [
       "File upload for context",
       "90-day data retention",
       "A/B testing suite",
-      "Priority support"
+      "Priority support",
     ],
     cta: "Start Free Trial",
-    highlighted: false
+    highlighted: true,
   },
   {
     name: "Enterprise",
@@ -101,65 +95,79 @@ const pricingTiers = [
       "Enhanced mode with web search",
       "On-premise deployment",
       "SSO & SAML",
-      "Dedicated support"
+      "Dedicated support",
     ],
     cta: "Contact Sales",
-    highlighted: false
-  }
+    highlighted: false,
+  },
 ]
 
-// FAQ items for objection handling
+// FAQ items - agency-focused objection handling
 const faqItems = [
   {
-    question: "How is this different from just using ChatGPT to improve my prompts?",
-    answer: "Clarynt uses a research-backed 100-point scoring system based on official guides from OpenAI, Anthropic, and Google DeepMind. Unlike generic AI suggestions, we apply specific, measurable criteria and automatically generate few-shot examples - something you can't easily do manually."
+    question: "How is this different from just using ChatGPT?",
+    answer:
+      "Clayrnt is built for repeatable output quality across a team. It asks targeted questions, applies a consistent scoring rubric, and produces a structured production prompt with constraints and negatives to reduce model guessing. The result is fewer failed generations and a higher first-pass usable rate.",
   },
   {
-    question: "How long does it take to integrate?",
-    answer: "Most teams are up and running in under 15 minutes. Our Python SDK wraps your existing OpenAI client with a single line of code, and the web optimizer requires no integration at all."
+    question: "How long does it take to start?",
+    answer:
+      "No integration required. Paste what you want, answer questions, and copy the production prompt in minutes. API and SDK workflows are optional.",
   },
   {
-    question: "What if it doesn't improve my prompts?",
-    answer: "Start with our free tier - 10 optimizations per month, no credit card required. If you don't see measurable improvements in your prompt scores, you've lost nothing. Most users see 40-60 point improvements on their first optimization."
+    question: "What if it doesn't help?",
+    answer:
+      "Then do not keep it. The goal is measurable: fewer generations to reach usable outputs and closer matches to what you asked for.",
   },
   {
     question: "Is my data secure?",
-    answer: "Yes. All data is encrypted in transit and at rest. Enterprise customers can use on-premise deployment. We never use your prompts to train models or share them with third parties."
-  }
+    answer:
+      "By default we store only what is needed to provide the service. You control retention in settings. If you need custom retention or enterprise controls, contact us.",
+  },
 ]
 
-// Platform features
-const platformFeatures = [
+// Top 3 agency-focused features
+const agencyFeatures = [
   {
-    icon: Sparkles,
-    title: "AI-Powered Optimization",
-    description: "Transform vague prompts into precise instructions using 2025 best practices from OpenAI, Anthropic, and Google."
+    icon: Zap,
+    title: "Requirements → Production Prompt",
+    description:
+      "Paste what you want. Get back a precise, structured prompt with constraints and negatives that makes the model stop guessing.",
   },
   {
-    icon: Target,
-    title: "Web-Enhanced Examples",
-    description: "Paid plans use real-time web search to find grounded few-shot examples from documentation and GitHub."
+    icon: FileQuestion,
+    title: "Clarifying Questions",
+    description:
+      "Clayrnt asks targeted questions to capture details you'd forget to specify. Container type? Lighting? What must not appear? Every answer tightens the output.",
+  },
+  {
+    icon: Scale,
+    title: "Judge Evaluation",
+    description:
+      "An AI Judge scores the prompt against your requirements before you run it. Know if it will work before wasting generations.",
+  },
+]
+
+// Developer features (lower section)
+const developerFeatures = [
+  {
+    icon: Code2,
+    title: "Python SDK",
+    description:
+      "Drop-in SDK that wraps your existing OpenAI client. Automatic logging and optimization with one line of code.",
   },
   {
     icon: BarChart3,
     title: "Request Logging",
-    description: "Capture every LLM API call with full request/response data, token counts, and latency metrics."
+    description:
+      "Capture every API call with full request/response data, token counts, and latency metrics for debugging.",
   },
   {
-    icon: GitCompare,
+    icon: Settings,
     title: "A/B Testing",
-    description: "Compare prompt variations side-by-side with automatic scoring to find the best performer."
+    description:
+      "Compare prompt variations side-by-side with automatic scoring to find the best performer.",
   },
-  {
-    icon: Shield,
-    title: "Judge Evaluation",
-    description: "AI Judge evaluates optimized prompts before returning, detecting regressions and ensuring quality."
-  },
-  {
-    icon: Code2,
-    title: "Simple SDK",
-    description: "Drop-in Python SDK that works with OpenAI, Anthropic, and other providers."
-  }
 ]
 
 export function LandingPageV2() {
@@ -168,21 +176,40 @@ export function LandingPageV2() {
   return (
     <div className="min-h-screen bg-background">
       {/* ================================================================
-          NAVIGATION - Clean, minimal (Figma-style)
+          NAVIGATION
           ================================================================ */}
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <img src="/clarynt_icon.jpg" alt="Clarynt" className="h-8 w-8" />
-              <span className="text-xl font-bold">Clarynt</span>
+              <img src="/clarynt_icon.jpg" alt="Clayrnt" className="h-8 w-8" />
+              <span className="text-xl font-bold">Clayrnt</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
-              <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How it works</a>
-              <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
-              <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
-              <Link to="/docs" className="text-muted-foreground hover:text-foreground transition-colors">Docs</Link>
-              <Link to="/education" className="text-muted-foreground hover:text-foreground transition-colors">Learn</Link>
+              <a
+                href="#how-it-works"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                How it works
+              </a>
+              <a
+                href="#features"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Features
+              </a>
+              <a
+                href="#pricing"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Pricing
+              </a>
+              <Link
+                to="/docs"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Docs
+              </Link>
             </div>
             <div className="flex items-center gap-4">
               <Link to="/login">
@@ -197,24 +224,24 @@ export function LandingPageV2() {
       </nav>
 
       {/* ================================================================
-          HERO SECTION - Single CTA, Problem-focused (Uber-style)
-          Key: One clear value prop, one primary action
+          HERO SECTION - Agency-focused value prop
           ================================================================ */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto text-center">
-          {/* Main headline - Problem/Solution in one */}
+          {/* Main headline */}
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-            Creative Prompts
+            Get ad-ready images
             <br />
-            <span className="text-primary">That Actually Work.</span>
+            <span className="text-primary">in fewer generations.</span>
           </h1>
 
-          {/* Value prop - Specific, measurable benefit */}
+          {/* Value prop */}
           <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Stop wasting generations on bad prompts. Our AI optimizer creates perfect prompts for Midjourney, Stable Diffusion, DALL-E, Runway, and more.
+            Paste what you want. Clayrnt asks a few quick questions, then gives you a prompt that
+            makes the model stop guessing.
           </p>
 
-          {/* Model logos */}
+          {/* Model compatibility */}
           <div className="flex flex-wrap justify-center gap-4 mb-10 text-sm text-muted-foreground">
             <span className="px-3 py-1 bg-muted rounded-full">Midjourney</span>
             <span className="px-3 py-1 bg-muted rounded-full">Stable Diffusion</span>
@@ -223,51 +250,53 @@ export function LandingPageV2() {
             <span className="px-3 py-1 bg-muted rounded-full">Flux</span>
           </div>
 
-          {/* Single primary CTA */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
             <Link to="/login">
               <Button size="lg" className="text-lg px-8 py-6 h-auto">
-                Create Your First Prompt
+                Run a 7-day agency pilot
                 <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button variant="outline" size="lg" className="text-lg px-8 py-6 h-auto">
+                Get Started Free
               </Button>
             </Link>
           </div>
 
-          {/* Risk reversal */}
+          {/* Small note */}
           <p className="text-sm text-muted-foreground">
-            No credit card required. 10 free optimizations per month.
+            Works with any model. Preset available for Gemini Nano Banana Pro.
           </p>
         </div>
       </section>
 
       {/* ================================================================
-          SOLUTION DEMO - Before/After transformation
-          Key: Visual proof of value
+          DEMO SECTION - Before/Questions/After animation
           ================================================================ */}
       <section id="how-it-works" className="py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <Badge className="mb-4" variant="secondary">
               <Sparkles className="h-3 w-3 mr-1" />
-              The Solution
+              See It Work
             </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              See the Transformation in Seconds
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Watch the model stop guessing</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Paste any prompt and watch it transform from vague to precise
+              Same model. Same settings. Clayrnt just makes the instructions specific.
             </p>
           </div>
 
-          {/* Video Comparison Demo */}
-          <VideoComparisonDemo />
+          {/* Agency Demo Component */}
+          <AgencyDemo />
 
           {/* CTA after demo */}
           <div className="text-center mt-12">
             <Link to="/login">
               <Button size="lg" className="text-lg px-8">
-                <Play className="mr-2 h-5 w-5" />
                 Try It Yourself
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
           </div>
@@ -275,17 +304,13 @@ export function LandingPageV2() {
       </section>
 
       {/* ================================================================
-          3-STEP PROCESS - Simple, clear steps
+          3-STEP PROCESS - Simple steps
           ================================================================ */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Three Steps to Better Prompts
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              No complex setup. No learning curve.
-            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Three steps to usable outputs</h2>
+            <p className="text-xl text-muted-foreground">No integration. No learning curve.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
@@ -293,9 +318,9 @@ export function LandingPageV2() {
               <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl font-bold text-primary mx-auto mb-6">
                 1
               </div>
-              <h3 className="text-xl font-semibold mb-3">Paste Your Prompt</h3>
+              <h3 className="text-xl font-semibold mb-3">Paste what you want</h3>
               <p className="text-muted-foreground">
-                Enter any prompt - from simple queries to complex multi-step instructions.
+                Describe the image, video, or asset you need in plain language.
               </p>
             </div>
 
@@ -303,9 +328,9 @@ export function LandingPageV2() {
               <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl font-bold text-primary mx-auto mb-6">
                 2
               </div>
-              <h3 className="text-xl font-semibold mb-3">Get Your Score</h3>
+              <h3 className="text-xl font-semibold mb-3">Answer a few questions</h3>
               <p className="text-muted-foreground">
-                Our AI scores your prompt across 7 research-backed categories and shows improvement areas.
+                Clayrnt asks targeted questions to capture the details that matter.
               </p>
             </div>
 
@@ -313,9 +338,9 @@ export function LandingPageV2() {
               <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl font-bold text-primary mx-auto mb-6">
                 3
               </div>
-              <h3 className="text-xl font-semibold mb-3">Use the Optimized Version</h3>
+              <h3 className="text-xl font-semibold mb-3">Copy the production prompt</h3>
               <p className="text-muted-foreground">
-                Copy the optimized prompt with auto-generated few-shot examples and structure.
+                Get a structured prompt with constraints that makes the model stop guessing.
               </p>
             </div>
           </div>
@@ -323,90 +348,28 @@ export function LandingPageV2() {
       </section>
 
       {/* ================================================================
-          WHY PROMPT QUALITY MATTERS - Research validation
+          FEATURES - Agency-focused (top) + Developer (lower)
           ================================================================ */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <Badge className="mb-4" variant="secondary">
-              <Target className="h-3 w-3 mr-1" />
-              The Research Is Clear
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Your Prompts Are Holding You Back
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Studies from Harvard and Google show that how you ask is just as important as what you ask.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-10">
-            <Card className="border-2">
-              <CardContent className="pt-6">
-                <div className="text-red-500 font-semibold mb-3">The Problem</div>
-                <p className="text-lg font-medium mb-2">
-                  Vague prompts give vague answers
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Harvard researchers found that people using AI without prompt training actually produced <span className="font-semibold text-foreground">worse work</span> than not using AI at all. The AI gave confident but wrong answers.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-primary">
-              <CardContent className="pt-6">
-                <div className="text-primary font-semibold mb-3">The Solution</div>
-                <p className="text-lg font-medium mb-2">
-                  Show the AI what you want
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Adding just 2-3 examples of good output cuts errors in half. That's why Clarynt automatically generates relevant examples for every prompt you optimize.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2">
-              <CardContent className="pt-6">
-                <div className="text-green-500 font-semibold mb-3">The Result</div>
-                <p className="text-lg font-medium mb-2">
-                  AI that actually follows instructions
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Structured prompts with clear roles, examples, and constraints get dramatically better results. The same AI model, completely different output.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="text-center">
-            <Link to="/education" className="text-primary hover:underline inline-flex items-center gap-1">
-              See the research and learn best practices <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ================================================================
-          FEATURES GRID - Platform capabilities
-          ================================================================ */}
-      <section id="features" className="py-24 px-4 sm:px-6 lg:px-8">
+      <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <Badge className="mb-4" variant="secondary">
-              <Building2 className="h-3 w-3 mr-1" />
-              Platform Features
+              <Zap className="h-3 w-3 mr-1" />
+              For Teams
             </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Everything You Need for Production AI
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Built for teams shipping volume</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Beyond optimization - a complete LLMOps platform
+              Standardize how your team gets usable outputs fast.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {platformFeatures.map((feature) => (
-              <Card key={feature.title} className="hover:border-primary/50 transition-colors">
+          {/* Agency features - prominent */}
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {agencyFeatures.map((feature) => (
+              <Card
+                key={feature.title}
+                className="hover:border-primary/50 transition-colors border-2"
+              >
                 <CardHeader>
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                     <feature.icon className="h-6 w-6 text-primary" />
@@ -419,80 +382,47 @@ export function LandingPageV2() {
               </Card>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* ================================================================
-          SCORING SYSTEM - Credibility through methodology
-          ================================================================ */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <Badge className="mb-4" variant="secondary">
-                <Target className="h-3 w-3 mr-1" />
-                Research-Backed
-              </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-                100-Point Scoring System
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                Every prompt is scored across 7 categories derived from official documentation
-                and research papers from OpenAI, Anthropic, and Google DeepMind.
+          {/* Developer features - de-emphasized */}
+          <div className="border-t pt-16">
+            <div className="text-center mb-12">
+              <h3 className="text-xl font-semibold text-muted-foreground mb-2">For Developers</h3>
+              <p className="text-muted-foreground">
+                Optional API and SDK integrations for programmatic workflows.
               </p>
-
-              <div className="space-y-4">
-                {[
-                  { name: "Clarity & Specificity", points: "20", color: "bg-blue-500" },
-                  { name: "Structure & Organization", points: "20", color: "bg-purple-500" },
-                  { name: "Role Definition", points: "15", color: "bg-green-500" },
-                  { name: "Output Format", points: "15", color: "bg-yellow-500" },
-                  { name: "Few-Shot Examples", points: "15", color: "bg-orange-500" },
-                  { name: "Constraints & Boundaries", points: "10", color: "bg-red-500" },
-                  { name: "Reasoning Guidance", points: "5", color: "bg-pink-500" }
-                ].map((category) => (
-                  <div key={category.name} className="flex items-center gap-4">
-                    <div className={`h-3 w-3 rounded-full ${category.color}`} />
-                    <span className="flex-1">{category.name}</span>
-                    <span className="font-mono font-semibold text-primary">{category.points} pts</span>
-                  </div>
-                ))}
-              </div>
             </div>
-
-            <div className="bg-card rounded-2xl border p-8">
-              <div className="text-center mb-6">
-                <div className="text-6xl font-bold text-primary mb-2">87</div>
-                <div className="text-muted-foreground">Average optimized score</div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="p-4 bg-muted/50 rounded-xl">
-                  <div className="text-2xl font-bold text-primary">+47%</div>
-                  <div className="text-xs text-muted-foreground">Avg. Improvement</div>
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              {developerFeatures.map((feature) => (
+                <div key={feature.title} className="flex gap-4">
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                    <feature.icon className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1">{feature.title}</h4>
+                    <p className="text-sm text-muted-foreground">{feature.description}</p>
+                  </div>
                 </div>
-                <div className="p-4 bg-muted/50 rounded-xl">
-                  <div className="text-2xl font-bold text-primary">3</div>
-                  <div className="text-xs text-muted-foreground">AI Lab Sources</div>
-                </div>
-                <div className="p-4 bg-muted/50 rounded-xl">
-                  <div className="text-2xl font-bold text-primary">7</div>
-                  <div className="text-xs text-muted-foreground">Score Categories</div>
-                </div>
-              </div>
+              ))}
+            </div>
+            <div className="text-center mt-8">
+              <Link
+                to="/docs"
+                className="text-primary hover:underline inline-flex items-center gap-1"
+              >
+                View documentation <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
       {/* ================================================================
-          PRICING - Clear, transparent (Uber-style simplicity)
+          PRICING
           ================================================================ */}
       <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Simple, Transparent Pricing
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Simple, Transparent Pricing</h2>
             <p className="text-xl text-muted-foreground">
               Start free. Upgrade when you need more.
             </p>
@@ -508,7 +438,7 @@ export function LandingPageV2() {
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                     <Badge className="bg-primary">
                       <Star className="h-3 w-3 mr-1" />
-                      Most Popular
+                      Best for Agencies
                     </Badge>
                   </div>
                 )}
@@ -530,10 +460,7 @@ export function LandingPageV2() {
                     ))}
                   </ul>
                   <Link to="/login" className="block">
-                    <Button
-                      className="w-full"
-                      variant={tier.highlighted ? "default" : "outline"}
-                    >
+                    <Button className="w-full" variant={tier.highlighted ? "default" : "outline"}>
                       {tier.cta}
                     </Button>
                   </Link>
@@ -545,33 +472,30 @@ export function LandingPageV2() {
       </section>
 
       {/* ================================================================
-          FAQ - Objection handling
+          FAQ - Agency objection handling
           ================================================================ */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Frequently Asked Questions
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
           </div>
 
           <div className="space-y-4">
             {faqItems.map((faq, i) => (
-              <div
-                key={i}
-                className="bg-card border rounded-xl overflow-hidden"
-              >
+              <div key={i} className="bg-card border rounded-xl overflow-hidden">
                 <button
                   className="w-full p-6 text-left flex items-center justify-between"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                 >
                   <span className="font-semibold pr-4">{faq.question}</span>
-                  <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${openFaq === i ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-5 w-5 text-muted-foreground transition-transform ${
+                      openFaq === i ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
                 {openFaq === i && (
-                  <div className="px-6 pb-6 text-muted-foreground">
-                    {faq.answer}
-                  </div>
+                  <div className="px-6 pb-6 text-muted-foreground">{faq.answer}</div>
                 )}
               </div>
             ))}
@@ -580,21 +504,30 @@ export function LandingPageV2() {
       </section>
 
       {/* ================================================================
-          FINAL CTA - Strong close
+          FINAL CTA
           ================================================================ */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-primary text-primary-foreground">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-            Ready to Write Better Prompts?
+            Ready to stop wasting generations?
           </h2>
           <p className="text-xl opacity-90 mb-8">
-            Start building more reliable AI products with research-backed prompt optimization.
+            Get ad-ready images faster with prompts that make the model stop guessing.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link to="/login">
               <Button size="lg" variant="secondary" className="text-lg px-8">
-                Start Optimizing Free
+                Run a 7-day agency pilot
                 <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button
+                size="lg"
+                variant="ghost"
+                className="text-lg px-8 text-primary-foreground hover:text-primary-foreground hover:bg-primary-foreground/10"
+              >
+                Get Started Free
               </Button>
             </Link>
           </div>
@@ -612,50 +545,86 @@ export function LandingPageV2() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <img src="/clarynt_icon.jpg" alt="Clarynt" className="h-6 w-6" />
-                <span className="text-lg font-bold">Clarynt</span>
+                <img src="/clarynt_icon.jpg" alt="Clayrnt" className="h-6 w-6" />
+                <span className="text-lg font-bold">Clayrnt</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Research-backed prompt optimization for production AI applications.
+                Production-ready prompts for marketing agencies and creative studios.
               </p>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#how-it-works" className="hover:text-foreground">How it works</a></li>
-                <li><a href="#features" className="hover:text-foreground">Features</a></li>
-                <li><a href="#pricing" className="hover:text-foreground">Pricing</a></li>
-                <li><Link to="/docs" className="hover:text-foreground">Documentation</Link></li>
+                <li>
+                  <a href="#how-it-works" className="hover:text-foreground">
+                    How it works
+                  </a>
+                </li>
+                <li>
+                  <a href="#features" className="hover:text-foreground">
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a href="#pricing" className="hover:text-foreground">
+                    Pricing
+                  </a>
+                </li>
+                <li>
+                  <Link to="/docs" className="hover:text-foreground">
+                    Documentation
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Learn</h4>
+              <h4 className="font-semibold mb-4">Resources</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/education" className="hover:text-foreground">Best Practices</Link></li>
-                <li><Link to="/education#privacy" className="hover:text-foreground">Privacy Guidelines</Link></li>
-                <li><Link to="/docs#sdk" className="hover:text-foreground">Python SDK</Link></li>
+                <li>
+                  <Link to="/education" className="hover:text-foreground">
+                    Best Practices
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/docs#sdk" className="hover:text-foreground">
+                    Python SDK
+                  </Link>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-foreground">
+                    API Reference
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">About</a></li>
-                <li><a href="#" className="hover:text-foreground">Blog</a></li>
-                <li><a href="#" className="hover:text-foreground">Careers</a></li>
-                <li><a href="#" className="hover:text-foreground">Contact</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-foreground">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-foreground">Security</a></li>
+                <li>
+                  <a href="#" className="hover:text-foreground">
+                    About
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-foreground">
+                    Contact
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-foreground">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-foreground">
+                    Terms of Service
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
           <div className="border-t mt-12 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} Clarynt. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Clayrnt. All rights reserved.</p>
           </div>
         </div>
       </footer>
