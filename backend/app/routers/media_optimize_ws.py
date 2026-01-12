@@ -175,7 +175,8 @@ async def media_optimize_websocket(
                 logging.warning(f"Failed to send WebSocket message: {e}")
 
         # Initialize agent
-        agent = MediaOptimizerAgent(model="gpt-4o-mini")
+        # Uses gpt-4o for main optimization loop (powerful), gpt-4o-mini for scoring (cheap)
+        agent = MediaOptimizerAgent()
 
         # Restore state if resuming
         initial_state = None

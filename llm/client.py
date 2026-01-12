@@ -62,15 +62,25 @@ def reset_usage() -> dict[str, int]:
 def calculate_cost_cents(prompt_tokens: int, completion_tokens: int, model: str = "gpt-4o-mini") -> int:
     """Calculate estimated cost in cents (hundredths of a dollar).
 
-    Pricing for gpt-4o-mini:
-    - Input: $0.15 per 1M tokens = $0.00000015 per token
-    - Output: $0.60 per 1M tokens = $0.0000006 per token
+    Pricing (as of 2024):
+    - gpt-4o-mini: Input $0.15/1M, Output $0.60/1M
+    - gpt-4o: Input $2.50/1M, Output $10.00/1M
+    - gpt-4-turbo: Input $10.00/1M, Output $30.00/1M
     """
     if "gpt-4o-mini" in model:
+        # gpt-4o-mini pricing
         input_cost = prompt_tokens * 0.00000015
         output_cost = completion_tokens * 0.0000006
+    elif "gpt-4o" in model and "mini" not in model:
+        # gpt-4o pricing (not mini)
+        input_cost = prompt_tokens * 0.0000025
+        output_cost = completion_tokens * 0.00001
+    elif "gpt-4-turbo" in model:
+        # gpt-4-turbo pricing
+        input_cost = prompt_tokens * 0.00001
+        output_cost = completion_tokens * 0.00003
     else:
-        # Default to gpt-4o pricing for other models
+        # Default to gpt-4o pricing for unknown models
         input_cost = prompt_tokens * 0.0000025
         output_cost = completion_tokens * 0.00001
 
