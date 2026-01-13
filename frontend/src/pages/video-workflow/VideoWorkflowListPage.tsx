@@ -112,16 +112,13 @@ export function VideoWorkflowListPage() {
   }
 
   return (
-    <div className="container py-8 max-w-6xl">
+    <div className="p-8 max-w-6xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Film className="h-8 w-8" />
-            Video Workflows
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Create structured video prompts for Sora 2 and other AI video tools.
+          <h1 className="text-3xl font-bold">Video Workflows</h1>
+          <p className="text-muted-foreground mt-2">
+            Create structured video prompts for Sora 2 and other AI video tools
           </p>
         </div>
         <Button onClick={handleCreateNew}>
@@ -132,14 +129,14 @@ export function VideoWorkflowListPage() {
 
       {/* Error */}
       {error && (
-        <div className="bg-destructive/10 text-destructive rounded-lg p-4 mb-6">
+        <div className="bg-destructive/10 text-destructive rounded-lg p-4">
           {error}
         </div>
       )}
 
       {/* Templates Section */}
       {templates.length > 0 && (
-        <section className="mb-8">
+        <section>
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Bookmark className="h-5 w-5" />
             Templates
