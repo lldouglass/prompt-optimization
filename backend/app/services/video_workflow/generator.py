@@ -54,7 +54,7 @@ async def generate_clarifying_questions(brief: dict) -> list[dict]:
     Returns:
         List of question dicts with id, question, category
     """
-    if MOCK_MODE or not LLM_AVAILABLE:
+    if MOCK_MODE:
         return get_mock_clarifying_questions()
 
     # Build prompt for LLM
@@ -120,7 +120,7 @@ async def generate_continuity_pack(brief: dict, answers: dict) -> dict:
     Returns:
         Continuity pack dict
     """
-    if MOCK_MODE or not LLM_AVAILABLE:
+    if MOCK_MODE:
         return get_mock_continuity_pack()
 
     system_prompt = """You are a professional video production designer. Create a comprehensive continuity pack for consistent video production.
@@ -181,7 +181,7 @@ async def generate_shot_plan(brief: dict, continuity: dict) -> dict:
     Returns:
         Shot plan dict with shots array
     """
-    if MOCK_MODE or not LLM_AVAILABLE:
+    if MOCK_MODE:
         return get_mock_shot_plan()
 
     duration = brief.get("duration_seconds", 12)
