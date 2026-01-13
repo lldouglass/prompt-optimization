@@ -80,24 +80,28 @@ Script/VO: {brief.get('script_or_vo', 'None')}
 
 Generate clarifying questions for missing details needed for video production."""
 
-    response = await asyncio.to_thread(
-        chat,
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-    )
+    try:
+        response = await asyncio.to_thread(
+            chat,
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+        )
 
-    # Parse JSON response
-    questions = _parse_json_response(response.get("content", "[]"), "[]")
+        # Parse JSON response
+        questions = _parse_json_response(response.get("content", "[]"), "[]")
 
-    # Ensure each question has an id
-    for q in questions:
-        if "id" not in q:
-            q["id"] = str(uuid.uuid4())
+        # Ensure each question has an id
+        for q in questions:
+            if "id" not in q:
+                q["id"] = str(uuid.uuid4())
 
-    return questions[:7]  # Max 7 questions
+        return questions[:7]  # Max 7 questions
+
+    except Exception as e:
+        raise RuntimeError(f"Failed to generate questions: {str(e)}")
 
 
 async def generate_continuity_pack(brief: dict, answers: dict) -> dict:
@@ -146,16 +150,20 @@ Clarifying Q&A:
 
 Create a detailed continuity pack for this video project."""
 
-    response = await asyncio.to_thread(
-        chat,
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-    )
+    try:
+        response = await asyncio.to_thread(
+            chat,
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+        )
 
-    return _parse_json_response(response.get("content", "{}"))
+        return _parse_json_response(response.get("content", "{}"))
+
+    except Exception as e:
+        raise RuntimeError(f"Failed to generate continuity pack: {str(e)}")
 
 
 async def generate_shot_plan(brief: dict, continuity: dict) -> dict:
@@ -213,23 +221,27 @@ Do List: {json.dumps(continuity.get('do_list', []))}
 
 Create a {num_shots}-shot plan covering {duration} seconds."""
 
-    response = await asyncio.to_thread(
-        chat,
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-    )
+    try:
+        response = await asyncio.to_thread(
+            chat,
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+        )
 
-    result = _parse_json_response(response.get("content", '{"shots": []}'), '{"shots": []}')
+        result = _parse_json_response(response.get("content", '{"shots": []}'), '{"shots": []}')
 
-    # Ensure each shot has a UUID
-    for shot in result.get("shots", []):
-        if "id" not in shot or not shot["id"]:
-            shot["id"] = str(uuid.uuid4())
+        # Ensure each shot has a UUID
+        for shot in result.get("shots", []):
+            if "id" not in shot or not shot["id"]:
+                shot["id"] = str(uuid.uuid4())
 
-    return result
+        return result
+
+    except Exception as e:
+        raise RuntimeError(f"Failed to generate shot plan: {str(e)}")
 
 
 async def generate_prompt_pack(

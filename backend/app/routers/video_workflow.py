@@ -305,7 +305,7 @@ async def save_brief(
 
 
 @router.post("/{workflow_id}/questions")
-async def generate_questions(
+async def generate_questions_endpoint(
     workflow_id: str,
     org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db),
@@ -316,7 +316,10 @@ async def generate_questions(
     if not workflow.brief:
         raise HTTPException(status_code=400, detail="Brief must be saved first")
 
-    questions = await generate_clarifying_questions(workflow.brief)
+    try:
+        questions = await generate_clarifying_questions(workflow.brief)
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     # Save questions to brief
     workflow.brief["clarifying_questions"] = questions
@@ -361,7 +364,7 @@ async def submit_answers(
 # ============================================================================
 
 @router.post("/{workflow_id}/continuity")
-async def generate_continuity(
+async def generate_continuity_endpoint(
     workflow_id: str,
     org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db),
@@ -378,7 +381,10 @@ async def generate_continuity(
         if q.get("answer"):
             answers[q["id"]] = q["answer"]
 
-    continuity = await generate_continuity_pack(workflow.brief, answers)
+    try:
+        continuity = await generate_continuity_pack(workflow.brief, answers)
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     workflow.continuity_pack = continuity
     workflow.current_step = max(workflow.current_step, 3)
@@ -428,7 +434,7 @@ async def update_continuity(
 # ============================================================================
 
 @router.post("/{workflow_id}/shots")
-async def generate_shots(
+async def generate_shots_endpoint(
     workflow_id: str,
     org: Organization = Depends(get_current_org_dual),
     db: AsyncSession = Depends(get_db),
@@ -441,7 +447,10 @@ async def generate_shots(
     if not workflow.continuity_pack:
         raise HTTPException(status_code=400, detail="Continuity pack must be completed first")
 
-    shot_plan = await generate_shot_plan(workflow.brief, workflow.continuity_pack)
+    try:
+        shot_plan = await generate_shot_plan(workflow.brief, workflow.continuity_pack)
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     workflow.shot_plan = shot_plan
     workflow.current_step = max(workflow.current_step, 4)
@@ -490,7 +499,7 @@ async def update_shot(
 # ============================================================================
 
 @router.post("/{workflow_id}/prompts")
-async def generate_prompts(
+async def generate_prompts_endpoint(
     workflow_id: str,
     data: GeneratePromptsRequest = None,
     org: Organization = Depends(get_current_org_dual),
@@ -508,12 +517,15 @@ async def generate_prompts(
     if data:
         target_model = data.target_model
 
-    prompt_pack = await generate_prompt_pack(
-        workflow.shot_plan["shots"],
-        workflow.continuity_pack,
-        workflow.brief or {},
-        target_model,
-    )
+    try:
+        prompt_pack = await generate_prompt_pack(
+            workflow.shot_plan["shots"],
+            workflow.continuity_pack,
+            workflow.brief or {},
+            target_model,
+        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     workflow.prompt_pack = prompt_pack
     workflow.current_step = max(workflow.current_step, 5)
