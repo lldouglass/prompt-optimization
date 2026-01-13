@@ -256,22 +256,23 @@ export function MediaOptimizerPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="container py-8 max-w-4xl">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        {mediaType === "photo" ? (
-          <Camera className="h-8 w-8 text-primary" />
-        ) : (
-          <Video className="h-8 w-8 text-primary" />
-        )}
-        <div>
-          <h1 className="text-2xl font-bold">Media Prompt Optimizer</h1>
-          <p className="text-muted-foreground">
-            Create optimized prompts for AI image and video generation
-          </p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold flex items-center gap-3">
+          {mediaType === "photo" ? (
+            <Camera className="h-8 w-8 text-primary" />
+          ) : (
+            <Video className="h-8 w-8 text-primary" />
+          )}
+          Media Prompt Optimizer
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          Create optimized prompts for AI image and video generation using our intelligent agent.
+        </p>
       </div>
 
+      <div className="space-y-6">
       {/* Input Card */}
       <Card>
         <CardHeader>
@@ -736,6 +737,7 @@ export function MediaOptimizerPage() {
           </Card>
         </div>
       )}
+      </div>
     </div>
   )
 }
