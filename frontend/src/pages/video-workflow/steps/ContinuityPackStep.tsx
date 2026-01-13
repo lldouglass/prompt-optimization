@@ -20,10 +20,13 @@ export function ContinuityPackStep({ workflow, onComplete, onRefresh }: Continui
   const [error, setError] = useState<string | null>(null)
   const [continuity, setContinuity] = useState<ContinuityPack | null>(null)
 
-  // Load existing continuity pack
+  // Load existing continuity pack, or auto-generate if none exists
   useEffect(() => {
     if (workflow?.continuity_pack) {
       setContinuity(workflow.continuity_pack)
+    } else if (workflow?.brief && !isGenerating && !continuity) {
+      // Auto-generate continuity if brief exists but no continuity yet
+      handleGenerate()
     }
   }, [workflow])
 

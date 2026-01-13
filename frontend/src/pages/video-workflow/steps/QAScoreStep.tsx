@@ -17,10 +17,13 @@ export function QAScoreStep({ workflow, onComplete, onRefresh }: QAScoreStepProp
   const [error, setError] = useState<string | null>(null)
   const [qaScore, setQAScore] = useState<QAScore | null>(null)
 
-  // Load existing QA score
+  // Load existing QA score, or auto-run if none exists
   useEffect(() => {
     if (workflow?.qa_score) {
       setQAScore(workflow.qa_score)
+    } else if (workflow?.prompt_pack?.prompts && !isScoring && !qaScore) {
+      // Auto-run QA if prompts exist but no score yet
+      handleRunQA()
     }
   }, [workflow])
 

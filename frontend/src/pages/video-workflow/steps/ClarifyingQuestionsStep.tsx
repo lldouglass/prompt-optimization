@@ -20,9 +20,9 @@ export function ClarifyingQuestionsStep({ workflow, onComplete, onRefresh }: Cla
   const [questions, setQuestions] = useState<ClarifyingQuestion[]>([])
   const [answers, setAnswers] = useState<Record<string, string>>({})
 
-  // Load existing questions from workflow
+  // Load existing questions from workflow, or auto-generate if none exist
   useEffect(() => {
-    if (workflow?.brief?.clarifying_questions) {
+    if (workflow?.brief?.clarifying_questions && workflow.brief.clarifying_questions.length > 0) {
       setQuestions(workflow.brief.clarifying_questions)
       // Pre-fill answers
       const existingAnswers: Record<string, string> = {}
@@ -32,6 +32,9 @@ export function ClarifyingQuestionsStep({ workflow, onComplete, onRefresh }: Cla
         }
       })
       setAnswers(existingAnswers)
+    } else if (workflow?.brief && !isGenerating && questions.length === 0) {
+      // Auto-generate questions if brief exists but no questions yet
+      handleGenerateQuestions()
     }
   }, [workflow])
 

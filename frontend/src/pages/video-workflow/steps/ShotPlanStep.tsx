@@ -23,10 +23,13 @@ export function ShotPlanStep({ workflow, onComplete, onRefresh }: ShotPlanStepPr
   const [shotPlan, setShotPlan] = useState<ShotPlan | null>(null)
   const [expandedShot, setExpandedShot] = useState<number | null>(null)
 
-  // Load existing shot plan
+  // Load existing shot plan, or auto-generate if none exists
   useEffect(() => {
     if (workflow?.shot_plan) {
       setShotPlan(workflow.shot_plan)
+    } else if (workflow?.continuity_pack && !isGenerating && !shotPlan) {
+      // Auto-generate shots if continuity pack exists but no shots yet
+      handleGenerate()
     }
   }, [workflow])
 

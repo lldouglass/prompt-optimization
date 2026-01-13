@@ -22,10 +22,13 @@ export function PromptPackStep({ workflow, onComplete, onRefresh }: PromptPackSt
   const [activePrompt, setActivePrompt] = useState<number>(0)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
 
-  // Load existing prompt pack
+  // Load existing prompt pack, or auto-generate if none exists
   useEffect(() => {
     if (workflow?.prompt_pack) {
       setPromptPack(workflow.prompt_pack)
+    } else if (workflow?.shot_plan?.shots && !isGenerating && !promptPack) {
+      // Auto-generate prompts if shots exist but no prompts yet
+      handleGenerate()
     }
   }, [workflow])
 

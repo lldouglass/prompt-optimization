@@ -2,7 +2,14 @@
 
 import asyncio
 import json
+import sys
 import uuid
+from pathlib import Path
+
+# Add project root to path for llm imports
+# generator.py -> video_workflow -> services -> app -> backend -> project_root
+project_root = Path(__file__).parent.parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
 
 from .mocks import (
     MOCK_MODE,

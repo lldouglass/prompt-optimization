@@ -45,31 +45,26 @@ MOCK_CLARIFYING_QUESTIONS = [
         "id": str(uuid.uuid4()),
         "question": "What shot style do you prefer for this video?",
         "category": "shot_style",
-        "answer": "handheld with subtle movement for organic feel",
     },
     {
         "id": str(uuid.uuid4()),
         "question": "What pacing works best for your brand?",
         "category": "pacing",
-        "answer": "smooth and cinematic, not too fast",
     },
     {
         "id": str(uuid.uuid4()),
         "question": "Should there be a primary camera movement throughout?",
         "category": "camera_movement",
-        "answer": "gentle push-ins to draw attention to details",
     },
     {
         "id": str(uuid.uuid4()),
         "question": "What are the key action beats you want to capture?",
         "category": "action_beats",
-        "answer": "1) kettle pouring, 2) coffee blooming, 3) steam rising, 4) final pour into cup",
     },
     {
         "id": str(uuid.uuid4()),
         "question": "What audio approach works for this video?",
         "category": "audio",
-        "answer": "ambient coffee shop sounds with subtle background music",
     },
 ]
 
