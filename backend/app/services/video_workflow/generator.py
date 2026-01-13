@@ -7,9 +7,13 @@ import uuid
 from pathlib import Path
 
 # Add project root to path for llm imports
-# generator.py -> video_workflow -> services -> app -> backend -> project_root
-project_root = Path(__file__).parent.parent.parent.parent.parent
+# In Docker: /app/app/services/video_workflow/generator.py -> /app (4 parents)
+# Locally: backend/app/services/video_workflow/generator.py -> project_root (5 parents)
+# We add both to handle both environments
+project_root = Path(__file__).parent.parent.parent.parent  # /app in Docker
+project_root_local = project_root.parent  # project root locally
 sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root_local))
 
 from .mocks import (
     MOCK_MODE,
