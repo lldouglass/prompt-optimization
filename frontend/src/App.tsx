@@ -8,6 +8,8 @@ import { SettingsPage } from "@/pages/Settings"
 import { AgentsPage } from "@/pages/Agents"
 import { MediaOptimizerPage } from "@/pages/MediaOptimizer"
 import { PromptLibraryPage } from "@/pages/PromptLibrary"
+import { VideoWorkflowListPage } from "@/pages/video-workflow/VideoWorkflowListPage"
+import { VideoWorkflowWizard } from "@/pages/video-workflow/VideoWorkflowWizard"
 import { VerifyEmailPage } from "@/pages/VerifyEmail"
 import { VerifyEmailPendingPage } from "@/pages/VerifyEmailPending"
 import { EducationPage } from "@/pages/Education"
@@ -104,6 +106,9 @@ function AppRoutes() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/library" element={<PromptLibraryPage />} />
+        <Route path="/video-workflow" element={<VideoWorkflowListPage />} />
+        <Route path="/video-workflow/new" element={<VideoWorkflowWizard />} />
+        <Route path="/video-workflow/:id" element={<VideoWorkflowWizard />} />
       </Route>
     </Routes>
   )

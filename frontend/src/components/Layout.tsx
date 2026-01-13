@@ -2,11 +2,12 @@ import { useState, useEffect } from "react"
 import { Link, Outlet, useLocation } from "react-router-dom"
 import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Settings, LogOut, LogIn, Bot, Library, GraduationCap, BookOpen, PanelLeft, PanelLeftClose, Menu, X, Camera } from "lucide-react"
+import { LayoutDashboard, Settings, LogOut, LogIn, Bot, Library, GraduationCap, BookOpen, PanelLeft, PanelLeftClose, Menu, X, Camera, Film } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { to: "/media", icon: Camera, label: "Media Prompts" },
+  { to: "/video-workflow", icon: Film, label: "Video Workflow" },
   { to: "/agents", icon: Bot, label: "Text Prompts" },
   { to: "/library", icon: Library, label: "Prompt Library" },
   { to: "/dashboard", icon: LayoutDashboard, label: "Requests" },

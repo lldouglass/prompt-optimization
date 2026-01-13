@@ -1620,6 +1620,237 @@ export const videoApi = {
   },
 }
 
+// ============================================================================
+// Video Workflow API (7-step wizard)
+// ============================================================================
+
+import type {
+  VideoWorkflow,
+  VideoWorkflowDetail,
+  BriefIntake,
+  UpdateContinuityRequest,
+  UpdateShotRequest,
+  UpdatePromptRequest,
+  ExportWorkflowResponse,
+} from "@/types/video-workflow"
+
+export type { VideoWorkflow, VideoWorkflowDetail }
+
+export const videoWorkflowApi = {
+  // Workflow CRUD
+  async create(name: string): Promise<VideoWorkflow> {
+    const res = await fetch(`${API_BASE}/video-workflows`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ name }),
+    })
+    if (!res.ok) throw new Error("Failed to create workflow")
+    return res.json()
+  },
+
+  async list(includeTemplates = false): Promise<VideoWorkflow[]> {
+    const params = new URLSearchParams()
+    if (includeTemplates) params.set("include_templates", "true")
+    const res = await fetch(`${API_BASE}/video-workflows?${params}`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list workflows")
+    return res.json()
+  },
+
+  async get(id: string): Promise<VideoWorkflowDetail> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to get workflow")
+    return res.json()
+  },
+
+  async delete(id: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to delete workflow")
+  },
+
+  // Step 1-2: Brief & Questions
+  async saveBrief(id: string, brief: BriefIntake): Promise<{ message: string; brief: BriefIntake }> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}/brief`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(brief),
+    })
+    if (!res.ok) throw new Error("Failed to save brief")
+    return res.json()
+  },
+
+  async generateQuestions(id: string): Promise<{ questions: ClarifyingQuestion[] }> {
+    const res = await fetchWithTimeout(`${API_BASE}/video-workflows/${id}/questions`, {
+      method: "POST",
+      credentials: "include",
+    }, TIMEOUTS.LONG)
+    if (!res.ok) throw new Error("Failed to generate questions")
+    return res.json()
+  },
+
+  async submitAnswers(id: string, answers: Record<string, string>): Promise<{ message: string; questions: ClarifyingQuestion[] }> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}/questions/answer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ answers }),
+    })
+    if (!res.ok) throw new Error("Failed to submit answers")
+    return res.json()
+  },
+
+  // Step 3: Continuity Pack
+  async generateContinuity(id: string): Promise<{ continuity_pack: ContinuityPack }> {
+    const res = await fetchWithTimeout(`${API_BASE}/video-workflows/${id}/continuity`, {
+      method: "POST",
+      credentials: "include",
+    }, TIMEOUTS.LONG)
+    if (!res.ok) throw new Error("Failed to generate continuity pack")
+    return res.json()
+  },
+
+  async updateContinuity(id: string, updates: UpdateContinuityRequest): Promise<{ continuity_pack: ContinuityPack }> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}/continuity`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(updates),
+    })
+    if (!res.ok) throw new Error("Failed to update continuity pack")
+    return res.json()
+  },
+
+  // Step 4: Shot Plan
+  async generateShots(id: string): Promise<{ shot_plan: ShotPlan }> {
+    const res = await fetchWithTimeout(`${API_BASE}/video-workflows/${id}/shots`, {
+      method: "POST",
+      credentials: "include",
+    }, TIMEOUTS.LONG)
+    if (!res.ok) throw new Error("Failed to generate shot plan")
+    return res.json()
+  },
+
+  async updateShot(id: string, shotIndex: number, updates: UpdateShotRequest): Promise<{ shot: Shot }> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}/shots/${shotIndex}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(updates),
+    })
+    if (!res.ok) throw new Error("Failed to update shot")
+    return res.json()
+  },
+
+  // Step 5: Prompt Pack
+  async generatePrompts(id: string, targetModel = "sora_2"): Promise<{ prompt_pack: PromptPack }> {
+    const res = await fetchWithTimeout(`${API_BASE}/video-workflows/${id}/prompts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ target_model: targetModel }),
+    }, TIMEOUTS.LONG)
+    if (!res.ok) throw new Error("Failed to generate prompts")
+    return res.json()
+  },
+
+  async updatePrompt(id: string, promptIndex: number, updates: UpdatePromptRequest): Promise<{ prompt: ShotPrompt }> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}/prompts/${promptIndex}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(updates),
+    })
+    if (!res.ok) throw new Error("Failed to update prompt")
+    return res.json()
+  },
+
+  // Step 6: QA Score
+  async runQA(id: string): Promise<{ qa_score: QAScore }> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}/qa`, {
+      method: "POST",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to run QA scoring")
+    return res.json()
+  },
+
+  // Step 7: Versions, Export, Templates
+  async saveVersion(id: string, step: "brief" | "continuity" | "shots" | "prompts"): Promise<{ version: VersionSnapshot; total_versions: number }> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}/versions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ step }),
+    })
+    if (!res.ok) throw new Error("Failed to save version")
+    return res.json()
+  },
+
+  async listVersions(id: string): Promise<{ versions: VersionSnapshot[] }> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}/versions`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list versions")
+    return res.json()
+  },
+
+  async restoreVersion(id: string, versionIndex: number): Promise<{ message: string }> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}/restore/${versionIndex}`, {
+      method: "POST",
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to restore version")
+    return res.json()
+  },
+
+  async export(id: string, format: "json" | "markdown" = "json"): Promise<ExportWorkflowResponse> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}/export?format=${format}`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to export workflow")
+    return res.json()
+  },
+
+  // Templates
+  async listTemplates(): Promise<VideoWorkflow[]> {
+    const res = await fetch(`${API_BASE}/video-workflows/templates`, {
+      credentials: "include",
+    })
+    if (!res.ok) throw new Error("Failed to list templates")
+    return res.json()
+  },
+
+  async createTemplate(id: string, templateName: string): Promise<VideoWorkflow> {
+    const res = await fetch(`${API_BASE}/video-workflows/${id}/template`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ template_name: templateName }),
+    })
+    if (!res.ok) throw new Error("Failed to create template")
+    return res.json()
+  },
+
+  async createFromTemplate(templateId: string, name: string): Promise<VideoWorkflow> {
+    const res = await fetch(`${API_BASE}/video-workflows/from-template/${templateId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ name }),
+    })
+    if (!res.ok) throw new Error("Failed to create from template")
+    return res.json()
+  },
+}
+
 // WebSocket helper for media agent-based optimization
 export function connectMediaAgentWebSocket(
   sessionId: string,

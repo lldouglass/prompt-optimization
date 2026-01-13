@@ -11,6 +11,7 @@ from .membership import OrganizationMember
 from .session import UserSession
 from .referral import Referral
 from .agent_session import AgentSession
+from .video_workflow import VideoWorkflow
 
 __all__ = [
     "Organization",
@@ -30,4 +31,5 @@ __all__ = [
     "UserSession",
     "Referral",
     "AgentSession",
+    "VideoWorkflow",
 ]
