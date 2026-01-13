@@ -41,13 +41,10 @@ class Sora2Compiler(BasePromptCompiler):
             brief: Brief intake data
 
         Returns:
-            Dict with shot_id, sora_params, prompt_text, negative_prompt_text, dialogue_block
+            Dict with shot_id, sora_params, prompt_text, dialogue_block
         """
-        # Build the main prompt text
+        # Build the main prompt text (includes exclusions woven in)
         prompt_text = self._build_prompt_text(shot, continuity, brief)
-
-        # Build negative prompt from continuity
-        negative_prompt = self._build_negative_prompt(continuity, shot)
 
         # Get Sora-specific parameters
         sora_params = self._get_sora_params(shot, brief)
@@ -59,7 +56,6 @@ class Sora2Compiler(BasePromptCompiler):
             "shot_id": shot.get("id", ""),
             "sora_params": sora_params,
             "prompt_text": prompt_text,
-            "negative_prompt_text": negative_prompt,
             "dialogue_block": dialogue_block,
         }
 
@@ -114,31 +110,45 @@ class Sora2Compiler(BasePromptCompiler):
             guidance = ". ".join(do_list[:3])
             parts.append(guidance)
 
+        # 9. Exclusions woven into prompt (avoid section)
+        exclusions = self._build_exclusions(continuity, brief)
+        if exclusions:
+            parts.append(exclusions)
+
         return "\n\n".join(parts)
 
-    def _build_negative_prompt(self, continuity: dict, shot: Optional[dict] = None) -> str:
-        """Build negative prompt from continuity don't list."""
-        negative_parts = []
+    def _build_exclusions(self, continuity: dict, brief: dict) -> str:
+        """Build exclusions section woven into the main prompt."""
+        exclusion_parts = []
 
-        # Global negatives from continuity
+        # Don't list from continuity
         dont_list = continuity.get("dont_list", [])
         if dont_list:
-            negative_parts.extend(dont_list)
+            exclusion_parts.extend(dont_list)
 
-        # Add common video generation artifacts to avoid
-        common_negatives = [
-            "distorted faces",
-            "extra limbs",
-            "blurry",
-            "low quality",
-            "artifacts",
-            "glitches",
+        # Avoid vibe from brief
+        avoid_vibe = brief.get("avoid_vibe", [])
+        if avoid_vibe:
+            avoid_vibe_items = [f"no {v} aesthetic" for v in avoid_vibe if v]
+            exclusion_parts.extend(avoid_vibe_items)
+
+        # Must avoid from brief
+        must_avoid = brief.get("must_avoid", [])
+        if must_avoid:
+            exclusion_parts.extend([f"avoid {item}" for item in must_avoid])
+
+        # Common video quality exclusions
+        quality_exclusions = [
+            "no distorted faces",
+            "no extra limbs",
+            "avoid blurry footage",
+            "no visual artifacts or glitches",
         ]
-        negative_parts.extend(common_negatives)
+        exclusion_parts.extend(quality_exclusions)
 
-        # Shot-specific negatives (from avoid_vibe in brief if available)
-
-        return ", ".join(negative_parts)
+        if exclusion_parts:
+            return "Important: " + ". ".join(exclusion_parts) + "."
+        return ""
 
     def _get_sora_params(self, shot: dict, brief: dict) -> dict:
         """Get Sora 2 API parameters for the shot."""

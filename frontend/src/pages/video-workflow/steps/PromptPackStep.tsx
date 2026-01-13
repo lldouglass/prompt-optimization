@@ -60,7 +60,6 @@ export function PromptPackStep({ workflow, onComplete, onRefresh }: PromptPackSt
       for (let i = 0; i < promptPack.prompts.length; i++) {
         await videoWorkflowApi.updatePrompt(workflow.id, i, {
           prompt_text: promptPack.prompts[i].prompt_text,
-          negative_prompt_text: promptPack.prompts[i].negative_prompt_text,
           dialogue_block: promptPack.prompts[i].dialogue_block,
         })
       }
@@ -199,17 +198,6 @@ export function PromptPackStep({ workflow, onComplete, onRefresh }: PromptPackSt
                   </p>
                 </div>
 
-                {/* Negative Prompt */}
-                <div className="space-y-2">
-                  <Label>Negative Prompt (Optional)</Label>
-                  <Textarea
-                    value={currentPrompt.negative_prompt_text || ""}
-                    onChange={e => updatePrompt(activePrompt, "negative_prompt_text", e.target.value)}
-                    rows={3}
-                    className="font-mono text-sm"
-                    placeholder="Things to avoid in the generated video..."
-                  />
-                </div>
 
                 {/* Dialogue Block */}
                 <div className="space-y-2">
