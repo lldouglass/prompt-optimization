@@ -20,6 +20,9 @@ export function ClarifyingQuestionsStep({ workflow, onComplete, onRefresh }: Cla
   const [questions, setQuestions] = useState<ClarifyingQuestion[]>([])
   const [answers, setAnswers] = useState<Record<string, string>>({})
 
+  // Track if we've attempted generation to prevent infinite loops
+  const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false)
+
   // Load existing questions from workflow, or auto-generate if none exist
   useEffect(() => {
     if (workflow?.brief?.clarifying_questions && workflow.brief.clarifying_questions.length > 0) {
@@ -32,11 +35,13 @@ export function ClarifyingQuestionsStep({ workflow, onComplete, onRefresh }: Cla
         }
       })
       setAnswers(existingAnswers)
-    } else if (workflow?.brief && !isGenerating && questions.length === 0) {
+      setHasAttemptedGeneration(true) // Already have questions
+    } else if (workflow?.brief && !hasAttemptedGeneration) {
       // Auto-generate questions if brief exists but no questions yet
+      setHasAttemptedGeneration(true)
       handleGenerateQuestions()
     }
-  }, [workflow])
+  }, [workflow, hasAttemptedGeneration])
 
   const handleGenerateQuestions = async () => {
     if (!workflow) return

@@ -36,3 +36,6 @@ Thumbs.db
 .claude/
 tmpclaude-*
 **/tmpclaude-*
+
+# Local Netlify folder
+.netlify
