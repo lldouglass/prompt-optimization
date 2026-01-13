@@ -2,18 +2,10 @@
 
 import asyncio
 import json
-import sys
+import os
 import uuid
-from pathlib import Path
 
-# Add project root to path for llm imports
-# In Docker: /app/app/services/video_workflow/generator.py -> /app (4 parents)
-# Locally: backend/app/services/video_workflow/generator.py -> project_root (5 parents)
-# We add both to handle both environments
-project_root = Path(__file__).parent.parent.parent.parent  # /app in Docker
-project_root_local = project_root.parent  # project root locally
-sys.path.insert(0, str(project_root))
-sys.path.insert(0, str(project_root_local))
+import openai
 
 from .mocks import (
     MOCK_MODE,
@@ -25,12 +17,22 @@ from .mocks import (
 from .compiler import compile_all_shots
 
 
-# Try to import LLM client, fall back to mock if not available
-try:
-    from llm.client import chat
-    LLM_AVAILABLE = True
-except ImportError:
-    LLM_AVAILABLE = False
+def _get_openai_client() -> openai.OpenAI:
+    """Get OpenAI client with API key from environment."""
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not configured")
+    return openai.OpenAI(api_key=api_key)
+
+
+def _chat(messages: list[dict], model: str = "gpt-4o-mini") -> str:
+    """Simple chat function using OpenAI directly."""
+    client = _get_openai_client()
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+    )
+    return response.choices[0].message.content or ""
 
 
 def _parse_json_response(content: str, default: str = "{}") -> dict | list:
@@ -85,17 +87,16 @@ Script/VO: {brief.get('script_or_vo', 'None')}
 Generate clarifying questions for missing details needed for video production."""
 
     try:
-        response = await asyncio.to_thread(
-            chat,
-            model="gpt-4o-mini",
-            messages=[
+        content = await asyncio.to_thread(
+            _chat,
+            [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
         )
 
         # Parse JSON response
-        questions = _parse_json_response(response.get("content", "[]"), "[]")
+        questions = _parse_json_response(content, "[]")
 
         # Ensure each question has an id
         for q in questions:
@@ -155,16 +156,15 @@ Clarifying Q&A:
 Create a detailed continuity pack for this video project."""
 
     try:
-        response = await asyncio.to_thread(
-            chat,
-            model="gpt-4o-mini",
-            messages=[
+        content = await asyncio.to_thread(
+            _chat,
+            [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
         )
 
-        return _parse_json_response(response.get("content", "{}"))
+        return _parse_json_response(content, "{}")
 
     except Exception as e:
         raise RuntimeError(f"Failed to generate continuity pack: {str(e)}")
@@ -226,16 +226,15 @@ Do List: {json.dumps(continuity.get('do_list', []))}
 Create a {num_shots}-shot plan covering {duration} seconds."""
 
     try:
-        response = await asyncio.to_thread(
-            chat,
-            model="gpt-4o-mini",
-            messages=[
+        content = await asyncio.to_thread(
+            _chat,
+            [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
         )
 
-        result = _parse_json_response(response.get("content", '{"shots": []}'), '{"shots": []}')
+        result = _parse_json_response(content, '{"shots": []}')
 
         # Ensure each shot has a UUID
         for shot in result.get("shots", []):
@@ -257,7 +256,7 @@ async def generate_prompt_pack(
     """
     Generate a prompt pack for all shots.
 
-    This uses the compiler to generate prompts, with LLM enhancement if available.
+    This uses the compiler to generate prompts, with LLM enhancement.
 
     Args:
         shots: Shot plan shots array
@@ -274,13 +273,12 @@ async def generate_prompt_pack(
     # Use the compiler to generate base prompts
     prompt_pack = compile_all_shots(shots, continuity, brief, target_model)
 
-    # If LLM is available, enhance the prompts
-    if LLM_AVAILABLE and not MOCK_MODE:
-        try:
-            prompt_pack = await _enhance_prompts_with_llm(prompt_pack, continuity, brief)
-        except Exception as e:
-            print(f"Error enhancing prompts: {e}")
-            # Fall back to compiler-generated prompts
+    # Enhance the prompts with LLM
+    try:
+        prompt_pack = await _enhance_prompts_with_llm(prompt_pack, continuity, brief)
+    except Exception as e:
+        print(f"Error enhancing prompts: {e}")
+        # Fall back to compiler-generated prompts
 
     return prompt_pack
 
@@ -318,16 +316,15 @@ Current Prompts:
 Enhance each prompt for better video generation results."""
 
     try:
-        response = await asyncio.to_thread(
-            chat,
-            model="gpt-4o-mini",
-            messages=[
+        content = await asyncio.to_thread(
+            _chat,
+            [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
         )
 
-        enhanced = _parse_json_response(response.get("content", ""), "{}")
+        enhanced = _parse_json_response(content, "{}")
         # Validate that we got a proper prompt pack structure
         if enhanced and "prompts" in enhanced:
             return enhanced
