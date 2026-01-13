@@ -25,8 +25,13 @@ export function ContinuityPackStep({ workflow, onComplete, onRefresh }: Continui
     if (workflow?.continuity_pack) {
       setContinuity(workflow.continuity_pack)
     } else if (workflow?.brief && !isGenerating && !continuity) {
-      // Auto-generate continuity if brief exists but no continuity yet
-      handleGenerate()
+      // Only auto-generate if there are answered questions (meaning user went through Q&A)
+      const hasAnsweredQuestions = workflow.brief.clarifying_questions?.some(
+        (q: { answer?: string }) => q.answer && q.answer.trim().length > 0
+      )
+      if (hasAnsweredQuestions) {
+        handleGenerate()
+      }
     }
   }, [workflow])
 

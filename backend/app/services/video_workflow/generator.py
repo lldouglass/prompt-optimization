@@ -2,10 +2,13 @@
 
 import asyncio
 import json
+import logging
 import os
 import uuid
 
 import openai
+
+logger = logging.getLogger(__name__)
 
 from .mocks import (
     MOCK_MODE,
@@ -54,7 +57,11 @@ async def generate_clarifying_questions(brief: dict) -> list[dict]:
     Returns:
         List of question dicts with id, question, category
     """
+    logger.info(f"generate_clarifying_questions called with MOCK_MODE={MOCK_MODE}")
+    logger.info(f"Brief for questions: {json.dumps(brief, indent=2)[:500]}")
+
     if MOCK_MODE:
+        logger.info("Returning mock questions due to MOCK_MODE=True")
         return get_mock_clarifying_questions()
 
     # Build prompt for LLM
@@ -120,7 +127,12 @@ async def generate_continuity_pack(brief: dict, answers: dict) -> dict:
     Returns:
         Continuity pack dict
     """
+    logger.info(f"generate_continuity_pack called with MOCK_MODE={MOCK_MODE}")
+    logger.info(f"Brief: {json.dumps(brief, indent=2)[:500]}")
+    logger.info(f"Answers: {json.dumps(answers, indent=2)}")
+
     if MOCK_MODE:
+        logger.info("Returning mock continuity pack due to MOCK_MODE=True")
         return get_mock_continuity_pack()
 
     system_prompt = """You are a professional video production designer. Create a comprehensive continuity pack for consistent video production.
@@ -156,6 +168,7 @@ Clarifying Q&A:
 Create a detailed continuity pack for this video project."""
 
     try:
+        logger.info("Calling OpenAI for continuity pack generation...")
         content = await asyncio.to_thread(
             _chat,
             [
@@ -163,10 +176,14 @@ Create a detailed continuity pack for this video project."""
                 {"role": "user", "content": user_prompt},
             ],
         )
+        logger.info(f"OpenAI response (first 500 chars): {content[:500]}")
 
-        return _parse_json_response(content, "{}")
+        result = _parse_json_response(content, "{}")
+        logger.info(f"Parsed continuity pack keys: {list(result.keys()) if isinstance(result, dict) else 'not a dict'}")
+        return result
 
     except Exception as e:
+        logger.error(f"Failed to generate continuity pack: {str(e)}")
         raise RuntimeError(f"Failed to generate continuity pack: {str(e)}")
 
 

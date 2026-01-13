@@ -70,6 +70,8 @@ export function ClarifyingQuestionsStep({ workflow, onComplete, onRefresh }: Cla
 
     try {
       await videoWorkflowApi.submitAnswers(workflow.id, answers)
+      // Refresh workflow data so next step gets updated answers
+      onRefresh()
       onComplete()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit answers")
