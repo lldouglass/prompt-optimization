@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-ssr
+*.log
+logs
+.vscode
+.idea
+.DS_Store
+*.local
+tmpclaude-*
