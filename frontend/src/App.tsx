@@ -164,106 +164,172 @@ function DentalPage() {
 }
 
 function BrandsPage() {
-  const emailHref = `mailto:${EMAIL}?subject=${encodeURIComponent('1 reel idea for my product')}`
   const samples = [
     {
+      id: 'jack-tall-owl',
+      title: 'Tall Owl whipped tallow',
+      subtitle: 'Premium animated skincare ad for a natural product brand',
+      badge: 'Newest sample',
+      poster: '/jack-tall-owl-poster.jpg',
+      src: '/jack-tall-owl.mp4',
+      tag: 'Skincare',
+      featured: true,
+      note:
+        'A warmer character-led product ad. This gives brands a more memorable option than generic UGC or static product slides.',
+    },
+    {
       id: 'product-brand-sample',
-      title: 'Product-brand sample',
+      title: 'Pulse product sample',
       subtitle: 'A premium-style example for physical products',
-      badge: 'Website review cut',
+      badge: 'Spec sample',
       poster: '/product-brand-sample-poster.jpg',
       src: '/product-brand-sample.mp4',
+      tag: 'Wellness',
+      featured: false,
       note:
-        'This is the main product-brand lane: premium visuals, clear product focus, and no founder-on-camera dependency.',
+        'This is the core premium product-brand lane: polished visuals, clear product focus, and no founder-on-camera dependency.',
     },
     {
       id: 'oral-care-sample',
       title: 'Oral-care sample',
       subtitle: 'Relevant proof for tooth and oral-care products',
-      badge: 'Tooth sample',
+      badge: 'Oral care',
       poster: '/dental-sample-poster.jpg',
       src: '/dental-sample.mp4',
+      tag: 'Oral care',
+      featured: false,
       note:
-        'Included here as a second sample for oral-care brands that want to see a more tooth-specific example without leaving the product-brand page.',
+        'A more tooth-specific example for oral-care brands that want to see category-relevant proof right away.',
     },
   ]
+  const featuredSample = samples.find((sample) => sample.featured) ?? samples[0]
+  const librarySamples = samples.filter((sample) => sample.id !== featuredSample.id)
 
   return (
-    <main className="grid flex-1 gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-      <section>
-        <div className="inline-flex items-center rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300">
-          Product brands
-        </div>
+    <main className="flex flex-1 flex-col gap-10">
+      <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+        <div>
+          <div className="inline-flex items-center rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300">
+            Product brands
+          </div>
 
-        <h1 className="mt-5 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
-          Premium short form product videos
-        </h1>
+          <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            Short form product ads that feel clean, premium, and built for real brands
+          </h1>
 
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
-          This is the kind of product-focused reel I can make for brands that want cleaner,
-          more premium social content without getting the founder on camera every week.
-        </p>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
+            This page is now a live sample library. As we make stronger work, we can keep adding
+            it here so brands can quickly see the range instead of judging us off one video.
+          </p>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          {[
-            {
-              title: 'Premium visual style',
-              body: 'Designed to feel more like a product ad than a throwaway social post.',
-            },
-            {
-              title: 'No founder filming needed',
-              body: 'Useful for brands that want consistent content without recording new footage every week.',
-            },
-            {
-              title: 'Simple beta first',
-              body: 'Start with a few tailored samples before committing to a bigger monthly cadence.',
-            },
-          ].map((item) => (
-            <div
-              key={item.title}
-              className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]"
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            {[
+              {
+                title: 'Premium visual style',
+                body: 'Built to feel more like a product ad than a filler social post.',
+              },
+              {
+                title: 'Multiple creative lanes',
+                body: 'Premium product shots, animated brand characters, and category-specific explainers.',
+              },
+              {
+                title: 'Simple beta first',
+                body: 'Start with a few tailored samples before committing to a bigger monthly cadence.',
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]"
+              >
+                <div className="text-sm font-semibold text-white">{item.title}</div>
+                <p className="mt-2 text-sm leading-6 text-slate-400">{item.body}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <a
+              href="#featured-sample"
+              className="inline-flex items-center justify-center rounded-full bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
             >
-              <div className="text-sm font-semibold text-white">{item.title}</div>
-              <p className="mt-2 text-sm leading-6 text-slate-400">{item.body}</p>
+              Watch the featured sample
+            </a>
+            <a
+              href="#sample-library"
+              className="inline-flex items-center justify-center rounded-full border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-slate-500 hover:bg-slate-900"
+            >
+              Browse the library
+            </a>
+          </div>
+
+          <ContactCard note="If this looks useful, reply and Logan can send 1 reel idea tailored to your product." />
+        </div>
+
+        <section
+          id="featured-sample"
+          className="rounded-[28px] border border-slate-800 bg-slate-900/80 p-4 shadow-2xl shadow-black/25 sm:p-5"
+        >
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold text-white">Featured sample</div>
+              <div className="text-sm text-slate-400">Newest proof on the page</div>
             </div>
-          ))}
-        </div>
+            <div className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200">
+              {featuredSample.badge}
+            </div>
+          </div>
 
-        <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-          <a
-            href="#sample-gallery"
-            className="inline-flex items-center justify-center rounded-full bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
-          >
-            Watch the samples
-          </a>
-          <a
-            href={emailHref}
-            className="inline-flex items-center justify-center rounded-full border border-slate-700 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-slate-500 hover:bg-slate-900"
-          >
-            Email Logan
-          </a>
-        </div>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-slate-800 bg-slate-950 px-3 py-1 text-xs text-slate-300">
+              {featuredSample.tag}
+            </span>
+            <span className="rounded-full border border-slate-800 bg-slate-950 px-3 py-1 text-xs text-slate-400">
+              Full quality on-page
+            </span>
+          </div>
 
-        <ContactCard note="If this looks useful, reply and Logan can send 1 reel idea tailored to your product. Oral-care brands can review the second tooth-specific sample below too." />
+          <div className="mb-3">
+            <div className="text-lg font-semibold text-white">{featuredSample.title}</div>
+            <div className="text-sm text-slate-400">{featuredSample.subtitle}</div>
+          </div>
+
+          <div className="overflow-hidden rounded-[24px] border border-slate-800 bg-black">
+            <video
+              className="aspect-[9/16] w-full bg-black object-cover"
+              controls
+              preload="metadata"
+              poster={featuredSample.poster}
+            >
+              <source src={featuredSample.src} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm leading-6 text-slate-400">
+            {featuredSample.note}
+          </div>
+        </section>
       </section>
 
       <section
-        id="sample-gallery"
-        className="rounded-[28px] border border-slate-800 bg-slate-900/80 p-4 shadow-2xl shadow-black/25 sm:p-5"
+        id="sample-library"
+        className="rounded-[28px] border border-slate-800 bg-slate-900/80 p-4 shadow-2xl shadow-black/25 sm:p-6"
       >
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="text-sm font-semibold text-white">Sample gallery</div>
-            <div className="text-sm text-slate-400">Product-brand proof first, with an extra oral-care sample for tooth-related brands</div>
+            <div className="text-sm font-semibold text-white">Sample library</div>
+            <div className="text-sm text-slate-400">
+              Add new samples by dropping in a file and adding one object to the list.
+            </div>
           </div>
           <div className="rounded-full border border-slate-800 bg-slate-950 px-3 py-1 text-xs text-slate-400">
-            Full quality on-page
+            Scalable layout for future samples
           </div>
         </div>
 
-        <div className="grid gap-5">
-          {samples.map((sample) => (
-            <div
+        <div className="grid gap-5 lg:grid-cols-2">
+          {librarySamples.map((sample) => (
+            <article
               key={sample.id}
               className="rounded-[24px] border border-slate-800 bg-slate-950/70 p-3 sm:p-4"
             >
@@ -275,6 +341,12 @@ function BrandsPage() {
                 <div className="rounded-full border border-slate-800 bg-black px-3 py-1 text-xs text-slate-400">
                   {sample.badge}
                 </div>
+              </div>
+
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300">
+                  {sample.tag}
+                </span>
               </div>
 
               <div className="overflow-hidden rounded-[20px] border border-slate-800 bg-black">
@@ -290,13 +362,8 @@ function BrandsPage() {
               </div>
 
               <div className="mt-3 text-sm leading-6 text-slate-400">{sample.note}</div>
-            </div>
+            </article>
           ))}
-        </div>
-
-        <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm leading-6 text-slate-400">
-          This page stays intentionally simple. The goal is to show strong examples clearly,
-          in full quality, without burying them under agency fluff.
         </div>
       </section>
     </main>
