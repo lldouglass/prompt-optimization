@@ -404,7 +404,7 @@ function LandingPage() {
                 Make the product
                 <span className="bg-gradient-to-r from-white via-violet-200 to-blue-300 bg-clip-text text-transparent">
                   {' '}feel expensive
-                </span>
+                </span>{' '}
                 before the caption.
               </h1>
 
