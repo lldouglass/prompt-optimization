@@ -22,13 +22,13 @@ const productSamples: Sample[] = [
   {
     id: 'jack-tall-owl',
     title: 'Tall Owl whipped tallow',
-    subtitle: 'Character-led premium skincare concept',
+    subtitle: 'Vanilla orange apothecary product story',
     badge: 'Featured',
     poster: '/jack-tall-owl-poster.jpg',
     src: '/jack-tall-owl.mp4',
     tag: 'Skincare',
     note:
-      'Character-led product creative for brands that want a warmer lane than generic UGC or static product slides.',
+      'A warmer handcrafted skincare lane that moves from world-building into the product and jar reveal instead of feeling like a generic product spin.',
   },
   {
     id: 'product-brand-sample',
@@ -150,13 +150,13 @@ const dentalSample: Sample = {
 const homepageTallOwlSamples: Sample[] = [
   {
     id: 'tall-owl-hero-v2',
-    title: 'Tall Owl hero',
-    subtitle: 'Updated character-led skincare concept',
+    title: 'Tall Owl whipped tallow',
+    subtitle: 'Vanilla orange apothecary hero',
     badge: 'Tall Owl',
-    poster: '/tall-owl-hero-v2-poster.png',
-    src: '/tall-owl-hero-v2.mp4',
-    tag: 'Character',
-    note: 'Character-led hero beat for the skincare lane.',
+    poster: '/jack-tall-owl-poster.jpg',
+    src: '/jack-tall-owl.mp4',
+    tag: 'Skincare',
+    note: 'Apothecary-style hero beat that lands on the jar and product texture.',
   },
   {
     id: 'tall-owl-hook',
