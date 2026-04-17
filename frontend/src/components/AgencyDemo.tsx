@@ -490,7 +490,7 @@ export function AgencyDemo() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base font-medium flex items-center gap-2">
                       <HelpCircle className="h-4 w-4 text-primary" />
-                      Clayrnt asks clarifying questions
+                      Clarynt asks clarifying questions
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -528,7 +528,7 @@ export function AgencyDemo() {
                     <CardTitle className="text-base font-medium flex items-center gap-2">
                       Optimized prompt
                       <span className="text-xs text-muted-foreground font-normal">
-                        (from Clayrnt)
+                        (from Clarynt)
                       </span>
                     </CardTitle>
                   </CardHeader>
@@ -631,7 +631,7 @@ export function AgencyDemo() {
               >
                 <div className="text-sm text-red-500 font-medium mb-3 text-center flex items-center justify-center gap-2">
                   <AlertTriangle className="h-4 w-4" />
-                  Inconsistent results without Clayrnt
+                  Inconsistent results without Clarynt
                 </div>
                 <ImageGrid
                   images={beforeImages}
@@ -651,7 +651,7 @@ export function AgencyDemo() {
                 transition={{ duration: 0.5 }}
               >
                 <div className="text-sm text-muted-foreground mb-3 text-center">
-                  Inconsistent results without Clayrnt
+                  Inconsistent results without Clarynt
                 </div>
                 <ImageGrid images={beforeImages} type="before" isVisible={false} />
               </motion.div>
@@ -667,7 +667,7 @@ export function AgencyDemo() {
               >
                 <div className="text-sm text-green-600 font-medium mb-3 text-center flex items-center justify-center gap-2">
                   <Check className="h-4 w-4" />
-                  Consistent results with Clayrnt
+                  Consistent results with Clarynt
                 </div>
                 <ImageGrid images={afterImages} type="after" isVisible={true} />
               </motion.div>

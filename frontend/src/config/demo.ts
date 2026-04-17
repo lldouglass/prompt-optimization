@@ -20,7 +20,7 @@ export const originalPrompt =
 
 export const optimizedPrompt = `Product photography of a 250ml tall cylindrical frosted glass bottle containing cream-colored vanilla oat body lotion visible through the semi-translucent glass. Rose-gold metal pump dispenser with matching collar. Clean blank cream-colored label with no text, no logos, no readable elements. Product positioned at 3/4 front view with 15-degree rotation to the right, centered horizontally and vertically, filling 75-80% of the frame height. Full product visible with subtle breathing room on all edges. Seamless pure white (#FFFFFF) studio backdrop with no gradients, no shadows on background. Product resting on white reflective acrylic surface showing soft mirror reflection underneath. Large softbox key light from upper-left at 45 degrees creating soft diffused illumination. Gentle fill light from right side opening shadows. Subtle rim light from behind for edge separation and glass definition. Soft specular highlights on glass surface, diffused metallic sheen on pump. Photorealistic commercial product photography style. Premium minimal spa-like clean luxury aesthetic. High resolution, sharp focus on product body with pump slightly soft. Single product only, no hands, no props, no secondary items, no background elements.`
 
-// These are the actual questions the Clayrnt agent asks (minimum 3, typically 5)
+// These are the actual questions the Clarynt agent asks (minimum 3, typically 5)
 export const clarifyingQuestions: string[] = [
   "What type of container is the vanilla oat body lotion in?",
   "What material and finish should the container have?",

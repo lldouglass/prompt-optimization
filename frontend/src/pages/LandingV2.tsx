@@ -107,7 +107,7 @@ const faqItems = [
   {
     question: "How is this different from just using ChatGPT?",
     answer:
-      "Clayrnt is built for repeatable output quality across a team. It asks targeted questions, applies a consistent scoring rubric, and produces a structured production prompt with constraints and negatives to reduce model guessing. The result is fewer failed generations and a higher first-pass usable rate.",
+      "Clarynt is built for repeatable output quality across a team. It asks targeted questions, applies a consistent scoring rubric, and produces a structured production prompt with constraints and negatives to reduce model guessing. The result is fewer failed generations and a higher first-pass usable rate.",
   },
   {
     question: "How long does it take to start?",
@@ -138,7 +138,7 @@ const agencyFeatures = [
     icon: FileQuestion,
     title: "Clarifying Questions",
     description:
-      "Clayrnt asks targeted questions to capture details you'd forget to specify. Container type? Lighting? What must not appear? Every answer tightens the output.",
+      "Clarynt asks targeted questions to capture details you'd forget to specify. Container type? Lighting? What must not appear? Every answer tightens the output.",
   },
   {
     icon: Scale,
@@ -182,8 +182,8 @@ export function LandingPageV2() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <img src="/clarynt_icon.jpg" alt="Clayrnt" className="h-8 w-8" />
-              <span className="text-xl font-bold">Clayrnt</span>
+              <img src="/clarynt_icon.jpg" alt="Clarynt" className="h-8 w-8" />
+              <span className="text-xl font-bold">Clarynt</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
               <a
@@ -237,7 +237,7 @@ export function LandingPageV2() {
 
           {/* Value prop */}
           <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Paste what you want. Clayrnt asks a few quick questions, then gives you a prompt that
+            Paste what you want. Clarynt asks a few quick questions, then gives you a prompt that
             makes the model stop guessing.
           </p>
 
@@ -284,7 +284,7 @@ export function LandingPageV2() {
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Watch the model stop guessing</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Same model. Same settings. Clayrnt just makes the instructions specific.
+              Same model. Same settings. Clarynt just makes the instructions specific.
             </p>
           </div>
 
@@ -330,7 +330,7 @@ export function LandingPageV2() {
               </div>
               <h3 className="text-xl font-semibold mb-3">Answer a few questions</h3>
               <p className="text-muted-foreground">
-                Clayrnt asks targeted questions to capture the details that matter.
+                Clarynt asks targeted questions to capture the details that matter.
               </p>
             </div>
 
@@ -545,8 +545,8 @@ export function LandingPageV2() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <img src="/clarynt_icon.jpg" alt="Clayrnt" className="h-6 w-6" />
-                <span className="text-lg font-bold">Clayrnt</span>
+                <img src="/clarynt_icon.jpg" alt="Clarynt" className="h-6 w-6" />
+                <span className="text-lg font-bold">Clarynt</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Production-ready prompts for marketing agencies and creative studios.
@@ -624,7 +624,7 @@ export function LandingPageV2() {
             </div>
           </div>
           <div className="border-t mt-12 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} Clayrnt. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Clarynt. All rights reserved.</p>
           </div>
         </div>
       </footer>
