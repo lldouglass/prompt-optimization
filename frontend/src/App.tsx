@@ -31,6 +31,17 @@ const productSamples: Sample[] = [
       'A warmer handcrafted skincare lane that moves from world-building into the product and jar reveal instead of feeling like a generic product spin.',
   },
   {
+    id: 'tall-owl-plain-ad',
+    title: 'Tall Owl plain ad',
+    subtitle: 'Clean vanilla orange skincare pitch',
+    badge: 'Product ad',
+    poster: '/tall-owl-plain-ad-poster.jpg',
+    src: '/tall-owl-plain-ad.mp4',
+    tag: 'Skincare',
+    note:
+      'A cleaner direct-response Tall Owl lane built around the jar, whipped texture, short ingredient list, and calm-skin positioning.',
+  },
+  {
     id: 'product-brand-sample',
     title: 'Pulse product reel',
     subtitle: 'Clean premium reel for physical products',
@@ -160,13 +171,13 @@ const homepageTallOwlSamples: Sample[] = [
   },
   {
     id: 'tall-owl-hook',
-    title: 'Tall Owl hook',
-    subtitle: 'Opening beat for the skincare lane',
-    badge: 'Hook',
-    poster: '/tall-owl-hook-poster.png',
-    src: '/tall-owl-hook.mp4',
+    title: 'Tall Owl plain ad',
+    subtitle: 'Clean vanilla orange skincare pitch',
+    badge: 'Product ad',
+    poster: '/tall-owl-plain-ad-poster.jpg',
+    src: '/tall-owl-plain-ad.mp4',
     tag: 'Skincare',
-    note: 'Opening hook for a warm product-story direction.',
+    note: 'Shorter product-first Tall Owl lane with a cleaner direct-response feel.',
   },
   {
     id: 'tall-owl-explainer',
@@ -390,7 +401,7 @@ function LandingPage() {
   const showcaseSamples = [
     getSample('product-brand-sample'),
     getSample('arc-two-shot-micro-ad'),
-    getSample('atlas-daily-one-shot'),
+    getSample('tall-owl-plain-ad'),
     getSample('gurunanda-monk'),
     getSample('luma-action-v2'),
     getSample('gurunanda-monk-spec'),
