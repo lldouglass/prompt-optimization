@@ -158,39 +158,6 @@ const dentalSample: Sample = {
     'A focused proof point for educational dental content when a practice wants a patient-facing sample before a broader campaign.',
 }
 
-const homepageTallOwlSamples: Sample[] = [
-  {
-    id: 'tall-owl-hero-v2',
-    title: 'Tall Owl whipped tallow',
-    subtitle: 'Vanilla orange apothecary hero',
-    badge: 'Tall Owl',
-    poster: '/jack-tall-owl-poster.jpg',
-    src: '/jack-tall-owl.mp4',
-    tag: 'Skincare',
-    note: 'Apothecary-style hero beat that lands on the jar and product texture.',
-  },
-  {
-    id: 'tall-owl-hook',
-    title: 'Tall Owl plain ad',
-    subtitle: 'Clean vanilla orange skincare pitch',
-    badge: 'Product ad',
-    poster: '/tall-owl-plain-ad-poster.jpg',
-    src: '/tall-owl-plain-ad.mp4',
-    tag: 'Skincare',
-    note: 'Shorter product-first Tall Owl lane with a cleaner direct-response feel.',
-  },
-  {
-    id: 'tall-owl-explainer',
-    title: 'Tall Owl explainer',
-    subtitle: 'Short product-story beat',
-    badge: 'Explainer',
-    poster: '/tall-owl-explainer-poster.png',
-    src: '/tall-owl-explainer.mp4',
-    tag: 'Concept',
-    note: 'Short explainer beat for a product-led concept.',
-  },
-]
-
 const sampleMap = Object.fromEntries(productSamples.map((sample) => [sample.id, sample])) as Record<string, Sample>
 
 function getSample(id: string) {
@@ -391,20 +358,20 @@ function LightSectionIntro({ eyebrow, title, body }: { eyebrow: string; title: s
 
 function LandingPage() {
   const heroMosaic = [
-    homepageTallOwlSamples[0],
+    getSample('jack-tall-owl'),
     getSample('atlas-daily-action-v2'),
-    homepageTallOwlSamples[1],
+    getSample('tall-owl-plain-ad'),
     getSample('luma-one-shot'),
-    homepageTallOwlSamples[2],
+    getSample('gurunanda-monk'),
   ]
 
   const showcaseSamples = [
     getSample('product-brand-sample'),
     getSample('arc-two-shot-micro-ad'),
-    getSample('tall-owl-plain-ad'),
-    getSample('gurunanda-monk'),
-    getSample('luma-action-v2'),
+    getSample('atlas-daily-one-shot'),
     getSample('gurunanda-monk-spec'),
+    getSample('luma-action-v2'),
+    getSample('arc-one-shot'),
   ]
 
   return (
