@@ -147,6 +147,39 @@ const dentalSample: Sample = {
     'Useful for the dental lane, but the main Clayrnt landing page is focused on premium product-brand creative.',
 }
 
+const homepageTallOwlSamples: Sample[] = [
+  {
+    id: 'tall-owl-hero-v2',
+    title: 'Tall Owl hero',
+    subtitle: 'Updated character-led skincare concept',
+    badge: 'Tall Owl',
+    poster: '/tall-owl-hero-v2-poster.png',
+    src: '/tall-owl-hero-v2.mp4',
+    tag: 'Character',
+    note: 'Updated Tall Owl homepage asset.',
+  },
+  {
+    id: 'tall-owl-hook',
+    title: 'Tall Owl hook',
+    subtitle: 'Opening beat for the skincare lane',
+    badge: 'Hook',
+    poster: '/tall-owl-hook-poster.png',
+    src: '/tall-owl-hook.mp4',
+    tag: 'Skincare',
+    note: 'Updated Tall Owl homepage asset.',
+  },
+  {
+    id: 'tall-owl-explainer',
+    title: 'Tall Owl explainer',
+    subtitle: 'Short product-story beat',
+    badge: 'Explainer',
+    poster: '/tall-owl-explainer-poster.png',
+    src: '/tall-owl-explainer.mp4',
+    tag: 'Concept',
+    note: 'Updated Tall Owl homepage asset.',
+  },
+]
+
 const sampleMap = Object.fromEntries(productSamples.map((sample) => [sample.id, sample])) as Record<string, Sample>
 
 function getSample(id: string) {
@@ -341,11 +374,11 @@ function LightSectionIntro({ eyebrow, title, body }: { eyebrow: string; title: s
 
 function LandingPage() {
   const heroMosaic = [
-    getSample('jack-tall-owl'),
+    homepageTallOwlSamples[0],
     getSample('atlas-daily-action-v2'),
-    getSample('gurunanda-monk-spec'),
+    homepageTallOwlSamples[1],
     getSample('luma-one-shot'),
-    getSample('arc-action-v2'),
+    homepageTallOwlSamples[2],
   ]
 
   const showcaseSamples = [
@@ -364,19 +397,19 @@ function LandingPage() {
           <div className="grid gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
             <div className="relative z-10 max-w-2xl">
               <div className="inline-flex items-center rounded-full border border-white/12 bg-white/5 px-4 py-2 text-xs font-medium uppercase tracking-[0.26em] text-slate-200">
-                Premium short-form ad creative for brands
+                Premium short-form creative
               </div>
 
               <h1 className="mt-7 text-5xl font-semibold tracking-tight text-white sm:text-6xl lg:text-7xl">
-                Premium short-form ads
+                Make the product
                 <span className="bg-gradient-to-r from-white via-violet-200 to-blue-300 bg-clip-text text-transparent">
-                  {' '}built to make products feel expensive
+                  {' '}feel expensive
                 </span>
-                .
+                before the caption.
               </h1>
 
               <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300 sm:text-xl">
-                Clayrnt creates polished product reels, character-led concepts, and campaign-style short-form creative for brands that need better visual proof than generic UGC or stock-looking social filler.
+                Clayrnt makes polished short-form ads, product reels, and character-led concepts for brands that need stronger visual proof.
               </p>
 
               <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -386,9 +419,9 @@ function LandingPage() {
 
               <div className="mt-10 grid max-w-2xl gap-4 sm:grid-cols-3">
                 {[
-                  ['Product reels', 'Premium visual lanes for physical products and DTC-style brands.'],
-                  ['Creative concepts', 'Character-led and campaign-style directions that feel more branded.'],
-                  ['Proof first', 'Real sample videos on the page instead of vague claims and filler metrics.'],
+                  ['Product reels', 'Clean premium visuals for physical products.'],
+                  ['Creative concepts', 'Character-led lanes with stronger identity.'],
+                  ['Proof first', 'Real samples, no filler claims.'],
                 ].map(([title, body]) => (
                   <div key={title} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
                     <div className="text-sm font-semibold text-white">{title}</div>
@@ -420,8 +453,8 @@ function LandingPage() {
         <div className="mx-auto max-w-7xl px-6 pb-20 pt-8 sm:px-8 sm:pb-24 lg:px-10 lg:pt-10">
           <LightSectionIntro
             eyebrow="Selected work"
-            title="A premium video showcase built from real Clayrnt creative."
-            body="The fastest honest way to judge the service is to look at the actual output. Product reels, micro-ads, and character-led concepts carry the pitch without fake logos or inflated claims."
+            title="Real videos. Clearer judgment."
+            body="Product reels, micro-ads, and character-led concepts carry the pitch without fake logos or inflated claims."
           />
 
           <div className="mt-12 grid auto-rows-[220px] gap-5 md:auto-rows-[250px] lg:grid-cols-12 lg:auto-rows-[170px]">
@@ -435,10 +468,10 @@ function LandingPage() {
 
           <div className="mt-10 grid gap-3 rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-4 xl:p-5">
             {[
-              'Product brands, premium reels, and spec concepts',
-              'Direct-response-friendly creative without fake SaaS language',
-              'Character lanes, one-shots, micro-ads, and campaign-style pieces',
-              'Proof-first sales motion, real samples before a bigger commitment',
+              'Product reels and spec concepts',
+              'Direct-response-friendly creative',
+              'Character lanes and micro-ads',
+              'Real samples before bigger scope',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm">
                 {item}
@@ -453,10 +486,10 @@ function LandingPage() {
           <div>
             <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-500">What Clayrnt is built for</div>
             <h2 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-              Short-form creative for brands that need a stronger first impression.
+              Short-form creative with a stronger first frame.
             </h2>
             <p className="mt-5 max-w-lg text-lg leading-8 text-slate-600">
-              Clayrnt is built for product teams, founders, and operators who want cleaner visuals, sharper hooks, and a practical first test before committing to a bigger content system.
+              Built for brands that want cleaner visuals, sharper hooks, and a practical first test.
             </p>
           </div>
 
@@ -464,15 +497,15 @@ function LandingPage() {
             {[
               {
                 title: 'Premium product-first direction',
-                body: 'Each concept starts with the product, the category, and the visual lane that can make the brand feel more valuable in a few seconds.',
+                body: 'Each concept starts with the product, the category, and the visual lane.',
               },
               {
                 title: 'More than one creative lane',
-                body: 'Product-led reels, one-shot concepts, character directions, and campaign-style clips can all sit under one visual system without feeling random.',
+                body: 'Product reels, one-shots, character directions, and campaign-style clips can work together.',
               },
               {
                 title: 'Operator-led next step',
-                body: 'If the work feels close, the next step is direct contact with Logan and a proof-first conversation, not a fake enterprise platform funnel.',
+                body: 'If the work feels close, talk directly with Logan about the first test.',
               },
             ].map((item, index) => (
               <div key={item.title} className="grid gap-4 border-b border-slate-200 pb-8 last:border-b-0 last:pb-0 sm:grid-cols-[72px_1fr] sm:gap-6">
@@ -493,18 +526,18 @@ function LandingPage() {
           <div>
             <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-400">Creative standard</div>
             <h2 className="mt-5 max-w-2xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              The work should feel polished enough to carry the brand before anyone reads the caption.
+              The work should sell the standard before anyone reads the caption.
             </h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {[
               {
                 title: 'Proof over promises',
-                body: 'Real videos do the heavy lifting, not invented logos, metrics, or fluffy platform language.',
+                body: 'Real videos do the heavy lifting.',
               },
               {
                 title: 'Better visual density',
-                body: 'Multiple clips working together creates a stronger first impression than one lonely featured sample.',
+                body: 'Multiple clips create a stronger first impression.',
               },
             ].map((item) => (
               <div key={item.title} className="rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
@@ -522,7 +555,7 @@ function LandingPage() {
             <div>
               <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-500">Process</div>
               <h2 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Simpler than an agency, sharper than a random content vendor.
+                Simple process. Stronger creative.
               </h2>
             </div>
 
@@ -531,17 +564,17 @@ function LandingPage() {
                 {
                   step: '01',
                   title: 'Pick the creative lane',
-                  body: 'Choose the direction that best fits the product, character, or campaign feel you actually want to test first.',
+                  body: 'Choose the product, character, or campaign direction to test first.',
                 },
                 {
                   step: '02',
                   title: 'Build around proof',
-                  body: 'Use real sample work and category-fit concepts instead of trying to sell through abstract promises.',
+                  body: 'Use real sample work and category-fit concepts.',
                 },
                 {
                   step: '03',
                   title: 'Tighten into a beta',
-                  body: 'Once the right lane is clear, keep iterating from the strongest visual direction instead of bloating scope too early.',
+                  body: 'Iterate from the strongest direction without bloating scope.',
                 },
               ].map((item) => (
                 <div key={item.step} className="rounded-[30px] border border-slate-200 bg-slate-50 p-6">
@@ -557,7 +590,7 @@ function LandingPage() {
             <div>
               <div className="text-2xl font-semibold tracking-tight text-white">Book a call about your first Clayrnt creative lane.</div>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
-                Send Logan the product, category, and direction you want to test. The call is a practical fit check around what Clayrnt can make first, using the real sample lanes already on this site.
+                Send Logan the product, category, and direction you want to test. The call is a practical fit check around the first piece.
               </p>
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-300">
                 <a href={PHONE_LINK} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 transition hover:border-white/20 hover:bg-white/10">
