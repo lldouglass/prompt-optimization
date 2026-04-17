@@ -1,7 +1,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react'
 
 const EMAIL = 'logandouglass7@gmail.com'
-const EMAIL_SUBJECT = 'Clayrnt question'
+const EMAIL_SUBJECT = 'Clarynt question'
 const PHONE_DISPLAY = '720-391-4835'
 const PHONE_LINK = 'tel:+17203914835'
 const EMAIL_LINK = `mailto:${EMAIL}?subject=${encodeURIComponent(EMAIL_SUBJECT)}`
@@ -28,38 +28,38 @@ const productSamples: Sample[] = [
     src: '/jack-tall-owl.mp4',
     tag: 'Skincare',
     note:
-      'A warmer, more memorable product ad lane for brands that want something richer than generic UGC or static slides.',
+      'Character-led product creative for brands that want a warmer lane than generic UGC or static product slides.',
   },
   {
     id: 'product-brand-sample',
-    title: 'Pulse product sample',
+    title: 'Pulse product reel',
     subtitle: 'Clean premium reel for physical products',
     badge: 'Core lane',
     poster: '/product-brand-sample-poster.jpg',
     src: '/product-brand-sample.mp4',
     tag: 'Product reel',
     note:
-      'This is the clean premium product-brand lane, polished visuals, strong product focus, and no founder-on-camera dependency.',
+      'A polished product-first lane with clean visuals, direct product focus, and no founder-on-camera dependency.',
   },
   {
     id: 'atlas-daily-one-shot',
     title: 'Atlas Daily one-shot',
-    subtitle: 'Simple premium one-shot built for DTC-style testing',
+    subtitle: 'Simple one-shot for DTC-style testing',
     badge: 'One-shot',
     src: '/atlas-daily-one-shot.mp4',
     tag: 'One-shot',
     note:
-      'A tighter one-shot creative direction for brands that want cleaner visuals and quicker concept testing.',
+      'A compact creative direction for brands that want clean visuals and quick concept testing.',
   },
   {
     id: 'atlas-daily-action-v2',
-    title: 'Atlas Daily action v2',
+    title: 'Atlas Daily motion reel',
     subtitle: 'More movement, stronger ad energy',
-    badge: 'Action lane',
+    badge: 'Motion lane',
     src: '/atlas-daily-action-v2.mp4',
     tag: 'Action',
     note:
-      'A more active variation when a brand needs extra pace and commercial energy without feeling cheap.',
+      'A more active variation when a brand needs extra pace and commercial energy without losing polish.',
   },
   {
     id: 'arc-one-shot',
@@ -69,17 +69,17 @@ const productSamples: Sample[] = [
     src: '/arc-one-shot.mp4',
     tag: 'Minimal',
     note:
-      'Useful for product pages, paid social, or brands that need a clean premium visual before heavier story work.',
+      'Useful for product pages, paid social, or a clean premium visual before heavier story work.',
   },
   {
     id: 'arc-action-v2',
-    title: 'Arc action v2',
+    title: 'Arc motion reel',
     subtitle: 'Sharper motion-first product direction',
-    badge: 'Action lane',
+    badge: 'Motion lane',
     src: '/arc-action-v2.mp4',
     tag: 'Motion',
     note:
-      'This lane pushes stronger visual movement while keeping the overall feel premium and controlled.',
+      'Adds pace and movement while keeping the product presentation controlled.',
   },
   {
     id: 'arc-two-shot-micro-ad',
@@ -93,27 +93,27 @@ const productSamples: Sample[] = [
   },
   {
     id: 'luma-one-shot',
-    title: 'Luma one-shot',
+    title: 'Luma editorial one-shot',
     subtitle: 'Editorial one-shot direction for premium brands',
     badge: 'Editorial',
     src: '/luma-one-shot.mp4',
     tag: 'Editorial',
     note:
-      'A cleaner editorial lane for brands that want something elevated without overcomplicating the creative.',
+      'A clean editorial lane for brands that want something elevated without overcomplicating the creative.',
   },
   {
     id: 'luma-action-v2',
-    title: 'Luma action v2',
+    title: 'Luma motion reel',
     subtitle: 'Faster pacing with a high-end visual finish',
-    badge: 'Action lane',
+    badge: 'Motion lane',
     src: '/luma-action-v2.mp4',
     tag: 'Pacing',
     note:
-      'Built for brands that need more urgency and motion while keeping the overall piece expensive-looking.',
+      'Built for brands that need more urgency and motion while keeping the overall piece polished.',
   },
   {
     id: 'gurunanda-monk',
-    title: 'GuruNanda monk',
+    title: 'GuruNanda character concept',
     subtitle: 'Brand character concept with stronger identity',
     badge: 'Character lane',
     poster: '/gurunanda-monk-poster.jpg',
@@ -124,14 +124,14 @@ const productSamples: Sample[] = [
   },
   {
     id: 'gurunanda-monk-spec',
-    title: 'GuruNanda monk spec',
+    title: 'GuruNanda campaign concept',
     subtitle: 'Campaign-style brand concept with more polish',
-    badge: 'Spec concept',
+    badge: 'Campaign concept',
     poster: '/gurunanda-monk-poster.jpg',
     src: '/gurunanda-monk-spec.mp4',
-    tag: 'Spec',
+    tag: 'Campaign',
     note:
-      'A more campaign-like direction that helps the homepage feel like a real creative company rather than a sample dump.',
+      'A more campaign-shaped direction for brands that want the sample to feel less like an isolated product reel.',
   },
 ]
 
@@ -144,7 +144,7 @@ const dentalSample: Sample = {
   src: '/dental-sample.mp4',
   tag: 'Dental',
   note:
-    'Useful for the dental lane, but the main Clayrnt landing page is focused on premium product-brand creative.',
+    'A focused proof point for educational dental content when a practice wants a patient-facing sample before a broader campaign.',
 }
 
 const homepageTallOwlSamples: Sample[] = [
@@ -156,7 +156,7 @@ const homepageTallOwlSamples: Sample[] = [
     poster: '/tall-owl-hero-v2-poster.png',
     src: '/tall-owl-hero-v2.mp4',
     tag: 'Character',
-    note: 'Updated Tall Owl homepage asset.',
+    note: 'Character-led hero beat for the skincare lane.',
   },
   {
     id: 'tall-owl-hook',
@@ -166,7 +166,7 @@ const homepageTallOwlSamples: Sample[] = [
     poster: '/tall-owl-hook-poster.png',
     src: '/tall-owl-hook.mp4',
     tag: 'Skincare',
-    note: 'Updated Tall Owl homepage asset.',
+    note: 'Opening hook for a warm product-story direction.',
   },
   {
     id: 'tall-owl-explainer',
@@ -176,7 +176,7 @@ const homepageTallOwlSamples: Sample[] = [
     poster: '/tall-owl-explainer-poster.png',
     src: '/tall-owl-explainer.mp4',
     tag: 'Concept',
-    note: 'Updated Tall Owl homepage asset.',
+    note: 'Short explainer beat for a product-led concept.',
   },
 ]
 
@@ -197,17 +197,26 @@ function Shell({ children }: { children: ReactNode }) {
   )
 }
 
-function Logo() {
+function Logo({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
+  const isLight = tone === 'light'
+
   return (
     <div className="flex items-center gap-3">
       <img
         src="/clarynt_icon.jpg"
-        alt="Clayrnt"
-        className="h-10 w-10 rounded-2xl border border-white/10 object-cover shadow-lg shadow-emerald-950/40"
+        alt="Clarynt"
+        className={[
+          'h-10 w-10 rounded-lg object-cover shadow-lg shadow-emerald-950/40',
+          isLight ? 'border border-slate-200' : 'border border-white/10',
+        ].join(' ')}
       />
       <div>
-        <div className="text-lg font-semibold tracking-tight text-white">Clayrnt</div>
-        <div className="text-[11px] uppercase tracking-[0.24em] text-slate-400">Premium short-form creative</div>
+        <div className={['text-lg font-semibold tracking-tight', isLight ? 'text-slate-950' : 'text-white'].join(' ')}>
+          Clarynt
+        </div>
+        <div className={['hidden text-[11px] uppercase tracking-[0.24em] sm:block', isLight ? 'text-slate-500' : 'text-slate-400'].join(' ')}>
+          Premium short-form creative
+        </div>
       </div>
     </div>
   )
@@ -254,7 +263,7 @@ function TopBar() {
           <NavLink href="/#work">Work</NavLink>
           <NavLink href="/#capabilities">Capabilities</NavLink>
           <NavLink href="/#process">Process</NavLink>
-          <NavLink href="/brands">Samples</NavLink>
+          <NavLink href="/brands">Library</NavLink>
         </nav>
         <div className="flex items-center gap-3">
           <SecondaryButton href={BOOK_CALL_LINK}>Book a call</SecondaryButton>
@@ -334,9 +343,6 @@ function SampleVideoCard({ sample, controls = true }: { sample: Sample; controls
         <span className="rounded-full border border-white/10 bg-slate-950/80 px-3 py-1 text-xs text-slate-300">
           {sample.tag}
         </span>
-        <span className="rounded-full border border-white/10 bg-slate-950/80 px-3 py-1 text-xs text-slate-400">
-          Full quality on-page
-        </span>
       </div>
 
       <div className="overflow-hidden rounded-[24px] border border-white/10 bg-black">
@@ -387,7 +393,7 @@ function LandingPage() {
     getSample('atlas-daily-one-shot'),
     getSample('gurunanda-monk'),
     getSample('luma-action-v2'),
-    dentalSample,
+    getSample('gurunanda-monk-spec'),
   ]
 
   return (
@@ -409,7 +415,7 @@ function LandingPage() {
               </h1>
 
               <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300 sm:text-xl">
-                Clayrnt makes polished short-form ads, product reels, and character-led concepts for brands that need stronger visual proof.
+                Clarynt makes polished short-form ads, product reels, and character-led concepts for brands that need stronger visual proof.
               </p>
 
               <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -419,9 +425,9 @@ function LandingPage() {
 
               <div className="mt-10 grid max-w-2xl gap-4 sm:grid-cols-3">
                 {[
-                  ['Product reels', 'Clean premium visuals for physical products.'],
-                  ['Creative concepts', 'Character-led lanes with stronger identity.'],
-                  ['Proof first', 'Real samples, no filler claims.'],
+                  ['Product reels', 'Clean product-first visuals for paid social and landing pages.'],
+                  ['Concept lanes', 'Character-led and campaign-shaped directions for stronger identity.'],
+                  ['Samples first', 'Work you can judge before a bigger scope.'],
                 ].map(([title, body]) => (
                   <div key={title} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
                     <div className="text-sm font-semibold text-white">{title}</div>
@@ -453,8 +459,8 @@ function LandingPage() {
         <div className="mx-auto max-w-7xl px-6 pb-20 pt-8 sm:px-8 sm:pb-24 lg:px-10 lg:pt-10">
           <LightSectionIntro
             eyebrow="Selected work"
-            title="Real videos. Clearer judgment."
-            body="Product reels, micro-ads, and character-led concepts carry the pitch without fake logos or inflated claims."
+            title="Samples you can judge fast."
+            body="Product reels, micro-ads, and character-led concepts carry the pitch without borrowed logos, testimonials, or inflated claims."
           />
 
           <div className="mt-12 grid auto-rows-[220px] gap-5 md:auto-rows-[250px] lg:grid-cols-12 lg:auto-rows-[170px]">
@@ -468,10 +474,10 @@ function LandingPage() {
 
           <div className="mt-10 grid gap-3 rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-4 xl:p-5">
             {[
-              'Product reels and spec concepts',
-              'Direct-response-friendly creative',
+              'Product reels and concept tests',
+              'Paid-social-friendly creative',
               'Character lanes and micro-ads',
-              'Real samples before bigger scope',
+              'Current samples before larger scope',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm">
                 {item}
@@ -484,28 +490,28 @@ function LandingPage() {
       <section id="capabilities" className="bg-white text-slate-950">
         <div className="mx-auto grid max-w-7xl gap-16 px-6 py-24 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:px-10">
           <div>
-            <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-500">What Clayrnt is built for</div>
+            <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-500">What Clarynt is built for</div>
             <h2 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
               Short-form creative with a stronger first frame.
             </h2>
             <p className="mt-5 max-w-lg text-lg leading-8 text-slate-600">
-              Built for brands that want cleaner visuals, sharper hooks, and a practical first test.
+              Built for brands that want cleaner visuals, sharper hooks, and a practical first creative test.
             </p>
           </div>
 
           <div className="space-y-8">
             {[
               {
-                title: 'Premium product-first direction',
+                title: 'Product-first direction',
                 body: 'Each concept starts with the product, the category, and the visual lane.',
               },
               {
-                title: 'More than one creative lane',
+                title: 'Multiple creative lanes',
                 body: 'Product reels, one-shots, character directions, and campaign-style clips can work together.',
               },
               {
-                title: 'Operator-led next step',
-                body: 'If the work feels close, talk directly with Logan about the first test.',
+                title: 'Direct fit check',
+                body: 'If the work feels close, talk with Logan about the first test, scope, and category fit.',
               },
             ].map((item, index) => (
               <div key={item.title} className="grid gap-4 border-b border-slate-200 pb-8 last:border-b-0 last:pb-0 sm:grid-cols-[72px_1fr] sm:gap-6">
@@ -524,20 +530,20 @@ function LandingPage() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.24),transparent_22%),radial-gradient(circle_at_25%_50%,rgba(34,197,94,0.12),transparent_26%)]" />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-6 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-10">
           <div>
-            <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-400">Creative standard</div>
+            <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-400">Creative bar</div>
             <h2 className="mt-5 max-w-2xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              The work should sell the standard before anyone reads the caption.
+              The work should set the standard before anyone reads the caption.
             </h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {[
               {
                 title: 'Proof over promises',
-                body: 'Real videos do the heavy lifting.',
+                body: 'Real videos carry the first impression.',
               },
               {
-                title: 'Better visual density',
-                body: 'Multiple clips create a stronger first impression.',
+                title: 'Useful variation',
+                body: 'Different lanes make the next decision easier.',
               },
             ].map((item) => (
               <div key={item.title} className="rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
@@ -555,7 +561,7 @@ function LandingPage() {
             <div>
               <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-500">Process</div>
               <h2 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Simple process. Stronger creative.
+                Simple process. Stronger first test.
               </h2>
             </div>
 
@@ -563,18 +569,18 @@ function LandingPage() {
               {[
                 {
                   step: '01',
-                  title: 'Pick the creative lane',
-                  body: 'Choose the product, character, or campaign direction to test first.',
+                  title: 'Choose the first lane',
+                  body: 'Pick the product reel, one-shot, character, or micro-ad direction to test first.',
                 },
                 {
                   step: '02',
-                  title: 'Build around proof',
-                  body: 'Use real sample work and category-fit concepts.',
+                  title: 'Make the first cut',
+                  body: 'Build around the product, category, and sample style that fits.',
                 },
                 {
                   step: '03',
-                  title: 'Tighten into a beta',
-                  body: 'Iterate from the strongest direction without bloating scope.',
+                  title: 'Refine what works',
+                  body: 'Tighten the strongest direction before expanding scope.',
                 },
               ].map((item) => (
                 <div key={item.step} className="rounded-[30px] border border-slate-200 bg-slate-50 p-6">
@@ -588,9 +594,9 @@ function LandingPage() {
 
           <div id="contact" className="mt-16 rounded-[36px] border border-slate-200 bg-slate-950 px-6 py-8 text-white shadow-[0_30px_80px_rgba(15,23,42,0.16)] sm:px-8 lg:flex lg:items-center lg:justify-between lg:gap-8">
             <div>
-              <div className="text-2xl font-semibold tracking-tight text-white">Book a call about your first Clayrnt creative lane.</div>
+              <div className="text-2xl font-semibold tracking-tight text-white">Book a call about the first Clarynt creative test.</div>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
-                Send Logan the product, category, and direction you want to test. The call is a practical fit check around the first piece.
+                Send Logan the product, category, and direction you want to test. The call is a practical fit check for the first piece.
               </p>
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-300">
                 <a href={PHONE_LINK} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 transition hover:border-white/20 hover:bg-white/10">
@@ -612,7 +618,7 @@ function LandingPage() {
       <footer className="border-t border-slate-200 bg-white text-slate-950">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 sm:px-8 lg:grid-cols-[1.15fr_0.85fr_0.85fr_0.85fr] lg:px-10">
           <div>
-            <Logo />
+            <Logo tone="light" />
             <p className="mt-5 max-w-sm text-sm leading-7 text-slate-600">
               Premium short-form ad creative for brands that need cleaner visuals, stronger hooks, and a better first impression.
             </p>
@@ -625,7 +631,7 @@ function LandingPage() {
                 Sample library
               </a>
               <a href="/#work" className="block transition hover:text-slate-950">
-                Homepage showcase
+                Selected work
               </a>
               <a href="/dental" className="block transition hover:text-slate-950">
                 Dental sample
@@ -680,7 +686,7 @@ function BrandsPage() {
             Short-form product ads that feel clean, premium, and built for real brands.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
-            This page is the live library for the Clayrnt product-brand lane. It keeps the work easy to browse without turning the root page into a giant portfolio dump.
+            Browse the current Clarynt product-brand sample library: product reels, one-shots, micro-ads, and character-led concepts.
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -706,8 +712,8 @@ function BrandsPage() {
           </div>
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-            <PrimaryButton href="#featured-sample">Watch the featured sample</PrimaryButton>
-            <SecondaryButton href={EMAIL_LINK}>Email Logan</SecondaryButton>
+            <PrimaryButton href={BOOK_CALL_LINK}>Book a call</PrimaryButton>
+            <SecondaryButton href="#featured-sample">Watch featured sample</SecondaryButton>
           </div>
         </div>
 
@@ -720,10 +726,10 @@ function BrandsPage() {
         <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="text-sm font-semibold text-white">More samples</div>
-            <div className="text-sm text-slate-400">Expanded library pulled from real Clayrnt sample videos.</div>
+            <div className="text-sm text-slate-400">Current product-brand samples available to review.</div>
           </div>
           <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-400">
-            Real sample library
+            Current samples
           </div>
         </div>
 
@@ -749,7 +755,7 @@ function DentalPage() {
             Patient-education videos that help dental offices build trust online.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
-            This is the original dental sample lane. It stays here as useful proof for practices, while the main Clayrnt homepage leads with the broader product-brand offer.
+            A focused sample for practices that want patient-facing education before broader ad creative.
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -775,8 +781,8 @@ function DentalPage() {
           </div>
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-            <PrimaryButton href={EMAIL_LINK}>Email Logan</PrimaryButton>
-            <SecondaryButton href={PHONE_LINK}>Call or text Logan</SecondaryButton>
+            <PrimaryButton href={BOOK_CALL_LINK}>Book a call</PrimaryButton>
+            <SecondaryButton href={EMAIL_LINK}>Email Logan</SecondaryButton>
           </div>
         </div>
 
@@ -794,7 +800,7 @@ export default function App() {
   const meta = useMemo(() => {
     if (isBrands) {
       return {
-        title: 'Clayrnt | Product Brand Reels',
+        title: 'Clarynt | Product Brand Reels',
         description:
           'Premium short-form product ads and sample reels for brands that want cleaner visuals, stronger hooks, and a higher-trust first impression.',
       }
@@ -802,16 +808,16 @@ export default function App() {
 
     if (isDental) {
       return {
-        title: 'Clayrnt | Dental Sample',
+        title: 'Clarynt | Dental Sample',
         description:
           'Patient-education videos that help dental offices build trust with potential patients online.',
       }
     }
 
     return {
-      title: 'Clayrnt | Premium Short-Form Creative',
+      title: 'Clarynt | Premium Short-Form Creative',
       description:
-        'Clayrnt creates premium short-form ads and product reels for brands that want cleaner visuals, stronger hooks, and proof-first creative.',
+        'Clarynt creates premium short-form ads and product reels for brands that want cleaner visuals, stronger hooks, and proof-first creative.',
     }
   }, [isBrands, isDental])
 
