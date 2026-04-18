@@ -393,7 +393,7 @@ function LandingPage() {
               </h1>
 
               <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300 sm:text-xl">
-                Clarynt makes polished short-form ads, product reels, and character-led concepts for brands that need stronger visual proof.
+                Short-form ads and product reels for brands that need the product to sell fast.
               </p>
 
               <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -403,9 +403,9 @@ function LandingPage() {
 
               <div className="mt-10 grid max-w-2xl gap-4 sm:grid-cols-3">
                 {[
-                  ['Product reels', 'Clean product-first visuals for paid social and landing pages.'],
-                  ['Concept lanes', 'Character-led and campaign-shaped directions for stronger identity.'],
-                  ['Samples first', 'Work you can judge before a bigger scope.'],
+                  ['Product-first', 'Clean visuals built around the product.'],
+                  ['Testable concepts', 'Reels, one-shots, and campaign directions.'],
+                  ['Samples first', 'Judge the work before bigger scope.'],
                 ].map(([title, body]) => (
                   <div key={title} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
                     <div className="text-sm font-semibold text-white">{title}</div>
@@ -438,7 +438,7 @@ function LandingPage() {
           <LightSectionIntro
             eyebrow="Selected work"
             title="Samples you can judge fast."
-            body="Product reels, micro-ads, and character-led concepts carry the pitch without borrowed logos, testimonials, or inflated claims."
+            body="Product reels, micro-ads, and character concepts."
           />
 
           <div className="mt-12 grid auto-rows-[220px] gap-5 md:auto-rows-[250px] lg:grid-cols-12 lg:auto-rows-[170px]">
@@ -452,10 +452,10 @@ function LandingPage() {
 
           <div className="mt-10 grid gap-3 rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 xl:grid-cols-4 xl:gap-4 xl:p-5">
             {[
-              'Product reels and concept tests',
-              'Paid-social-friendly creative',
-              'Character lanes and micro-ads',
-              'Current samples before larger scope',
+              'Product reels',
+              'Micro-ads',
+              'Character concepts',
+              'Samples before scope',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm">
                 {item}
@@ -468,12 +468,12 @@ function LandingPage() {
       <section id="capabilities" className="bg-white text-slate-950">
         <div className="mx-auto grid max-w-7xl gap-16 px-6 py-24 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:px-10">
           <div>
-            <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-500">What Clarynt is built for</div>
+            <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-500">What Clarynt does</div>
             <h2 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-              Short-form creative with a stronger first frame.
+              A tighter first creative test.
             </h2>
             <p className="mt-5 max-w-lg text-lg leading-8 text-slate-600">
-              Built for brands that want cleaner visuals, sharper hooks, and a practical first creative test.
+              Cleaner visuals, sharper hooks, less fluff.
             </p>
           </div>
 
@@ -481,15 +481,15 @@ function LandingPage() {
             {[
               {
                 title: 'Product-first direction',
-                body: 'Each concept starts with the product, the category, and the visual lane.',
+                body: 'Start with the product and the visual lane.',
               },
               {
-                title: 'Multiple creative lanes',
-                body: 'Product reels, one-shots, character directions, and campaign-style clips can work together.',
+                title: 'Multiple angles',
+                body: 'Test reels, one-shots, or character concepts.',
               },
               {
                 title: 'Direct fit check',
-                body: 'If the work feels close, talk with Logan about the first test, scope, and category fit.',
+                body: 'Talk with Logan about the first test and scope.',
               },
             ].map((item, index) => (
               <div key={item.title} className="grid gap-4 border-b border-slate-200 pb-8 last:border-b-0 last:pb-0 sm:grid-cols-[72px_1fr] sm:gap-6">
@@ -504,42 +504,13 @@ function LandingPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden border-y border-white/10 bg-slate-950 py-24 text-white">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.24),transparent_22%),radial-gradient(circle_at_25%_50%,rgba(34,197,94,0.12),transparent_26%)]" />
-        <div className="relative mx-auto grid max-w-7xl gap-10 px-6 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-10">
-          <div>
-            <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-400">Creative bar</div>
-            <h2 className="mt-5 max-w-2xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              The work should set the standard before anyone reads the caption.
-            </h2>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              {
-                title: 'Proof over promises',
-                body: 'Real videos carry the first impression.',
-              },
-              {
-                title: 'Useful variation',
-                body: 'Different lanes make the next decision easier.',
-              },
-            ].map((item) => (
-              <div key={item.title} className="rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-                <div className="text-xl font-semibold text-white">{item.title}</div>
-                <p className="mt-3 text-sm leading-7 text-slate-300">{item.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section id="process" className="bg-white text-slate-950">
         <div className="mx-auto max-w-7xl px-6 py-24 sm:px-8 lg:px-10">
           <div className="grid gap-12 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
             <div>
               <div className="text-xs font-medium uppercase tracking-[0.26em] text-slate-500">Process</div>
               <h2 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Simple process. Stronger first test.
+                Simple process.
               </h2>
             </div>
 
@@ -548,17 +519,17 @@ function LandingPage() {
                 {
                   step: '01',
                   title: 'Choose the first lane',
-                  body: 'Pick the product reel, one-shot, character, or micro-ad direction to test first.',
+                  body: 'Pick the first direction to test.',
                 },
                 {
                   step: '02',
                   title: 'Make the first cut',
-                  body: 'Build around the product, category, and sample style that fits.',
+                  body: 'Build it around the product.',
                 },
                 {
                   step: '03',
                   title: 'Refine what works',
-                  body: 'Tighten the strongest direction before expanding scope.',
+                  body: 'Keep the strongest lane and expand from there.',
                 },
               ].map((item) => (
                 <div key={item.step} className="rounded-[30px] border border-slate-200 bg-slate-50 p-6">
@@ -572,9 +543,9 @@ function LandingPage() {
 
           <div id="contact" className="mt-16 rounded-[36px] border border-slate-200 bg-slate-950 px-6 py-8 text-white shadow-[0_30px_80px_rgba(15,23,42,0.16)] sm:px-8 lg:flex lg:items-center lg:justify-between lg:gap-8">
             <div>
-              <div className="text-2xl font-semibold tracking-tight text-white">Book a call about the first Clarynt creative test.</div>
+              <div className="text-2xl font-semibold tracking-tight text-white">Book a call for the first creative test.</div>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
-                Send Logan the product, category, and direction you want to test. The call is a practical fit check for the first piece.
+                Send Logan the product and category. He’ll tell you if the fit is real and what to test first.
               </p>
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-300">
                 <a href={PHONE_LINK} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 transition hover:border-white/20 hover:bg-white/10">
@@ -598,7 +569,7 @@ function LandingPage() {
           <div>
             <Logo tone="light" />
             <p className="mt-5 max-w-sm text-sm leading-7 text-slate-600">
-              Premium short-form ad creative for brands that need cleaner visuals, stronger hooks, and a better first impression.
+              Premium short-form creative for brands that need a stronger first impression.
             </p>
           </div>
 
