@@ -5,7 +5,7 @@ const EMAIL_SUBJECT = 'Clarynt question'
 const PHONE_DISPLAY = '720-391-4835'
 const PHONE_LINK = 'tel:+17203914835'
 const EMAIL_LINK = `mailto:${EMAIL}?subject=${encodeURIComponent(EMAIL_SUBJECT)}`
-const BOOK_CALL_LINK = '/#contact'
+const BOOK_CALL_LINK = 'https://cal.com/logan-douglass-isjf9m/intro-call'
 
 type Sample = {
   id: string
@@ -557,7 +557,7 @@ function LandingPage() {
               </div>
             </div>
             <div className="mt-6 flex flex-col gap-4 sm:flex-row lg:mt-0">
-              <PrimaryButton href={PHONE_LINK}>Book a call</PrimaryButton>
+              <PrimaryButton href={BOOK_CALL_LINK}>Book a call</PrimaryButton>
               <SecondaryButton href={EMAIL_LINK}>Email Logan</SecondaryButton>
             </div>
           </div>
