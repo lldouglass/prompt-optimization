@@ -64,26 +64,6 @@ const productSamples: Sample[] = [
       'A polished product-first lane with clean visuals, direct product focus, and no founder-on-camera dependency.',
   },
   {
-    id: 'atlas-daily-one-shot',
-    title: 'Atlas Daily one-shot',
-    subtitle: 'Simple one-shot for DTC-style testing',
-    badge: 'One-shot',
-    src: '/atlas-daily-one-shot.mp4',
-    tag: 'One-shot',
-    note:
-      'A compact creative direction for brands that want clean visuals and quick concept testing.',
-  },
-  {
-    id: 'atlas-daily-action-v2',
-    title: 'Atlas Daily motion reel',
-    subtitle: 'More movement, stronger ad energy',
-    badge: 'Motion lane',
-    src: '/atlas-daily-action-v2.mp4',
-    tag: 'Action',
-    note:
-      'A more active variation when a brand needs extra pace and commercial energy without losing polish.',
-  },
-  {
     id: 'arc-one-shot',
     title: 'Arc one-shot',
     subtitle: 'Minimal product vignette with premium framing',
@@ -371,7 +351,7 @@ function LandingPage() {
   const heroMosaic = [
     getSample('heinz-yellow-mustard-spec-ad'),
     getSample('jack-tall-owl'),
-    getSample('atlas-daily-action-v2'),
+    getSample('arc-action-v2'),
     getSample('tall-owl-plain-ad'),
     getSample('luma-one-shot'),
   ]
@@ -380,7 +360,7 @@ function LandingPage() {
     getSample('heinz-yellow-mustard-spec-ad'),
     getSample('product-brand-sample'),
     getSample('arc-two-shot-micro-ad'),
-    getSample('atlas-daily-one-shot'),
+    getSample('arc-one-shot'),
     getSample('gurunanda-monk-spec'),
     getSample('luma-action-v2'),
   ]
