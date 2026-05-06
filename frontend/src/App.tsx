@@ -20,6 +20,17 @@ type Sample = {
 
 const productSamples: Sample[] = [
   {
+    id: 'heinz-yellow-mustard-spec-ad',
+    title: 'Heinz Yellow Mustard spec ad',
+    subtitle: 'Street-food micro ad with bold condiment payoff',
+    badge: 'Featured spec ad',
+    poster: '/heinz-yellow-mustard-spec-ad-poster.jpg',
+    src: '/heinz-yellow-mustard-spec-ad.mp4',
+    tag: 'Food & beverage',
+    note:
+      'A punchy street-food spec ad for Heinz Yellow Mustard, moving from appetite appeal into the bottle and label reveal with a clear brand/product finish.',
+  },
+  {
     id: 'jack-tall-owl',
     title: 'Tall Owl whipped tallow',
     subtitle: 'Vanilla orange apothecary product story',
@@ -358,20 +369,20 @@ function LightSectionIntro({ eyebrow, title, body }: { eyebrow: string; title: s
 
 function LandingPage() {
   const heroMosaic = [
+    getSample('heinz-yellow-mustard-spec-ad'),
     getSample('jack-tall-owl'),
     getSample('atlas-daily-action-v2'),
     getSample('tall-owl-plain-ad'),
     getSample('luma-one-shot'),
-    getSample('gurunanda-monk'),
   ]
 
   const showcaseSamples = [
+    getSample('heinz-yellow-mustard-spec-ad'),
     getSample('product-brand-sample'),
     getSample('arc-two-shot-micro-ad'),
     getSample('atlas-daily-one-shot'),
     getSample('gurunanda-monk-spec'),
     getSample('luma-action-v2'),
-    getSample('arc-one-shot'),
   ]
 
   return (
