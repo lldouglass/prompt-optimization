@@ -350,8 +350,8 @@ function LightSectionIntro({ eyebrow, title, body }: { eyebrow: string; title: s
 function LandingPage() {
   const heroMosaic = [
     getSample('heinz-yellow-mustard-spec-ad'),
-    getSample('jack-tall-owl'),
     getSample('arc-action-v2'),
+    getSample('jack-tall-owl'),
     getSample('tall-owl-plain-ad'),
     getSample('luma-one-shot'),
   ]
@@ -360,7 +360,7 @@ function LandingPage() {
     getSample('heinz-yellow-mustard-spec-ad'),
     getSample('product-brand-sample'),
     getSample('arc-two-shot-micro-ad'),
-    getSample('arc-one-shot'),
+    getSample('jack-tall-owl'),
     getSample('gurunanda-monk-spec'),
     getSample('luma-action-v2'),
   ]
